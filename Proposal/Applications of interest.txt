@@ -1,0 +1,15 @@
+- Multi point science data collect w/ distributed processing and aggregation to reduce downlink data requirements
+
+- Opportunistic control data communications network over mutliple orbital inclinations 
+
+- Challa (University of Florida): MapReduce, CDFS, Torrent
+
+- DTN extensions of currently implemented protocols 
+
+- Accurate predications of optimal schedule for ISL communication to minimize power consumption
+
+- Nodes/EDSN: Distributed command and control
+
+- Opportunistic connection handover for large clusters (IP Multicast)
+
+- Hetrogenous sensor network
