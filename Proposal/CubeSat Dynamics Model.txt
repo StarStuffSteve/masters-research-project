@@ -1,9 +1,0 @@
-Basics Objectives
-
-	- Use existing TW and Nodes data to create probability distribution for distance change between CubeSats for some time step -> sample distribution to simulate movement of CubeSats
-
-	- Calculate minimum distance between sats in a single Sun-Sync Polar Oribtal (SSPO) (600-800km LEO)
-
-	- Calculate max oribtal inclination offsets for SSPOs (Assuming 75km max comms effective distance)
-
-	- Investigate affects of orbital velocity difference on inter-orbit communication windows
