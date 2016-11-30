@@ -57,9 +57,17 @@
 - Can be configured to use X.25 protocol suite
 
 #### NetSim
+- Seems to have been a version with X.25 support
+- Power modelling possible
+- Looks like there is less inherent mbility support than ns-3
+- Popular for WSNs and MANETs it seems
 
 #### omnet++
-
+- Much more rudimentary
+- Module/Channel structure (C++)
+- More a tool for building network simulators than a simulator in and of itself?
+- [Castalia](https://castalia.forge.nicta.com.au/index.php/en/)
+- [INETMANET](https://github.com/aarizaq/inetmanet-3.x)
 
 
 
