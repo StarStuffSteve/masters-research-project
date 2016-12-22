@@ -1,8 +1,8 @@
-#### Orbital Configuration
-- 25 CubeSats (C/Ss)
+#### Goal Orbital Configuration
+- 12 CubeSats (C/Ss)
 - Orbital altitude at approx. 600km (_~150 km higher than TW_) 
 - Initial pass straight line inter-orbit distance approx. 50km
-- 5 Orbits serparted by approx. 5 degrees 
+- 5 Orbits separated by approx. 5 degrees 
 - _Sun synchronized_ 
 - Polar orbits
 - No orbital control capabilities
@@ -10,8 +10,8 @@
 - No meaningful inter-sat ranging capabilities
 
 #### Node Capabilities
-- Crosslink radios are omni-directional 1.2kbps (Nodes _cannot get Gamalink rates_)
-- 1W crosslink receieve and transmit power consumption (COPINS)
+- Crosslink radios are omni-directional 1.2 kbps (Nodes _cannot get Gamalink rates_)
+- 1W crosslink receive and transmit power consumption (COPINS)
 - Node can get accurate time and location from GPS network
 - Node is preloaded with UTC windows for every ground station fly-over
 - Downlink 9.6 kbps (TW) at 3W power consumption (COPINS)
