@@ -92,7 +92,7 @@ Paper available [here](http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=74667
 - "It is concluded that the proposed MAC protocol is suitable for missions that do not require tight communication links."
 
 ###### QB-50 [75](http://ieeexplore.ieee.org/document/5640977/)
-- _already have notes on this paper [some link to notes] which I personally think is kinda bunk_
+- _already have [notes on this paper](https://github.com/StarStuffSteve/masters-research-project/blob/master/Publication%20Notes/Preliminary%20internetworking%20simulation%20of%20the%20QB50%20cubesat%20constellation%20-%202010.md) which I personally think is kinda bunk_
 - They do some TCP v. UDP simulation
 - "The proposed multiple access protocol is AX.25"
 
@@ -125,6 +125,7 @@ Paper available [here](http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=74667
 - Multiple modes of operation proposed based on state of network _seems dangerously complex and likely to experience frequent switching and perhaps non-convergent thrashing_
 - Perhaps a good example of a dubious non-generalized approach
 
+###### Standards
 - The Consultative Committee for Space Data Systems (CCSDS) protocol standards have not been used in LEO small sat missions as most are more suitable for deep space DTN style applications
 - Another handy dandy table on 2456
 
@@ -191,7 +192,7 @@ Paper available [here](http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=74667
 
 ##### C. Optimum MAC Protocols for Inter-Satellite Communication for Small Satellite Systems
 
-###### 1) Modified CSMA/CA/RTS/CTS Protocol[74](http://design-development-research.co.za/wp-content/uploads/2015/04/DDR2014Full-Proceedings.pdf)
+###### 1) Modified CSMA/CA/RTS/CTS Protocol [74](http://design-development-research.co.za/wp-content/uploads/2015/04/DDR2014Full-Proceedings.pdf)
 - _Definitely should give 74 a close read_
 - "based upon distributed coordination function, one of the services offered by the IEEE 802.11"
 - Leader-follower, cluster and constellation formations considered
