@@ -1,0 +1,250 @@
+file 1635850 1486641544                                         
+version 2
+run Wireless14-0-20170209-11:58:48-9944
+attr configname Wireless14
+attr datetime 20170209-11:58:48
+attr experiment Wireless14
+attr inifile omnetpp.ini
+attr iterationvars ""
+attr iterationvars2 $repetition=0
+attr measurement ""
+attr network Base
+attr processid 9944
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+param *.configurator.addStaticRoutes false
+param *.configurator.config "xml(\"<config><interface hosts='**' address='10.0.0.x' netmask='255.255.255.0'/><autoroute metric='errorRate'/></config>\")"
+param *.configurator.optimizeRoutes false
+param *.host*.**.bitrate 1Mbps
+param *.host*.energyStorageType "\"IdealEnergyStorage\""
+param *.host*.forwarding true
+param *.host*.mobility.initialZ 1.7m
+param *.host*.networkLayer.arpType "\"GlobalARP\""
+param *.host*.routingTable.netmaskRoutes "\"\""
+param *.host*.wlan[0].mac.fullDuplex true
+param *.host*.wlan[0].mac.maxQueueSize 10
+param *.host*.wlan[0].mac.useAck true
+param *.host*.wlan[0].macType "\"CsmaCaMac\""
+param *.host*.wlan[0].radio.antenna.gain 3dB
+param *.host*.wlan[0].radio.antennaType "\"ConstantGainAntenna\""
+param *.host*.wlan[0].radio.bandwidth 2MHz
+param *.host*.wlan[0].radio.carrierFrequency 2GHz
+param *.host*.wlan[0].radio.displayInterferenceRange false
+param *.host*.wlan[0].radio.energyConsumer transmitterIdlePowerConsumption 2mW
+param *.host*.wlan[0].radio.energyConsumer.offPowerConsumption 0mW
+param *.host*.wlan[0].radio.energyConsumer.receiverBusyPowerConsumption 5mW
+param *.host*.wlan[0].radio.energyConsumer.receiverIdlePowerConsumption 2mW
+param *.host*.wlan[0].radio.energyConsumer.receiverReceivingPowerConsumption 10mW
+param *.host*.wlan[0].radio.energyConsumer.sleepPowerConsumption 1mW
+param *.host*.wlan[0].radio.energyConsumer.switchingPowerConsumption 1mW
+param *.host*.wlan[0].radio.energyConsumer.transmitterTransmittingPowerConsumption 100mW
+param *.host*.wlan[0].radio.energyConsumerType "\"StateBasedEnergyConsumer\""
+param *.host*.wlan[0].radio.receiver.energyDetection -85dBm
+param *.host*.wlan[0].radio.receiver.ignoreInterference false
+param *.host*.wlan[0].radio.receiver.sensitivity -85dBm
+param *.host*.wlan[0].radio.receiver.snirThreshold 4dB
+param *.host*.wlan[0].radio.transmitter.communicationRange 250m
+param *.host*.wlan[0].radio.transmitter.headerBitLength 0b
+param *.host*.wlan[0].radio.transmitter.interferenceRange 500m
+param *.host*.wlan[0].radio.transmitter.power 1.4mW
+param *.host*.wlan[0].radio.transmitter.preambleDuration 10us
+param *.host*.wlan[0].radioType "\"IdealRadio\""
+param *.host*.wlan[0].typename "\"WirelessNic\""
+param *.hostM0.numUdpApps 1
+param *.hostM0.udpApp[0].destAddresses "\"hostM1\""
+param *.hostM0.udpApp[0].destPort 5000
+param *.hostM0.udpApp[0].messageLength 1000B
+param *.hostM0.udpApp[0].packetName "\"UDPData\""
+param *.hostM0.udpApp[0].sendInterval exponential(12ms)
+param *.hostM0.udpApp[0].typename "\"UDPBasicApp\""
+param *.hostM0.wlan[0].radio.displayInterferenceRange true
+param *.hostM1.numUdpApps 1
+param *.hostM1.udpApp[0].localPort 5000
+param *.hostM1.udpApp[0].typename "\"UDPSink\""
+param *.hostM1.wlan[0].radio.displayCommunicationRange true
+param *.hostS*.mobility.angle 270deg
+param *.hostS*.mobility.speed 12mps
+param *.hostS*.mobilityType "\"LinearMobility\""
+param *.hostS00.wlan[0].radio.displayCommunicationRange true
+param *.hostType "\"AODVRouter\""
+param *.mediumType "\"APSKScalarRadioMedium\""
+param *.physicalEnvironment.config "xmldoc(\"walls.xml\")"
+param *.physicalEnvironment.ground.elevation 0m
+param *.physicalEnvironment.groundType "\"FlatGround\""
+param *.radioMedium.backgroundNoise.power -90dBm
+param *.radioMedium.mediumLimitCache.carrierFrequency 2GHz
+param *.radioMedium.obstacleLossType "\"IdealObstacleLoss\""
+param *.radioMedium.pathLossType "\"TwoRayGroundReflection\""
+param *.visualizer.dataLinkVisualizer.packetNameFilter "\"\""
+param *.visualizer.mediumVisualizer.displaySignals true
+param *.visualizer.mediumVisualizer.signalPropagationUpdateInterval 100ns
+param *.visualizer.mobilityVisualizer.displayMovementTrail true
+param *.visualizer.networkRouteVisualizer.packetNameFilter "\"UDPData*\""
+param *.visualizer.physicalLinkVisualizer.packetNameFilter "\"UDPData*\""
+param *.visualizer.sceneVisualizer.descriptionFigure "\"title\""
+param Base.hostType "\"WirelessHost\""
+param Base.mediumType "\"IdealRadioMedium\""
+
+vector 47  Base.hostM0.energyStorage  powerConsumption:vector  ETV
+attr interpolationmode  sample-hold
+attr source  powerConsumptionChanged
+attr title  "Power consumption, vector"
+vector 66  Base.hostM1.energyStorage  powerConsumption:vector  ETV
+attr interpolationmode  sample-hold
+attr source  powerConsumptionChanged
+attr title  "Power consumption, vector"
+vector 84  Base.hostS00.energyStorage  powerConsumption:vector  ETV
+attr interpolationmode  sample-hold
+attr source  powerConsumptionChanged
+attr title  "Power consumption, vector"
+vector 94  Base.hostS01.energyStorage  powerConsumption:vector  ETV
+attr interpolationmode  sample-hold
+attr source  powerConsumptionChanged
+attr title  "Power consumption, vector"
+vector 104  Base.hostS02.energyStorage  powerConsumption:vector  ETV
+attr interpolationmode  sample-hold
+attr source  powerConsumptionChanged
+attr title  "Power consumption, vector"
+vector 62  Base.hostM0.wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 80  Base.hostM1.wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 90  Base.hostS00.wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 100  Base.hostS01.wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 110  Base.hostS02.wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 63  Base.hostM0.wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 81  Base.hostM1.wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 91  Base.hostS00.wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 101  Base.hostS01.wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 111  Base.hostS02.wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 51  Base.hostM0.udpApp[0]  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+vector 54  Base.hostM0.udp  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+vector 49  Base.hostM0.energyStorage  residualCapacity:vector  ETV
+attr interpolationmode  linear
+attr source  residualCapacityChanged
+attr title  "Residual capacity, vector"
+vector 64  Base.hostM0.wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 96  Base.hostS01.energyStorage  residualCapacity:vector  ETV
+attr interpolationmode  linear
+attr source  residualCapacityChanged
+attr title  "Residual capacity, vector"
+vector 102  Base.hostS01.wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 86  Base.hostS00.energyStorage  residualCapacity:vector  ETV
+attr interpolationmode  linear
+attr source  residualCapacityChanged
+attr title  "Residual capacity, vector"
+vector 106  Base.hostS02.energyStorage  residualCapacity:vector  ETV
+attr interpolationmode  linear
+attr source  residualCapacityChanged
+attr title  "Residual capacity, vector"
+vector 68  Base.hostM1.energyStorage  residualCapacity:vector  ETV
+attr interpolationmode  linear
+attr source  residualCapacityChanged
+attr title  "Residual capacity, vector"
+vector 82  Base.hostM1.wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 73  Base.hostM1.udp  rcvdPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  rcvdPk
+attr title  "packets received, vector(packetBytes)"
+vector 74  Base.hostM1.udp  passedUpPk:vector(count)  ETV
+attr interpolationmode  none
+attr title  "packets passed up, vector(count)"
+vector 69  Base.hostM1.udpApp[0]  rcvdPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  rcvdPk
+attr title  "packets received, vector(packetBytes)"
+vector 70  Base.hostM1.udpApp[0]  endToEndDelay:vector  ETV
+attr interpolationmode  none
+attr source  messageAge(rcvdPk)
+attr title  "end-to-end delay, vector"
+attr unit  s
+vector 71  Base.hostM1.udpApp[0]  rcvdPkSeqNo:vector  ETV
+attr interpolationmode  none
+attr source  appPkSeqNo(rcvdPk)
+attr title  "received packet sequence number, vector"
+vector 92  Base.hostS00.wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 112  Base.hostS02.wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+47	10164 10 0 0 0 0 1 0 0 0 0
+49	10174 144408 28 40444 0.016728842123 9.99329259458 3385 -0.59711709718952 -3.3457684246e-005 -1026.8263819915 416.52691619131
+51	154582 23945 21 40448 0.015071169097 9.995021783701 808 1000 1000 808000 808000000
+54	178527 23945 23 40449 0.015071169097 9.995021783701 808 1008 1008 814464 820979712
+62	202472 36269 0 40415 0 9.992916947076 1362 0 3 3402 8844
+63	238741 90109 0 40444 0 9.99329259458 3386 0 3 4732 10792
+64	328850 72498 28 40415 0.016728842123 9.992916947076 2720 0 2 2720 4080
+66	401348 10 0 0 0 0 1 0 0 0 0
+68	401358 129053 50 40445 0.018034024248 9.99329259458 2975 -0.054695009189161 -3.6068048496e-005 -83.46953409723 3.0901730210456
+69	530411 13347 242 40386 0.050198948895 9.984188947076 451 1000 1000 451000 451000000
+70	543758 17816 242 40386 0.050198948895 9.984188947076 451 0.035127779798 1.029516415296 123.48161353831 41.099007410962
+71	561574 12811 242 40386 0.050198948895 9.984188947076 451 0 784 177880 95761880
+73	574385 13347 241 40385 0.050198948895 9.984188947076 451 1008 1008 454608 458244864
+74	587732 12788 241 40385 0.050198948895 9.984188947076 451 1 451 101926 30679726
+80	600520 24164 0 40394 0 9.984272947076 910 0 3 2272 5906
+81	624684 79130 0 40445 0 9.99329259458 2976 0 3 4590 10794
+82	703814 48288 71 40394 0.019094024248 9.984272947076 1816 0 2 1816 2724
+84	752102 10 0 0 0 0 1 0 0 0 0
+86	752112 167757 48 40440 0.018033541783 9.993291770726 3902 -0.32179354476405 -3.6067083566e-005 -508.3814674544 107.53594732335
+90	919869 39137 0 40440 0 9.993291770726 1457 0 3 3640 9464
+91	959006 104077 0 40440 0 9.993291770726 3903 0 3 5622 12932
+92	1063083 78234 12656 40441 3.643465490586 9.993291770726 2910 0 2 2911 4367
+94	1141317 10 0 0 0 0 1 0 0 0 0
+96	1141327 140312 30 40442 0.016729375563 9.993292372067 3289 -0.17350999327931 -3.3458751126e-005 -406.64646226346 58.573526961879
+100	1281639 16386 0 12962 0 3.653379926128 610 0 3 1522 3956
+101	1298025 90594 0 40442 0 9.993292372067 3290 0 3 5668 13706
+102	1388619 32728 45 12962 0.018032940442 3.653379926128 1216 0 2 1216 1824
+104	1421347 11 0 0 0 0 1 0 0 0 0
+106	1421358 132013 49 40443 0.01803360757 9.993292372067 2975 -0.051655888744134 -3.606721514e-005 -78.931043048448 2.762455269355
+110	1553371 134 0 12981 0 3.654040593256 6 0 3 12 30
+111	1553505 82121 0 40443 0 9.993292372067 2976 0 3 5946 14862
+112	1635626 224 12742 12981 3.647017305101 3.654040593256 8 0 2 8 12
