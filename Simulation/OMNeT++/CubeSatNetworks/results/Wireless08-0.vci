@@ -1,4 +1,4 @@
-file 2173531 1486641560                                         
+file 2173531 1487090333                                         
 version 2
 run Wireless08-0-20170209-11:59:11-9944
 attr configname Wireless08
@@ -26,7 +26,7 @@ param *.host*.wlan[0].mac.fullDuplex true
 param *.host*.wlan[0].mac.useAck true
 param *.host*.wlan[0].macType "\"CsmaCaMac\""
 param *.host*.wlan[0].radio.displayInterferenceRange false
-param *.host*.wlan[0].radio.energyConsumer transmitterIdlePowerConsumption 2mW
+param *.host*.wlan[0].radio.energyConsumer transmitterIdlePowerConsumption
 param *.host*.wlan[0].radio.energyConsumer.offPowerConsumption 0mW
 param *.host*.wlan[0].radio.energyConsumer.receiverBusyPowerConsumption 5mW
 param *.host*.wlan[0].radio.energyConsumer.receiverIdlePowerConsumption 2mW
@@ -61,154 +61,153 @@ param *.visualizer.physicalLinkVisualizer.packetNameFilter "\"UDPData*\""
 param *.visualizer.sceneVisualizer.descriptionFigure "\"title\""
 param Base.hostType "\"WirelessHost\""
 param Base.mediumType "\"IdealRadioMedium\""
-
 vector 114  Base.hostM0.energyStorage  powerConsumption:vector  ETV
-attr interpolationmode  sample-hold
-attr source  powerConsumptionChanged
-attr title  "Power consumption, vector"
-vector 133  Base.hostM1.energyStorage  powerConsumption:vector  ETV
-attr interpolationmode  sample-hold
-attr source  powerConsumptionChanged
-attr title  "Power consumption, vector"
-vector 151  Base.hostS00.energyStorage  powerConsumption:vector  ETV
-attr interpolationmode  sample-hold
-attr source  powerConsumptionChanged
-attr title  "Power consumption, vector"
-vector 161  Base.hostS01.energyStorage  powerConsumption:vector  ETV
-attr interpolationmode  sample-hold
-attr source  powerConsumptionChanged
-attr title  "Power consumption, vector"
-vector 171  Base.hostS02.energyStorage  powerConsumption:vector  ETV
-attr interpolationmode  sample-hold
-attr source  powerConsumptionChanged
-attr title  "Power consumption, vector"
-vector 129  Base.hostM0.wlan[0].radio  radioMode:vector  ETV
-attr interpolationmode  sample-hold
-attr source  radioModeChanged
-attr title  "Radio mode, vector"
-vector 147  Base.hostM1.wlan[0].radio  radioMode:vector  ETV
-attr interpolationmode  sample-hold
-attr source  radioModeChanged
-attr title  "Radio mode, vector"
-vector 157  Base.hostS00.wlan[0].radio  radioMode:vector  ETV
-attr interpolationmode  sample-hold
-attr source  radioModeChanged
-attr title  "Radio mode, vector"
-vector 167  Base.hostS01.wlan[0].radio  radioMode:vector  ETV
-attr interpolationmode  sample-hold
-attr source  radioModeChanged
-attr title  "Radio mode, vector"
-vector 177  Base.hostS02.wlan[0].radio  radioMode:vector  ETV
-attr interpolationmode  sample-hold
-attr source  radioModeChanged
-attr title  "Radio mode, vector"
-vector 130  Base.hostM0.wlan[0].radio  receptionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  receptionStateChanged
-attr title  "Radio reception state, vector"
-vector 148  Base.hostM1.wlan[0].radio  receptionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  receptionStateChanged
-attr title  "Radio reception state, vector"
-vector 158  Base.hostS00.wlan[0].radio  receptionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  receptionStateChanged
-attr title  "Radio reception state, vector"
-vector 168  Base.hostS01.wlan[0].radio  receptionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  receptionStateChanged
-attr title  "Radio reception state, vector"
-vector 178  Base.hostS02.wlan[0].radio  receptionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  receptionStateChanged
-attr title  "Radio reception state, vector"
-vector 118  Base.hostM0.udpApp[0]  sentPk:vector(packetBytes)  ETV
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, vector(packetBytes)"
-vector 121  Base.hostM0.udp  sentPk:vector(packetBytes)  ETV
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, vector(packetBytes)"
-vector 116  Base.hostM0.energyStorage  residualCapacity:vector  ETV
-attr interpolationmode  linear
-attr source  residualCapacityChanged
-attr title  "Residual capacity, vector"
-vector 131  Base.hostM0.wlan[0].radio  transmissionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  transmissionStateChanged
-attr title  "Radio transmission state, vector"
-vector 163  Base.hostS01.energyStorage  residualCapacity:vector  ETV
-attr interpolationmode  linear
-attr source  residualCapacityChanged
-attr title  "Residual capacity, vector"
-vector 153  Base.hostS00.energyStorage  residualCapacity:vector  ETV
-attr interpolationmode  linear
-attr source  residualCapacityChanged
-attr title  "Residual capacity, vector"
-vector 173  Base.hostS02.energyStorage  residualCapacity:vector  ETV
-attr interpolationmode  linear
-attr source  residualCapacityChanged
-attr title  "Residual capacity, vector"
-vector 135  Base.hostM1.energyStorage  residualCapacity:vector  ETV
-attr interpolationmode  linear
-attr source  residualCapacityChanged
-attr title  "Residual capacity, vector"
-vector 159  Base.hostS00.wlan[0].radio  transmissionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  transmissionStateChanged
-attr title  "Radio transmission state, vector"
-vector 140  Base.hostM1.udp  rcvdPk:vector(packetBytes)  ETV
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, vector(packetBytes)"
-vector 141  Base.hostM1.udp  passedUpPk:vector(count)  ETV
-attr interpolationmode  none
-attr title  "packets passed up, vector(count)"
-vector 136  Base.hostM1.udpApp[0]  rcvdPk:vector(packetBytes)  ETV
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, vector(packetBytes)"
-vector 137  Base.hostM1.udpApp[0]  endToEndDelay:vector  ETV
-attr interpolationmode  none
-attr source  messageAge(rcvdPk)
-attr title  "end-to-end delay, vector"
-attr unit  s
-vector 138  Base.hostM1.udpApp[0]  rcvdPkSeqNo:vector  ETV
-attr interpolationmode  none
-attr source  appPkSeqNo(rcvdPk)
-attr title  "received packet sequence number, vector"
-vector 149  Base.hostM1.wlan[0].radio  transmissionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  transmissionStateChanged
-attr title  "Radio transmission state, vector"
+attr interpolationmode sample-hold
+attr source powerConsumptionChanged
+attr title "Power consumption, vector"
 114	8441 11 0 0 0 0 1 0 0 0 0
-116	8452 199782 22 42942 0.022885250545 9.992554712049 4562 -0.56248776595369 -4.577050109e-005 -1308.4782362568 495.60962534602
-118	208234 24686 16 42954 0.022315250545 9.998022410404 806 1000 1000 806000 806000000
-121	232920 24686 18 42955 0.022315250545 9.998022410404 806 1008 1008 812448 818947584
-129	257606 34653 0 42942 0 9.992554712049 1251 0 3 3125 8125
-130	292259 126569 0 42942 0 9.992554712049 4563 0 3 6719 14513
-131	418828 69262 22 42943 0.022885250545 9.992554712049 2498 0 2 2499 3749
+vector 133  Base.hostM1.energyStorage  powerConsumption:vector  ETV
+attr interpolationmode sample-hold
+attr source powerConsumptionChanged
+attr title "Power consumption, vector"
 133	488090 11 0 0 0 0 1 0 0 0 0
-135	488101 204220 27 42947 0.022886584801 9.992556046305 4585 -0.076067447673747 -4.5773169602e-005 -172.7271105083 8.7235974781626
-136	692321 16365 75 42858 0.039726595185 9.975122688513 532 1000 1000 532000 532000000
-137	708686 21628 75 42858 0.039726595185 9.975122688513 532 0.01741134464 3.312693046206 981.35997707701 2321.6884487252
-138	730314 15723 75 42858 0.039726595185 9.975122688513 532 0 531 141246 50048166
-140	746037 16365 74 42857 0.039726595185 9.975122688513 532 1008 1008 536256 540546048
-141	762402 15725 74 42857 0.039726595185 9.975122688513 532 1 532 141778 50331190
-147	778127 29560 0 42865 0 9.975196688513 1066 0 3 2662 6920
-148	807687 127210 0 42947 0 9.992556046305 4586 0 3 6991 15177
-149	934897 59076 76 42865 0.039736595185 9.975196688513 2128 0 2 2128 3192
+vector 151  Base.hostS00.energyStorage  powerConsumption:vector  ETV
+attr interpolationmode sample-hold
+attr source powerConsumptionChanged
+attr title "Power consumption, vector"
 151	993973 11 0 0 0 0 1 0 0 0 0
-153	993984 200871 25 42945 0.022885922865 9.992555384369 4585 -0.52723416759596 -4.577184573e-005 -1180.7971803673 411.14316709265
-157	1194855 64162 0 42931 0 9.992444039729 2314 0 3 5782 15032
-158	1259017 127208 0 42945 0 9.992555384369 4586 0 3 5704 12486
-159	1386225 128280 41 42931 0.031183922865 9.992444039729 4624 0 2 4624 6936
+vector 161  Base.hostS01.energyStorage  powerConsumption:vector  ETV
+attr interpolationmode sample-hold
+attr source powerConsumptionChanged
+attr title "Power consumption, vector"
 161	1514505 11 0 0 0 0 1 0 0 0 0
-163	1514516 203222 24 42944 0.022885784508 9.992555246012 4585 -0.097033758555476 -4.5771569016e-005 -222.60695987557 14.406229855059
-167	1717738 22 0 0 0 0 2 0 2 2 4
-168	1717760 126175 0 42944 0 9.992555246012 4586 1 3 8640 20230
+vector 171  Base.hostS02.energyStorage  powerConsumption:vector  ETV
+attr interpolationmode sample-hold
+attr source powerConsumptionChanged
+attr title "Power consumption, vector"
 171	1843935 11 0 0 0 0 1 0 0 0 0
-173	1843946 203393 26 42946 0.022886334628 9.992555796132 4585 -0.073003105670121 -4.5772669256e-005 -165.90460266874 8.0446178914517
+vector 129  Base.hostM0.wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode sample-hold
+attr source radioModeChanged
+attr title "Radio mode, vector"
+129	257606 34653 0 42942 0 9.992554712049 1251 0 3 3125 8125
+vector 147  Base.hostM1.wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode sample-hold
+attr source radioModeChanged
+attr title "Radio mode, vector"
+147	778127 29560 0 42865 0 9.975196688513 1066 0 3 2662 6920
+vector 157  Base.hostS00.wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode sample-hold
+attr source radioModeChanged
+attr title "Radio mode, vector"
+157	1194855 64162 0 42931 0 9.992444039729 2314 0 3 5782 15032
+vector 167  Base.hostS01.wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode sample-hold
+attr source radioModeChanged
+attr title "Radio mode, vector"
+167	1717738 22 0 0 0 0 2 0 2 2 4
+vector 177  Base.hostS02.wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode sample-hold
+attr source radioModeChanged
+attr title "Radio mode, vector"
 177	2047339 22 0 0 0 0 2 0 2 2 4
+vector 130  Base.hostM0.wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode sample-hold
+attr source receptionStateChanged
+attr title "Radio reception state, vector"
+130	292259 126569 0 42942 0 9.992554712049 4563 0 3 6719 14513
+vector 148  Base.hostM1.wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode sample-hold
+attr source receptionStateChanged
+attr title "Radio reception state, vector"
+148	807687 127210 0 42947 0 9.992556046305 4586 0 3 6991 15177
+vector 158  Base.hostS00.wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode sample-hold
+attr source receptionStateChanged
+attr title "Radio reception state, vector"
+158	1259017 127208 0 42945 0 9.992555384369 4586 0 3 5704 12486
+vector 168  Base.hostS01.wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode sample-hold
+attr source receptionStateChanged
+attr title "Radio reception state, vector"
+168	1717760 126175 0 42944 0 9.992555246012 4586 1 3 8640 20230
+vector 178  Base.hostS02.wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode sample-hold
+attr source receptionStateChanged
+attr title "Radio reception state, vector"
 178	2047361 126170 0 42946 0 9.992555796132 4586 1 3 8587 19965
+vector 118  Base.hostM0.udpApp[0]  sentPk:vector(packetBytes)  ETV
+attr interpolationmode none
+attr source sentPk
+attr title "packets sent, vector(packetBytes)"
+118	208234 24686 16 42954 0.022315250545 9.998022410404 806 1000 1000 806000 806000000
+vector 121  Base.hostM0.udp  sentPk:vector(packetBytes)  ETV
+attr interpolationmode none
+attr source sentPk
+attr title "packets sent, vector(packetBytes)"
+121	232920 24686 18 42955 0.022315250545 9.998022410404 806 1008 1008 812448 818947584
+vector 116  Base.hostM0.energyStorage  residualCapacity:vector  ETV
+attr interpolationmode linear
+attr source residualCapacityChanged
+attr title "Residual capacity, vector"
+116	8452 199782 22 42942 0.022885250545 9.992554712049 4562 -0.56248776595369 -4.577050109e-005 -1308.4782362568 495.60962534602
+vector 131  Base.hostM0.wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode sample-hold
+attr source transmissionStateChanged
+attr title "Radio transmission state, vector"
+131	418828 69262 22 42943 0.022885250545 9.992554712049 2498 0 2 2499 3749
+vector 163  Base.hostS01.energyStorage  residualCapacity:vector  ETV
+attr interpolationmode linear
+attr source residualCapacityChanged
+attr title "Residual capacity, vector"
+163	1514516 203222 24 42944 0.022885784508 9.992555246012 4585 -0.097033758555476 -4.5771569016e-005 -222.60695987556 14.406229855059
+vector 153  Base.hostS00.energyStorage  residualCapacity:vector  ETV
+attr interpolationmode linear
+attr source residualCapacityChanged
+attr title "Residual capacity, vector"
+153	993984 200871 25 42945 0.022885922865 9.992555384369 4585 -0.52723416759596 -4.577184573e-005 -1180.7971803673 411.14316709265
+vector 173  Base.hostS02.energyStorage  residualCapacity:vector  ETV
+attr interpolationmode linear
+attr source residualCapacityChanged
+attr title "Residual capacity, vector"
+173	1843946 203393 26 42946 0.022886334628 9.992555796132 4585 -0.073003105670121 -4.5772669256e-005 -165.90460266874 8.0446178914517
+vector 135  Base.hostM1.energyStorage  residualCapacity:vector  ETV
+attr interpolationmode linear
+attr source residualCapacityChanged
+attr title "Residual capacity, vector"
+135	488101 204220 27 42947 0.022886584801 9.992556046305 4585 -0.076067447673747 -4.5773169602e-005 -172.7271105083 8.7235974781625
+vector 159  Base.hostS00.wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode sample-hold
+attr source transmissionStateChanged
+attr title "Radio transmission state, vector"
+159	1386225 128280 41 42931 0.031183922865 9.992444039729 4624 0 2 4624 6936
+vector 140  Base.hostM1.udp  rcvdPk:vector(packetBytes)  ETV
+attr interpolationmode none
+attr source rcvdPk
+attr title "packets received, vector(packetBytes)"
+140	746037 16365 74 42857 0.039726595185 9.975122688513 532 1008 1008 536256 540546048
+vector 141  Base.hostM1.udp  passedUpPk:vector(count)  ETV
+attr interpolationmode none
+attr title "packets passed up, vector(count)"
+141	762402 15725 74 42857 0.039726595185 9.975122688513 532 1 532 141778 50331190
+vector 136  Base.hostM1.udpApp[0]  rcvdPk:vector(packetBytes)  ETV
+attr interpolationmode none
+attr source rcvdPk
+attr title "packets received, vector(packetBytes)"
+136	692321 16365 75 42858 0.039726595185 9.975122688513 532 1000 1000 532000 532000000
+vector 137  Base.hostM1.udpApp[0]  endToEndDelay:vector  ETV
+attr interpolationmode none
+attr source messageAge(rcvdPk)
+attr title "end-to-end delay, vector"
+attr unit s
+137	708686 21628 75 42858 0.039726595185 9.975122688513 532 0.01741134464 3.312693046206 981.35997707701 2321.6884487252
+vector 138  Base.hostM1.udpApp[0]  rcvdPkSeqNo:vector  ETV
+attr interpolationmode none
+attr source appPkSeqNo(rcvdPk)
+attr title "received packet sequence number, vector"
+138	730314 15723 75 42858 0.039726595185 9.975122688513 532 0 531 141246 50048166
+vector 149  Base.hostM1.wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode sample-hold
+attr source transmissionStateChanged
+attr title "Radio transmission state, vector"
+149	934897 59076 76 42865 0.039736595185 9.975196688513 2128 0 2 2128 3192

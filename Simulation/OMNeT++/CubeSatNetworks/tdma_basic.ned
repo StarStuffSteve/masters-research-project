@@ -28,10 +28,10 @@ network Base
         @display("bgb=650,500;bgg=100,1,grey95");
         @figure[title](type=label; pos=0,-1; anchor=sw; color=darkblue);
 
-		@signal[nodeMaster1_rcvdPk];
+		@signal[nodeMaster0_rcvdPk];
         @figure[rcvdPkText](type=indicatorText; pos=420,20; anchor=w; font=,20; textFormat="packets received: %g"; initialValue=0);
-        @statistic[rcvdPk](source=nodeMaster1_rcvdPk; record=figure(count); targetFigure=rcvdPkText);
-        @delegatesignal[rcvdPk](source=nodeMaster[1].udpApp[0].rcvdPk; target=nodeMaster1_rcvdPk);
+        @statistic[rcvdPk](source=nodeMaster0_rcvdPk; record=figure(count); targetFigure=rcvdPkText);
+        @delegatesignal[rcvdPk](source=nodeMaster[0].udpApp[0].rcvdPk; target=nodeMaster0_rcvdPk);
 
     submodules: // Need to define loops for node creation
         visualizer: IntegratedCanvasVisualizer {
@@ -55,7 +55,7 @@ network Base
         // Masters
         nodeMaster[numMasters]: AODVRouter{
             parameters:
-                @display("r=,,#707070"); 
+                @display("r=,,#707070");
         }
         // Slaves
 //        nodeSlave[numSlaves]: WirelessHost{
