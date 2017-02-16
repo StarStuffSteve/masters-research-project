@@ -1,15 +1,15 @@
 version 2
-run BaseConfig-0-20170214-23:31:56-3804
-attr N 5
+run BaseConfig-0-20170216-11:45:25-1216
+attr N 2
 attr configname BaseConfig
-attr datetime 20170214-23:31:56
+attr datetime 20170216-11:45:25
 attr experiment BaseConfig
 attr inifile omnetpp.ini
-attr iterationvars $N=5
-attr iterationvars2 "$N=5, $repetition=0"
-attr measurement $N=5
+attr iterationvars $N=2
+attr iterationvars2 "$N=2, $repetition=0"
+attr measurement $N=2
 attr network Base
-attr processid 3804
+attr processid 1216
 attr repetition 0
 attr replication #0
 attr resultdir results
@@ -18,7 +18,12 @@ attr seedset 0
 param *.configurator.addStaticRoutes false
 param *.configurator.config "xml(\"<config><interface hosts='**' address='10.0.0.x' netmask='255.255.255.0'/><autoroute metric='errorRate'/></config>\")"
 param *.configurator.optimizeRoutes false
+param *.node*[*].wlan[*].mac.address "\"auto\""
+param *.node*[*].wlan[*].mac.headerLength 10B
+param *.node*[*].wlan[*].mac.mtu 0B
 param *.node*[*].wlan[*].mac.numSlots 2*${N}
+param *.node*[*].wlan[*].mac.reservedMobileSlots 2
+param *.node*[*].wlan[*].mac.slotDuration 100ms
 param *.node*[*].wlan[*].macType "\"LMacLayer\""
 param *.node*[*].wlan[*].radio.transmitter.bitrate 2Mbps
 param *.node*[*].wlan[*].radio.transmitter.communicationRange 200m
@@ -46,26 +51,26 @@ param *.nodeMaster[1..].**.startAngle "parentIndex() * (360deg/(${N}-1))"
 param *.nodeMaster[1..].mobilityType "\"CircleMobility\""
 param *.nodeMaster[1..].udpApp[0].destAddresses "\"nodeMaster[0]\""
 param *.nodeMaster[1..].udpApp[0].destPort 5000
-param *.nodeMaster[1..].udpApp[0].messageLength 1000B
+param *.nodeMaster[1..].udpApp[0].messageLength exponential(128B)
 param *.nodeMaster[1..].udpApp[0].packetName "\"UDPData\""
-param *.nodeMaster[1..].udpApp[0].sendInterval exponential(12ms)
+param *.nodeMaster[1..].udpApp[0].sendInterval exponential(10s)
 param *.nodeMaster[1..].udpApp[0].startTime 5s
 param *.nodeMaster[1..].udpApp[0].typename "\"UDPBasicApp\""
-param *.numMasters ${N=5}
+param *.numMasters ${N=2}
 param *.radioMediumType "\"IdealRadioMedium\""
 param *.visualizer.dataLinkVisualizer.packetNameFilter "\"UDPData*\""
 param *.visualizer.networkRouteVisualizer.packetNameFilter "\"UDPData*\""
 param *.visualizer.physicalLinkVisualizer.packetNameFilter "\"UDPData*\""
 
-scalar . 	N 	5
-scalar Base.radioMedium.propagation 	"Arrival computation count" 	6052
-scalar Base.radioMedium 	"transmission count" 	1513
-scalar Base.radioMedium 	"radio frame send count" 	6052
-scalar Base.radioMedium 	"reception computation count" 	6052
-scalar Base.radioMedium 	"interference computation count" 	25236
-scalar Base.radioMedium 	"reception decision computation count" 	5349
-scalar Base.radioMedium 	"listening decision computation count" 	14534
-scalar Base.radioMedium 	"reception cache hit" 	84.137967185616
+scalar . 	N 	2
+scalar Base.radioMedium.propagation 	"Arrival computation count" 	1510
+scalar Base.radioMedium 	"transmission count" 	1510
+scalar Base.radioMedium 	"radio frame send count" 	1510
+scalar Base.radioMedium 	"reception computation count" 	1510
+scalar Base.radioMedium 	"interference computation count" 	9698
+scalar Base.radioMedium 	"reception decision computation count" 	1509
+scalar Base.radioMedium 	"listening decision computation count" 	6679
+scalar Base.radioMedium 	"reception cache hit" 	85.708877531705
 attr unit  %
 scalar Base.radioMedium 	"interference cache hit" 	66.666666666667
 attr unit  %
@@ -79,13 +84,13 @@ scalar Base.radioMedium 	"reception result cache hit" 	0
 attr unit  %
 scalar Base.nodeMaster[0].networkLayer.arp 	sentReply:count 	0
 attr title  "ARP replies sent, count"
-scalar Base.nodeMaster[0].networkLayer.arp 	sentReq:count 	12
+scalar Base.nodeMaster[0].networkLayer.arp 	sentReq:count 	2
 attr title  "ARP request sent, count"
-scalar Base.nodeMaster[0].networkLayer.arp 	failedARPResolution:count 	2
+scalar Base.nodeMaster[0].networkLayer.arp 	failedARPResolution:count 	0
 attr title  "ARP failed resolutions, count"
-scalar Base.nodeMaster[0].networkLayer.arp 	completedARPResolution:count 	12
+scalar Base.nodeMaster[0].networkLayer.arp 	completedARPResolution:count 	2
 attr title  "ARP completed resolutions, count"
-scalar Base.nodeMaster[0].networkLayer.arp 	initiatedARPResolution:count 	4
+scalar Base.nodeMaster[0].networkLayer.arp 	initiatedARPResolution:count 	2
 attr title  "ARP initiated resolutions, count"
 scalar Base.nodeMaster[0].lo0.lo 	droppedPkBitError:count 	0
 attr interpolationmode  none
@@ -112,7 +117,7 @@ attr interpolationmode  none
 attr source  packetSentToUpper
 attr title  "packets passed to higher layer, sum(packetBytes)"
 statistic Base.nodeMaster[0].wlan[0].radio 	symbolErrorRate:histogram
-field count 1248
+field count 772
 field mean 0
 field stddev 0
 field sum 0
@@ -137,7 +142,7 @@ bin	-0.13333333333333	0
 bin	-0.1	0
 bin	-0.066666666666667	0
 bin	-0.033333333333333	0
-bin	0	1248
+bin	0	772
 bin	0.033333333333333	0
 bin	0.066666666666667	0
 bin	0.1	0
@@ -154,7 +159,7 @@ bin	0.43333333333333	0
 bin	0.46666666666667	0
 bin	0.5	0
 statistic Base.nodeMaster[0].wlan[0].radio 	bitErrorRate:histogram
-field count 1248
+field count 772
 field mean 0
 field stddev 0
 field sum 0
@@ -179,7 +184,7 @@ bin	-0.13333333333333	0
 bin	-0.1	0
 bin	-0.066666666666667	0
 bin	-0.033333333333333	0
-bin	0	1248
+bin	0	772
 bin	0.033333333333333	0
 bin	0.066666666666667	0
 bin	0.1	0
@@ -196,7 +201,7 @@ bin	0.43333333333333	0
 bin	0.46666666666667	0
 bin	0.5	0
 statistic Base.nodeMaster[0].wlan[0].radio 	packetErrorRate:histogram
-field count 1248
+field count 772
 field mean 0
 field stddev 0
 field sum 0
@@ -221,7 +226,7 @@ bin	-0.13333333333333	0
 bin	-0.1	0
 bin	-0.066666666666667	0
 bin	-0.033333333333333	0
-bin	0	1248
+bin	0	772
 bin	0.033333333333333	0
 bin	0.066666666666667	0
 bin	0.1	0
@@ -238,7 +243,7 @@ bin	0.43333333333333	0
 bin	0.46666666666667	0
 bin	0.5	0
 statistic Base.nodeMaster[0].wlan[0].radio 	minSNIR:histogram
-field count 1248
+field count 772
 field mean nan
 field stddev nan
 field sum nan
@@ -247,7 +252,7 @@ field min nan
 field max nan
 attr source  minSNIR
 attr title  "Min SNIR, histogram"
-bin	-INF	1248
+bin	-INF	772
 bin	nan	0
 bin	nan	0
 bin	nan	0
@@ -279,81 +284,81 @@ bin	nan	0
 bin	nan	0
 bin	nan	0
 bin	nan	0
-scalar Base.nodeMaster[0].wlan[0].radio 	transmissionState:count 	1026
+scalar Base.nodeMaster[0].wlan[0].radio 	transmissionState:count 	2918
 attr interpolationmode  sample-hold
 attr source  transmissionStateChanged
 attr title  "Radio transmission state, count"
-scalar Base.nodeMaster[0].wlan[0].radio 	receptionState:count 	6170
+scalar Base.nodeMaster[0].wlan[0].radio 	receptionState:count 	6714
 attr interpolationmode  sample-hold
 attr source  receptionStateChanged
 attr title  "Radio reception state, count"
-scalar Base.nodeMaster[0].wlan[0].radio 	radioMode:count 	3923
+scalar Base.nodeMaster[0].wlan[0].radio 	radioMode:count 	5892
 attr interpolationmode  sample-hold
 attr source  radioModeChanged
 attr title  "Radio mode, count"
-scalar Base.nodeMaster[0].udpApp[0] 	rcvdPk:count 	217
+scalar Base.nodeMaster[0].udpApp[0] 	rcvdPk:count 	20
 attr interpolationmode  none
 attr source  rcvdPk
 attr title  "packets received, count"
-scalar Base.nodeMaster[0].udpApp[0] 	rcvdPk:sum(packetBytes) 	217000
+scalar Base.nodeMaster[0].udpApp[0] 	rcvdPk:sum(packetBytes) 	2134
 attr interpolationmode  none
 attr source  rcvdPk
 attr title  "packets received, sum(packetBytes)"
-scalar Base.nodeMaster[0].udpApp[0] 	throughput:last 	8883.1485163459
+scalar Base.nodeMaster[0].udpApp[0] 	throughput:last 	87.700281786983
 attr source  throughput(rcvdPk)
 attr title  "throughput, last"
 attr unit  bps
 statistic Base.nodeMaster[0].udpApp[0] 	endToEndDelay:histogram
-field count 217
-field mean 11.353744480594
-field stddev 1.5499339051972
-field sum 2463.7625522888
-field sqrsum 28491.826223406
-field min 8.407873187823
-field max 21.34895587077
+field count 20
+field mean 0.8111390534481
+field stddev 0.54237260213795
+field sum 16.222781068962
+field sqrsum 18.748124032021
+field min 0.026734950467
+field max 1.903095002048
 attr interpolationmode  none
 attr source  messageAge(rcvdPk)
 attr title  "end-to-end delay, histogram"
 attr unit  s
 bin	-INF	0
-bin	1.9373318463495	0
-bin	2.8000706918793	0
-bin	3.6628095374091	0
-bin	4.5255483829389	0
-bin	5.3882872284687	0
-bin	6.2510260739985	0
-bin	7.1137649195283	0
-bin	7.9765037650581	1
-bin	8.8392426105879	1
-bin	9.7019814561177	1
-bin	10.564720301647	197
-bin	11.427459147177	1
-bin	12.290197992707	2
-bin	13.152936838237	2
-bin	14.015675683767	2
-bin	14.878414529296	2
-bin	15.741153374826	2
-bin	16.603892220356	2
-bin	17.466631065886	0
-bin	18.329369911416	1
-bin	19.192108756945	1
-bin	20.054847602475	1
-bin	20.917586448005	1
-bin	21.780325293535	0
-bin	22.643064139065	0
-bin	23.505802984594	0
-bin	24.368541830124	0
-bin	25.231280675654	0
-bin	26.094019521184	0
-bin	26.956758366714	0
-bin	27.819497212243	0
+bin	-0.9114450753235	0
+bin	-0.7863544052181	0
+bin	-0.6612637351127	0
+bin	-0.5361730650073	0
+bin	-0.4110823949019	0
+bin	-0.2859917247965	0
+bin	-0.1609010546911	0
+bin	-0.0358103845857	2
+bin	0.0892802855197	1
+bin	0.2143709556251	3
+bin	0.3394616257305	1
+bin	0.4645522958359	0
+bin	0.5896429659413	0
+bin	0.7147336360467	1
+bin	0.8398243061521	4
+bin	0.9649149762575	1
+bin	1.0900056463629	5
+bin	1.2150963164683	0
+bin	1.3401869865737	0
+bin	1.4652776566791	0
+bin	1.5903683267845	0
+bin	1.7154589968899	1
+bin	1.8405496669953	1
+bin	1.9656403371007	0
+bin	2.0907310072061	0
+bin	2.2158216773115	0
+bin	2.3409123474169	0
+bin	2.4660030175223	0
+bin	2.5910936876277	0
+bin	2.7161843577331	0
+bin	2.8412750278385	0
 scalar Base.nodeMaster[0].udp 	droppedPkBadChecksum:count 	0
 attr interpolationmode  none
 attr title  "packets dropped (checksum error), count"
 scalar Base.nodeMaster[0].udp 	droppedPkWrongPort:count 	0
 attr interpolationmode  none
 attr title  "packets dropped (wrong port), count"
-scalar Base.nodeMaster[0].udp 	passedUpPk:count 	217
+scalar Base.nodeMaster[0].udp 	passedUpPk:count 	20
 attr interpolationmode  none
 attr title  "packets passed up, count"
 scalar Base.nodeMaster[0].udp 	sentPk:count 	0
@@ -364,21 +369,21 @@ scalar Base.nodeMaster[0].udp 	sentPk:sum(packetBytes) 	0
 attr interpolationmode  none
 attr source  sentPk
 attr title  "packets sent, sum(packetBytes)"
-scalar Base.nodeMaster[0].udp 	rcvdPk:count 	217
+scalar Base.nodeMaster[0].udp 	rcvdPk:count 	20
 attr interpolationmode  none
 attr source  rcvdPk
 attr title  "packets received, count"
-scalar Base.nodeMaster[0].udp 	rcvdPk:sum(packetBytes) 	218736
+scalar Base.nodeMaster[0].udp 	rcvdPk:sum(packetBytes) 	2294
 attr interpolationmode  none
 attr source  rcvdPk
 attr title  "packets received, sum(packetBytes)"
-scalar Base.nodeMaster[1].networkLayer.arp 	sentReply:count 	3
+scalar Base.nodeMaster[1].networkLayer.arp 	sentReply:count 	2
 attr title  "ARP replies sent, count"
 scalar Base.nodeMaster[1].networkLayer.arp 	sentReq:count 	0
 attr title  "ARP request sent, count"
 scalar Base.nodeMaster[1].networkLayer.arp 	failedARPResolution:count 	0
 attr title  "ARP failed resolutions, count"
-scalar Base.nodeMaster[1].networkLayer.arp 	completedARPResolution:count 	4
+scalar Base.nodeMaster[1].networkLayer.arp 	completedARPResolution:count 	2
 attr title  "ARP completed resolutions, count"
 scalar Base.nodeMaster[1].networkLayer.arp 	initiatedARPResolution:count 	0
 attr title  "ARP initiated resolutions, count"
@@ -407,7 +412,7 @@ attr interpolationmode  none
 attr source  packetSentToUpper
 attr title  "packets passed to higher layer, sum(packetBytes)"
 statistic Base.nodeMaster[1].wlan[0].radio 	symbolErrorRate:histogram
-field count 1024
+field count 737
 field mean 0
 field stddev 0
 field sum 0
@@ -432,7 +437,7 @@ bin	-0.13333333333333	0
 bin	-0.1	0
 bin	-0.066666666666667	0
 bin	-0.033333333333333	0
-bin	0	1024
+bin	0	737
 bin	0.033333333333333	0
 bin	0.066666666666667	0
 bin	0.1	0
@@ -449,7 +454,7 @@ bin	0.43333333333333	0
 bin	0.46666666666667	0
 bin	0.5	0
 statistic Base.nodeMaster[1].wlan[0].radio 	bitErrorRate:histogram
-field count 1024
+field count 737
 field mean 0
 field stddev 0
 field sum 0
@@ -474,7 +479,7 @@ bin	-0.13333333333333	0
 bin	-0.1	0
 bin	-0.066666666666667	0
 bin	-0.033333333333333	0
-bin	0	1024
+bin	0	737
 bin	0.033333333333333	0
 bin	0.066666666666667	0
 bin	0.1	0
@@ -491,7 +496,7 @@ bin	0.43333333333333	0
 bin	0.46666666666667	0
 bin	0.5	0
 statistic Base.nodeMaster[1].wlan[0].radio 	packetErrorRate:histogram
-field count 1024
+field count 737
 field mean 0
 field stddev 0
 field sum 0
@@ -516,7 +521,7 @@ bin	-0.13333333333333	0
 bin	-0.1	0
 bin	-0.066666666666667	0
 bin	-0.033333333333333	0
-bin	0	1024
+bin	0	737
 bin	0.033333333333333	0
 bin	0.066666666666667	0
 bin	0.1	0
@@ -533,7 +538,7 @@ bin	0.43333333333333	0
 bin	0.46666666666667	0
 bin	0.5	0
 statistic Base.nodeMaster[1].wlan[0].radio 	minSNIR:histogram
-field count 1024
+field count 737
 field mean nan
 field stddev nan
 field sum nan
@@ -542,7 +547,7 @@ field min nan
 field max nan
 attr source  minSNIR
 attr title  "Min SNIR, histogram"
-bin	-INF	1024
+bin	-INF	737
 bin	nan	0
 bin	nan	0
 bin	nan	0
@@ -574,25 +579,25 @@ bin	nan	0
 bin	nan	0
 bin	nan	0
 bin	nan	0
-scalar Base.nodeMaster[1].wlan[0].radio 	transmissionState:count 	1014
+scalar Base.nodeMaster[1].wlan[0].radio 	transmissionState:count 	2992
 attr interpolationmode  sample-hold
 attr source  transmissionStateChanged
 attr title  "Radio transmission state, count"
-scalar Base.nodeMaster[1].wlan[0].radio 	receptionState:count 	5722
+scalar Base.nodeMaster[1].wlan[0].radio 	receptionState:count 	6644
 attr interpolationmode  sample-hold
 attr source  receptionStateChanged
 attr title  "Radio reception state, count"
-scalar Base.nodeMaster[1].wlan[0].radio 	radioMode:count 	3923
+scalar Base.nodeMaster[1].wlan[0].radio 	radioMode:count 	5894
 attr interpolationmode  sample-hold
 attr source  radioModeChanged
 attr title  "Radio mode, count"
-scalar Base.nodeMaster[1].udpApp[0] 	"packets sent" 	9868
+scalar Base.nodeMaster[1].udpApp[0] 	"packets sent" 	20
 scalar Base.nodeMaster[1].udpApp[0] 	"packets received" 	0
-scalar Base.nodeMaster[1].udpApp[0] 	sentPk:count 	9868
+scalar Base.nodeMaster[1].udpApp[0] 	sentPk:count 	20
 attr interpolationmode  none
 attr source  sentPk
 attr title  "packets sent, count"
-scalar Base.nodeMaster[1].udpApp[0] 	sentPk:sum(packetBytes) 	9868000
+scalar Base.nodeMaster[1].udpApp[0] 	sentPk:sum(packetBytes) 	2134
 attr interpolationmode  none
 attr source  sentPk
 attr title  "packets sent, sum(packetBytes)"
@@ -629,11 +634,11 @@ attr title  "packets dropped (wrong port), count"
 scalar Base.nodeMaster[1].udp 	passedUpPk:count 	0
 attr interpolationmode  none
 attr title  "packets passed up, count"
-scalar Base.nodeMaster[1].udp 	sentPk:count 	9868
+scalar Base.nodeMaster[1].udp 	sentPk:count 	20
 attr interpolationmode  none
 attr source  sentPk
 attr title  "packets sent, count"
-scalar Base.nodeMaster[1].udp 	sentPk:sum(packetBytes) 	9946944
+scalar Base.nodeMaster[1].udp 	sentPk:sum(packetBytes) 	2294
 attr interpolationmode  none
 attr source  sentPk
 attr title  "packets sent, sum(packetBytes)"
@@ -642,825 +647,6 @@ attr interpolationmode  none
 attr source  rcvdPk
 attr title  "packets received, count"
 scalar Base.nodeMaster[1].udp 	rcvdPk:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, sum(packetBytes)"
-scalar Base.nodeMaster[2].networkLayer.arp 	sentReply:count 	3
-attr title  "ARP replies sent, count"
-scalar Base.nodeMaster[2].networkLayer.arp 	sentReq:count 	3
-attr title  "ARP request sent, count"
-scalar Base.nodeMaster[2].networkLayer.arp 	failedARPResolution:count 	1
-attr title  "ARP failed resolutions, count"
-scalar Base.nodeMaster[2].networkLayer.arp 	completedARPResolution:count 	12
-attr title  "ARP completed resolutions, count"
-scalar Base.nodeMaster[2].networkLayer.arp 	initiatedARPResolution:count 	1
-attr title  "ARP initiated resolutions, count"
-scalar Base.nodeMaster[2].lo0.lo 	droppedPkBitError:count 	0
-attr interpolationmode  none
-attr source  dropPkBitError
-attr title  "packets dropped/bit error, count"
-scalar Base.nodeMaster[2].lo0.lo 	droppedPkBitError:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  dropPkBitError
-attr title  "packets dropped/bit error, sum(packetBytes)"
-scalar Base.nodeMaster[2].lo0.lo 	rcvdPkFromHL:count 	0
-attr interpolationmode  none
-attr source  packetReceivedFromUpper
-attr title  "packets received from higher layer, count"
-scalar Base.nodeMaster[2].lo0.lo 	rcvdPkFromHL:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  packetReceivedFromUpper
-attr title  "packets received from higher layer, sum(packetBytes)"
-scalar Base.nodeMaster[2].lo0.lo 	passedUpPk:count 	0
-attr interpolationmode  none
-attr source  packetSentToUpper
-attr title  "packets passed to higher layer, count"
-scalar Base.nodeMaster[2].lo0.lo 	passedUpPk:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  packetSentToUpper
-attr title  "packets passed to higher layer, sum(packetBytes)"
-statistic Base.nodeMaster[2].wlan[0].radio 	symbolErrorRate:histogram
-field count 1027
-field mean 0
-field stddev 0
-field sum 0
-field sqrsum 0
-field min 0
-field max 0
-attr source  symbolErrorRate
-attr title  "Symbol error rate, histogram"
-bin	-INF	0
-bin	-0.5	0
-bin	-0.46666666666667	0
-bin	-0.43333333333333	0
-bin	-0.4	0
-bin	-0.36666666666667	0
-bin	-0.33333333333333	0
-bin	-0.3	0
-bin	-0.26666666666667	0
-bin	-0.23333333333333	0
-bin	-0.2	0
-bin	-0.16666666666667	0
-bin	-0.13333333333333	0
-bin	-0.1	0
-bin	-0.066666666666667	0
-bin	-0.033333333333333	0
-bin	0	1027
-bin	0.033333333333333	0
-bin	0.066666666666667	0
-bin	0.1	0
-bin	0.13333333333333	0
-bin	0.16666666666667	0
-bin	0.2	0
-bin	0.23333333333333	0
-bin	0.26666666666667	0
-bin	0.3	0
-bin	0.33333333333333	0
-bin	0.36666666666667	0
-bin	0.4	0
-bin	0.43333333333333	0
-bin	0.46666666666667	0
-bin	0.5	0
-statistic Base.nodeMaster[2].wlan[0].radio 	bitErrorRate:histogram
-field count 1027
-field mean 0
-field stddev 0
-field sum 0
-field sqrsum 0
-field min 0
-field max 0
-attr source  bitErrorRate
-attr title  "Bit error rate, histogram"
-bin	-INF	0
-bin	-0.5	0
-bin	-0.46666666666667	0
-bin	-0.43333333333333	0
-bin	-0.4	0
-bin	-0.36666666666667	0
-bin	-0.33333333333333	0
-bin	-0.3	0
-bin	-0.26666666666667	0
-bin	-0.23333333333333	0
-bin	-0.2	0
-bin	-0.16666666666667	0
-bin	-0.13333333333333	0
-bin	-0.1	0
-bin	-0.066666666666667	0
-bin	-0.033333333333333	0
-bin	0	1027
-bin	0.033333333333333	0
-bin	0.066666666666667	0
-bin	0.1	0
-bin	0.13333333333333	0
-bin	0.16666666666667	0
-bin	0.2	0
-bin	0.23333333333333	0
-bin	0.26666666666667	0
-bin	0.3	0
-bin	0.33333333333333	0
-bin	0.36666666666667	0
-bin	0.4	0
-bin	0.43333333333333	0
-bin	0.46666666666667	0
-bin	0.5	0
-statistic Base.nodeMaster[2].wlan[0].radio 	packetErrorRate:histogram
-field count 1027
-field mean 0
-field stddev 0
-field sum 0
-field sqrsum 0
-field min 0
-field max 0
-attr source  packetErrorRate
-attr title  "Packet error rate, histogram"
-bin	-INF	0
-bin	-0.5	0
-bin	-0.46666666666667	0
-bin	-0.43333333333333	0
-bin	-0.4	0
-bin	-0.36666666666667	0
-bin	-0.33333333333333	0
-bin	-0.3	0
-bin	-0.26666666666667	0
-bin	-0.23333333333333	0
-bin	-0.2	0
-bin	-0.16666666666667	0
-bin	-0.13333333333333	0
-bin	-0.1	0
-bin	-0.066666666666667	0
-bin	-0.033333333333333	0
-bin	0	1027
-bin	0.033333333333333	0
-bin	0.066666666666667	0
-bin	0.1	0
-bin	0.13333333333333	0
-bin	0.16666666666667	0
-bin	0.2	0
-bin	0.23333333333333	0
-bin	0.26666666666667	0
-bin	0.3	0
-bin	0.33333333333333	0
-bin	0.36666666666667	0
-bin	0.4	0
-bin	0.43333333333333	0
-bin	0.46666666666667	0
-bin	0.5	0
-statistic Base.nodeMaster[2].wlan[0].radio 	minSNIR:histogram
-field count 1027
-field mean nan
-field stddev nan
-field sum nan
-field sqrsum nan
-field min nan
-field max nan
-attr source  minSNIR
-attr title  "Min SNIR, histogram"
-bin	-INF	1027
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-scalar Base.nodeMaster[2].wlan[0].radio 	transmissionState:count 	1232
-attr interpolationmode  sample-hold
-attr source  transmissionStateChanged
-attr title  "Radio transmission state, count"
-scalar Base.nodeMaster[2].wlan[0].radio 	receptionState:count 	5728
-attr interpolationmode  sample-hold
-attr source  receptionStateChanged
-attr title  "Radio reception state, count"
-scalar Base.nodeMaster[2].wlan[0].radio 	radioMode:count 	3923
-attr interpolationmode  sample-hold
-attr source  radioModeChanged
-attr title  "Radio mode, count"
-scalar Base.nodeMaster[2].udpApp[0] 	"packets sent" 	9967
-scalar Base.nodeMaster[2].udpApp[0] 	"packets received" 	0
-scalar Base.nodeMaster[2].udpApp[0] 	sentPk:count 	9967
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, count"
-scalar Base.nodeMaster[2].udpApp[0] 	sentPk:sum(packetBytes) 	9967000
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, sum(packetBytes)"
-scalar Base.nodeMaster[2].udpApp[0] 	rcvdPk:count 	0
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, count"
-scalar Base.nodeMaster[2].udpApp[0] 	rcvdPk:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, sum(packetBytes)"
-scalar Base.nodeMaster[2].udpApp[0] 	throughput:last 	nan
-attr source  throughput(rcvdPk)
-attr title  "throughput, last"
-attr unit  bps
-statistic Base.nodeMaster[2].udpApp[0] 	rcvdPkLifetime:stats
-field count 0
-field mean nan
-field stddev nan
-field sum 0
-field sqrsum 0
-field min nan
-field max nan
-attr interpolationmode  none
-attr source  messageAge(rcvdPk)
-attr title  "received packet lifetime, stats"
-attr unit  s
-scalar Base.nodeMaster[2].udp 	droppedPkBadChecksum:count 	0
-attr interpolationmode  none
-attr title  "packets dropped (checksum error), count"
-scalar Base.nodeMaster[2].udp 	droppedPkWrongPort:count 	0
-attr interpolationmode  none
-attr title  "packets dropped (wrong port), count"
-scalar Base.nodeMaster[2].udp 	passedUpPk:count 	0
-attr interpolationmode  none
-attr title  "packets passed up, count"
-scalar Base.nodeMaster[2].udp 	sentPk:count 	9967
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, count"
-scalar Base.nodeMaster[2].udp 	sentPk:sum(packetBytes) 	10046736
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, sum(packetBytes)"
-scalar Base.nodeMaster[2].udp 	rcvdPk:count 	0
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, count"
-scalar Base.nodeMaster[2].udp 	rcvdPk:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, sum(packetBytes)"
-scalar Base.nodeMaster[3].networkLayer.arp 	sentReply:count 	3
-attr title  "ARP replies sent, count"
-scalar Base.nodeMaster[3].networkLayer.arp 	sentReq:count 	0
-attr title  "ARP request sent, count"
-scalar Base.nodeMaster[3].networkLayer.arp 	failedARPResolution:count 	0
-attr title  "ARP failed resolutions, count"
-scalar Base.nodeMaster[3].networkLayer.arp 	completedARPResolution:count 	10
-attr title  "ARP completed resolutions, count"
-scalar Base.nodeMaster[3].networkLayer.arp 	initiatedARPResolution:count 	0
-attr title  "ARP initiated resolutions, count"
-scalar Base.nodeMaster[3].lo0.lo 	droppedPkBitError:count 	0
-attr interpolationmode  none
-attr source  dropPkBitError
-attr title  "packets dropped/bit error, count"
-scalar Base.nodeMaster[3].lo0.lo 	droppedPkBitError:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  dropPkBitError
-attr title  "packets dropped/bit error, sum(packetBytes)"
-scalar Base.nodeMaster[3].lo0.lo 	rcvdPkFromHL:count 	0
-attr interpolationmode  none
-attr source  packetReceivedFromUpper
-attr title  "packets received from higher layer, count"
-scalar Base.nodeMaster[3].lo0.lo 	rcvdPkFromHL:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  packetReceivedFromUpper
-attr title  "packets received from higher layer, sum(packetBytes)"
-scalar Base.nodeMaster[3].lo0.lo 	passedUpPk:count 	0
-attr interpolationmode  none
-attr source  packetSentToUpper
-attr title  "packets passed to higher layer, count"
-scalar Base.nodeMaster[3].lo0.lo 	passedUpPk:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  packetSentToUpper
-attr title  "packets passed to higher layer, sum(packetBytes)"
-statistic Base.nodeMaster[3].wlan[0].radio 	symbolErrorRate:histogram
-field count 1026
-field mean 0
-field stddev 0
-field sum 0
-field sqrsum 0
-field min 0
-field max 0
-attr source  symbolErrorRate
-attr title  "Symbol error rate, histogram"
-bin	-INF	0
-bin	-0.5	0
-bin	-0.46666666666667	0
-bin	-0.43333333333333	0
-bin	-0.4	0
-bin	-0.36666666666667	0
-bin	-0.33333333333333	0
-bin	-0.3	0
-bin	-0.26666666666667	0
-bin	-0.23333333333333	0
-bin	-0.2	0
-bin	-0.16666666666667	0
-bin	-0.13333333333333	0
-bin	-0.1	0
-bin	-0.066666666666667	0
-bin	-0.033333333333333	0
-bin	0	1026
-bin	0.033333333333333	0
-bin	0.066666666666667	0
-bin	0.1	0
-bin	0.13333333333333	0
-bin	0.16666666666667	0
-bin	0.2	0
-bin	0.23333333333333	0
-bin	0.26666666666667	0
-bin	0.3	0
-bin	0.33333333333333	0
-bin	0.36666666666667	0
-bin	0.4	0
-bin	0.43333333333333	0
-bin	0.46666666666667	0
-bin	0.5	0
-statistic Base.nodeMaster[3].wlan[0].radio 	bitErrorRate:histogram
-field count 1026
-field mean 0
-field stddev 0
-field sum 0
-field sqrsum 0
-field min 0
-field max 0
-attr source  bitErrorRate
-attr title  "Bit error rate, histogram"
-bin	-INF	0
-bin	-0.5	0
-bin	-0.46666666666667	0
-bin	-0.43333333333333	0
-bin	-0.4	0
-bin	-0.36666666666667	0
-bin	-0.33333333333333	0
-bin	-0.3	0
-bin	-0.26666666666667	0
-bin	-0.23333333333333	0
-bin	-0.2	0
-bin	-0.16666666666667	0
-bin	-0.13333333333333	0
-bin	-0.1	0
-bin	-0.066666666666667	0
-bin	-0.033333333333333	0
-bin	0	1026
-bin	0.033333333333333	0
-bin	0.066666666666667	0
-bin	0.1	0
-bin	0.13333333333333	0
-bin	0.16666666666667	0
-bin	0.2	0
-bin	0.23333333333333	0
-bin	0.26666666666667	0
-bin	0.3	0
-bin	0.33333333333333	0
-bin	0.36666666666667	0
-bin	0.4	0
-bin	0.43333333333333	0
-bin	0.46666666666667	0
-bin	0.5	0
-statistic Base.nodeMaster[3].wlan[0].radio 	packetErrorRate:histogram
-field count 1026
-field mean 0
-field stddev 0
-field sum 0
-field sqrsum 0
-field min 0
-field max 0
-attr source  packetErrorRate
-attr title  "Packet error rate, histogram"
-bin	-INF	0
-bin	-0.5	0
-bin	-0.46666666666667	0
-bin	-0.43333333333333	0
-bin	-0.4	0
-bin	-0.36666666666667	0
-bin	-0.33333333333333	0
-bin	-0.3	0
-bin	-0.26666666666667	0
-bin	-0.23333333333333	0
-bin	-0.2	0
-bin	-0.16666666666667	0
-bin	-0.13333333333333	0
-bin	-0.1	0
-bin	-0.066666666666667	0
-bin	-0.033333333333333	0
-bin	0	1026
-bin	0.033333333333333	0
-bin	0.066666666666667	0
-bin	0.1	0
-bin	0.13333333333333	0
-bin	0.16666666666667	0
-bin	0.2	0
-bin	0.23333333333333	0
-bin	0.26666666666667	0
-bin	0.3	0
-bin	0.33333333333333	0
-bin	0.36666666666667	0
-bin	0.4	0
-bin	0.43333333333333	0
-bin	0.46666666666667	0
-bin	0.5	0
-statistic Base.nodeMaster[3].wlan[0].radio 	minSNIR:histogram
-field count 1026
-field mean nan
-field stddev nan
-field sum nan
-field sqrsum nan
-field min nan
-field max nan
-attr source  minSNIR
-attr title  "Min SNIR, histogram"
-bin	-INF	1026
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-scalar Base.nodeMaster[3].wlan[0].radio 	transmissionState:count 	1228
-attr interpolationmode  sample-hold
-attr source  transmissionStateChanged
-attr title  "Radio transmission state, count"
-scalar Base.nodeMaster[3].wlan[0].radio 	receptionState:count 	5726
-attr interpolationmode  sample-hold
-attr source  receptionStateChanged
-attr title  "Radio reception state, count"
-scalar Base.nodeMaster[3].wlan[0].radio 	radioMode:count 	3923
-attr interpolationmode  sample-hold
-attr source  radioModeChanged
-attr title  "Radio mode, count"
-scalar Base.nodeMaster[3].udpApp[0] 	"packets sent" 	9882
-scalar Base.nodeMaster[3].udpApp[0] 	"packets received" 	0
-scalar Base.nodeMaster[3].udpApp[0] 	sentPk:count 	9882
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, count"
-scalar Base.nodeMaster[3].udpApp[0] 	sentPk:sum(packetBytes) 	9882000
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, sum(packetBytes)"
-scalar Base.nodeMaster[3].udpApp[0] 	rcvdPk:count 	0
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, count"
-scalar Base.nodeMaster[3].udpApp[0] 	rcvdPk:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, sum(packetBytes)"
-scalar Base.nodeMaster[3].udpApp[0] 	throughput:last 	nan
-attr source  throughput(rcvdPk)
-attr title  "throughput, last"
-attr unit  bps
-statistic Base.nodeMaster[3].udpApp[0] 	rcvdPkLifetime:stats
-field count 0
-field mean nan
-field stddev nan
-field sum 0
-field sqrsum 0
-field min nan
-field max nan
-attr interpolationmode  none
-attr source  messageAge(rcvdPk)
-attr title  "received packet lifetime, stats"
-attr unit  s
-scalar Base.nodeMaster[3].udp 	droppedPkBadChecksum:count 	0
-attr interpolationmode  none
-attr title  "packets dropped (checksum error), count"
-scalar Base.nodeMaster[3].udp 	droppedPkWrongPort:count 	0
-attr interpolationmode  none
-attr title  "packets dropped (wrong port), count"
-scalar Base.nodeMaster[3].udp 	passedUpPk:count 	0
-attr interpolationmode  none
-attr title  "packets passed up, count"
-scalar Base.nodeMaster[3].udp 	sentPk:count 	9882
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, count"
-scalar Base.nodeMaster[3].udp 	sentPk:sum(packetBytes) 	9961056
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, sum(packetBytes)"
-scalar Base.nodeMaster[3].udp 	rcvdPk:count 	0
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, count"
-scalar Base.nodeMaster[3].udp 	rcvdPk:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, sum(packetBytes)"
-scalar Base.nodeMaster[4].networkLayer.arp 	sentReply:count 	3
-attr title  "ARP replies sent, count"
-scalar Base.nodeMaster[4].networkLayer.arp 	sentReq:count 	0
-attr title  "ARP request sent, count"
-scalar Base.nodeMaster[4].networkLayer.arp 	failedARPResolution:count 	0
-attr title  "ARP failed resolutions, count"
-scalar Base.nodeMaster[4].networkLayer.arp 	completedARPResolution:count 	7
-attr title  "ARP completed resolutions, count"
-scalar Base.nodeMaster[4].networkLayer.arp 	initiatedARPResolution:count 	0
-attr title  "ARP initiated resolutions, count"
-scalar Base.nodeMaster[4].lo0.lo 	droppedPkBitError:count 	0
-attr interpolationmode  none
-attr source  dropPkBitError
-attr title  "packets dropped/bit error, count"
-scalar Base.nodeMaster[4].lo0.lo 	droppedPkBitError:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  dropPkBitError
-attr title  "packets dropped/bit error, sum(packetBytes)"
-scalar Base.nodeMaster[4].lo0.lo 	rcvdPkFromHL:count 	0
-attr interpolationmode  none
-attr source  packetReceivedFromUpper
-attr title  "packets received from higher layer, count"
-scalar Base.nodeMaster[4].lo0.lo 	rcvdPkFromHL:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  packetReceivedFromUpper
-attr title  "packets received from higher layer, sum(packetBytes)"
-scalar Base.nodeMaster[4].lo0.lo 	passedUpPk:count 	0
-attr interpolationmode  none
-attr source  packetSentToUpper
-attr title  "packets passed to higher layer, count"
-scalar Base.nodeMaster[4].lo0.lo 	passedUpPk:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  packetSentToUpper
-attr title  "packets passed to higher layer, sum(packetBytes)"
-statistic Base.nodeMaster[4].wlan[0].radio 	symbolErrorRate:histogram
-field count 1024
-field mean 0
-field stddev 0
-field sum 0
-field sqrsum 0
-field min 0
-field max 0
-attr source  symbolErrorRate
-attr title  "Symbol error rate, histogram"
-bin	-INF	0
-bin	-0.5	0
-bin	-0.46666666666667	0
-bin	-0.43333333333333	0
-bin	-0.4	0
-bin	-0.36666666666667	0
-bin	-0.33333333333333	0
-bin	-0.3	0
-bin	-0.26666666666667	0
-bin	-0.23333333333333	0
-bin	-0.2	0
-bin	-0.16666666666667	0
-bin	-0.13333333333333	0
-bin	-0.1	0
-bin	-0.066666666666667	0
-bin	-0.033333333333333	0
-bin	0	1024
-bin	0.033333333333333	0
-bin	0.066666666666667	0
-bin	0.1	0
-bin	0.13333333333333	0
-bin	0.16666666666667	0
-bin	0.2	0
-bin	0.23333333333333	0
-bin	0.26666666666667	0
-bin	0.3	0
-bin	0.33333333333333	0
-bin	0.36666666666667	0
-bin	0.4	0
-bin	0.43333333333333	0
-bin	0.46666666666667	0
-bin	0.5	0
-statistic Base.nodeMaster[4].wlan[0].radio 	bitErrorRate:histogram
-field count 1024
-field mean 0
-field stddev 0
-field sum 0
-field sqrsum 0
-field min 0
-field max 0
-attr source  bitErrorRate
-attr title  "Bit error rate, histogram"
-bin	-INF	0
-bin	-0.5	0
-bin	-0.46666666666667	0
-bin	-0.43333333333333	0
-bin	-0.4	0
-bin	-0.36666666666667	0
-bin	-0.33333333333333	0
-bin	-0.3	0
-bin	-0.26666666666667	0
-bin	-0.23333333333333	0
-bin	-0.2	0
-bin	-0.16666666666667	0
-bin	-0.13333333333333	0
-bin	-0.1	0
-bin	-0.066666666666667	0
-bin	-0.033333333333333	0
-bin	0	1024
-bin	0.033333333333333	0
-bin	0.066666666666667	0
-bin	0.1	0
-bin	0.13333333333333	0
-bin	0.16666666666667	0
-bin	0.2	0
-bin	0.23333333333333	0
-bin	0.26666666666667	0
-bin	0.3	0
-bin	0.33333333333333	0
-bin	0.36666666666667	0
-bin	0.4	0
-bin	0.43333333333333	0
-bin	0.46666666666667	0
-bin	0.5	0
-statistic Base.nodeMaster[4].wlan[0].radio 	packetErrorRate:histogram
-field count 1024
-field mean 0
-field stddev 0
-field sum 0
-field sqrsum 0
-field min 0
-field max 0
-attr source  packetErrorRate
-attr title  "Packet error rate, histogram"
-bin	-INF	0
-bin	-0.5	0
-bin	-0.46666666666667	0
-bin	-0.43333333333333	0
-bin	-0.4	0
-bin	-0.36666666666667	0
-bin	-0.33333333333333	0
-bin	-0.3	0
-bin	-0.26666666666667	0
-bin	-0.23333333333333	0
-bin	-0.2	0
-bin	-0.16666666666667	0
-bin	-0.13333333333333	0
-bin	-0.1	0
-bin	-0.066666666666667	0
-bin	-0.033333333333333	0
-bin	0	1024
-bin	0.033333333333333	0
-bin	0.066666666666667	0
-bin	0.1	0
-bin	0.13333333333333	0
-bin	0.16666666666667	0
-bin	0.2	0
-bin	0.23333333333333	0
-bin	0.26666666666667	0
-bin	0.3	0
-bin	0.33333333333333	0
-bin	0.36666666666667	0
-bin	0.4	0
-bin	0.43333333333333	0
-bin	0.46666666666667	0
-bin	0.5	0
-statistic Base.nodeMaster[4].wlan[0].radio 	minSNIR:histogram
-field count 1024
-field mean nan
-field stddev nan
-field sum nan
-field sqrsum nan
-field min nan
-field max nan
-attr source  minSNIR
-attr title  "Min SNIR, histogram"
-bin	-INF	1024
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-bin	nan	0
-scalar Base.nodeMaster[4].wlan[0].radio 	transmissionState:count 	1014
-attr interpolationmode  sample-hold
-attr source  transmissionStateChanged
-attr title  "Radio transmission state, count"
-scalar Base.nodeMaster[4].wlan[0].radio 	receptionState:count 	5722
-attr interpolationmode  sample-hold
-attr source  receptionStateChanged
-attr title  "Radio reception state, count"
-scalar Base.nodeMaster[4].wlan[0].radio 	radioMode:count 	3923
-attr interpolationmode  sample-hold
-attr source  radioModeChanged
-attr title  "Radio mode, count"
-scalar Base.nodeMaster[4].udpApp[0] 	"packets sent" 	9981
-scalar Base.nodeMaster[4].udpApp[0] 	"packets received" 	0
-scalar Base.nodeMaster[4].udpApp[0] 	sentPk:count 	9981
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, count"
-scalar Base.nodeMaster[4].udpApp[0] 	sentPk:sum(packetBytes) 	9981000
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, sum(packetBytes)"
-scalar Base.nodeMaster[4].udpApp[0] 	rcvdPk:count 	0
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, count"
-scalar Base.nodeMaster[4].udpApp[0] 	rcvdPk:sum(packetBytes) 	0
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, sum(packetBytes)"
-scalar Base.nodeMaster[4].udpApp[0] 	throughput:last 	nan
-attr source  throughput(rcvdPk)
-attr title  "throughput, last"
-attr unit  bps
-statistic Base.nodeMaster[4].udpApp[0] 	rcvdPkLifetime:stats
-field count 0
-field mean nan
-field stddev nan
-field sum 0
-field sqrsum 0
-field min nan
-field max nan
-attr interpolationmode  none
-attr source  messageAge(rcvdPk)
-attr title  "received packet lifetime, stats"
-attr unit  s
-scalar Base.nodeMaster[4].udp 	droppedPkBadChecksum:count 	0
-attr interpolationmode  none
-attr title  "packets dropped (checksum error), count"
-scalar Base.nodeMaster[4].udp 	droppedPkWrongPort:count 	0
-attr interpolationmode  none
-attr title  "packets dropped (wrong port), count"
-scalar Base.nodeMaster[4].udp 	passedUpPk:count 	0
-attr interpolationmode  none
-attr title  "packets passed up, count"
-scalar Base.nodeMaster[4].udp 	sentPk:count 	9981
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, count"
-scalar Base.nodeMaster[4].udp 	sentPk:sum(packetBytes) 	10060848
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, sum(packetBytes)"
-scalar Base.nodeMaster[4].udp 	rcvdPk:count 	0
-attr interpolationmode  none
-attr source  rcvdPk
-attr title  "packets received, count"
-scalar Base.nodeMaster[4].udp 	rcvdPk:sum(packetBytes) 	0
 attr interpolationmode  none
 attr source  rcvdPk
 attr title  "packets received, sum(packetBytes)"

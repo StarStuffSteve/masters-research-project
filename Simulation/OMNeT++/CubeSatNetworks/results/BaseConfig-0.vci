@@ -1,16 +1,16 @@
-file 3828499 1487115273                                         
+file 734248 1487245562                                          
 version 2
-run BaseConfig-0-20170214-23:31:56-3804
-attr N 5
+run BaseConfig-0-20170216-11:45:25-1216
+attr N 2
 attr configname BaseConfig
-attr datetime 20170214-23:31:56
+attr datetime 20170216-11:45:25
 attr experiment BaseConfig
 attr inifile omnetpp.ini
-attr iterationvars $N=5
-attr iterationvars2 "$N=5, $repetition=0"
-attr measurement $N=5
+attr iterationvars $N=2
+attr iterationvars2 "$N=2, $repetition=0"
+attr measurement $N=2
 attr network Base
-attr processid 3804
+attr processid 1216
 attr repetition 0
 attr replication #0
 attr resultdir results
@@ -19,7 +19,12 @@ attr seedset 0
 param *.configurator.addStaticRoutes false
 param *.configurator.config "xml(\"<config><interface hosts='**' address='10.0.0.x' netmask='255.255.255.0'/><autoroute metric='errorRate'/></config>\")"
 param *.configurator.optimizeRoutes false
+param *.node*[*].wlan[*].mac.address "\"auto\""
+param *.node*[*].wlan[*].mac.headerLength 10B
+param *.node*[*].wlan[*].mac.mtu 0B
 param *.node*[*].wlan[*].mac.numSlots 2*${N}
+param *.node*[*].wlan[*].mac.reservedMobileSlots 2
+param *.node*[*].wlan[*].mac.slotDuration 100ms
 param *.node*[*].wlan[*].macType "\"LMacLayer\""
 param *.node*[*].wlan[*].radio.transmitter.bitrate 2Mbps
 param *.node*[*].wlan[*].radio.transmitter.communicationRange 200m
@@ -47,12 +52,12 @@ param *.nodeMaster[1..].**.startAngle "parentIndex() * (360deg/(${N}-1))"
 param *.nodeMaster[1..].mobilityType "\"CircleMobility\""
 param *.nodeMaster[1..].udpApp[0].destAddresses "\"nodeMaster[0]\""
 param *.nodeMaster[1..].udpApp[0].destPort 5000
-param *.nodeMaster[1..].udpApp[0].messageLength 1000B
+param *.nodeMaster[1..].udpApp[0].messageLength exponential(128B)
 param *.nodeMaster[1..].udpApp[0].packetName "\"UDPData\""
-param *.nodeMaster[1..].udpApp[0].sendInterval exponential(12ms)
+param *.nodeMaster[1..].udpApp[0].sendInterval exponential(10s)
 param *.nodeMaster[1..].udpApp[0].startTime 5s
 param *.nodeMaster[1..].udpApp[0].typename "\"UDPBasicApp\""
-param *.numMasters ${N=5}
+param *.numMasters ${N=2}
 param *.radioMediumType "\"IdealRadioMedium\""
 param *.visualizer.dataLinkVisualizer.packetNameFilter "\"UDPData*\""
 param *.visualizer.networkRouteVisualizer.packetNameFilter "\"UDPData*\""
@@ -66,18 +71,6 @@ vector 30  Base.nodeMaster[1].wlan[0].radio  radioMode:vector  ETV
 attr interpolationmode  sample-hold
 attr source  radioModeChanged
 attr title  "Radio mode, vector"
-vector 47  Base.nodeMaster[2].wlan[0].radio  radioMode:vector  ETV
-attr interpolationmode  sample-hold
-attr source  radioModeChanged
-attr title  "Radio mode, vector"
-vector 64  Base.nodeMaster[3].wlan[0].radio  radioMode:vector  ETV
-attr interpolationmode  sample-hold
-attr source  radioModeChanged
-attr title  "Radio mode, vector"
-vector 81  Base.nodeMaster[4].wlan[0].radio  radioMode:vector  ETV
-attr interpolationmode  sample-hold
-attr source  radioModeChanged
-attr title  "Radio mode, vector"
 vector 14  Base.nodeMaster[0].wlan[0].radio  receptionState:vector  ETV
 attr interpolationmode  sample-hold
 attr source  receptionStateChanged
@@ -86,31 +79,6 @@ vector 31  Base.nodeMaster[1].wlan[0].radio  receptionState:vector  ETV
 attr interpolationmode  sample-hold
 attr source  receptionStateChanged
 attr title  "Radio reception state, vector"
-vector 48  Base.nodeMaster[2].wlan[0].radio  receptionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  receptionStateChanged
-attr title  "Radio reception state, vector"
-vector 65  Base.nodeMaster[3].wlan[0].radio  receptionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  receptionStateChanged
-attr title  "Radio reception state, vector"
-vector 82  Base.nodeMaster[4].wlan[0].radio  receptionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  receptionStateChanged
-attr title  "Radio reception state, vector"
-vector 49  Base.nodeMaster[2].wlan[0].radio  transmissionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  transmissionStateChanged
-attr title  "Radio transmission state, vector"
-vector 85  Base.nodeMaster[1].wlan[0].mac  slotChange  ETV
-vector 66  Base.nodeMaster[3].wlan[0].radio  transmissionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  transmissionStateChanged
-attr title  "Radio transmission state, vector"
-vector 83  Base.nodeMaster[4].wlan[0].radio  transmissionState:vector  ETV
-attr interpolationmode  sample-hold
-attr source  transmissionStateChanged
-attr title  "Radio transmission state, vector"
 vector 32  Base.nodeMaster[1].wlan[0].radio  transmissionState:vector  ETV
 attr interpolationmode  sample-hold
 attr source  transmissionStateChanged
@@ -123,44 +91,14 @@ vector 17  Base.nodeMaster[1].udpApp[0]  sentPk:vector(packetBytes)  ETV
 attr interpolationmode  none
 attr source  sentPk
 attr title  "packets sent, vector(packetBytes)"
-vector 34  Base.nodeMaster[2].udpApp[0]  sentPk:vector(packetBytes)  ETV
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, vector(packetBytes)"
-vector 51  Base.nodeMaster[3].udpApp[0]  sentPk:vector(packetBytes)  ETV
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, vector(packetBytes)"
-vector 68  Base.nodeMaster[4].udpApp[0]  sentPk:vector(packetBytes)  ETV
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, vector(packetBytes)"
 vector 20  Base.nodeMaster[1].udp  sentPk:vector(packetBytes)  ETV
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, vector(packetBytes)"
-vector 37  Base.nodeMaster[2].udp  sentPk:vector(packetBytes)  ETV
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, vector(packetBytes)"
-vector 54  Base.nodeMaster[3].udp  sentPk:vector(packetBytes)  ETV
-attr interpolationmode  none
-attr source  sentPk
-attr title  "packets sent, vector(packetBytes)"
-vector 71  Base.nodeMaster[4].udp  sentPk:vector(packetBytes)  ETV
 attr interpolationmode  none
 attr source  sentPk
 attr title  "packets sent, vector(packetBytes)"
 vector 8  Base.nodeMaster[0].networkLayer.arp  sentReq:vector  ETV
 attr title  "ARP request sent, vector"
-vector 43  Base.nodeMaster[2].networkLayer.arp  sentReply:vector  ETV
+vector 26  Base.nodeMaster[1].networkLayer.arp  sentReply:vector  ETV
 attr title  "ARP replies sent, vector"
-vector 60  Base.nodeMaster[3].networkLayer.arp  sentReply:vector  ETV
-attr title  "ARP replies sent, vector"
-vector 77  Base.nodeMaster[4].networkLayer.arp  sentReply:vector  ETV
-attr title  "ARP replies sent, vector"
-vector 42  Base.nodeMaster[2].networkLayer.arp  sentReq:vector  ETV
-attr title  "ARP request sent, vector"
 vector 4  Base.nodeMaster[0].udp  rcvdPk:vector(packetBytes)  ETV
 attr interpolationmode  none
 attr source  rcvdPk
@@ -181,40 +119,18 @@ vector 2  Base.nodeMaster[0].udpApp[0]  rcvdPkSeqNo:vector  ETV
 attr interpolationmode  none
 attr source  appPkSeqNo(rcvdPk)
 attr title  "received packet sequence number, vector"
-vector 26  Base.nodeMaster[1].networkLayer.arp  sentReply:vector  ETV
-attr title  "ARP replies sent, vector"
-0	8484 6652 32337 183237 13.407873187823 122.50721224409 217 1000 1000 217000 217000000
-1	15136 9002 32337 183237 13.407873187823 122.50721224409 217 8.407873187823 21.34895587077 2463.7625522888 28491.826223406
-2	24138 6584 32337 183237 13.407873187823 122.50721224409 217 0 8992 951806 5728651336
-4	30722 6652 32336 183236 13.407873187823 122.50721224409 217 1008 1008 218736 220485888
-5	37374 6327 32336 183236 13.407873187823 122.50721224409 217 1 217 23653 3429685
-8	43701 310 21461 28446 5.40308836398 10.803865124539 12 1 1 12 12
-13	44011 86660 0 184234 0 123.30021197128 3923 0 3 6257 11425
-14	130671 148754 28 184234 0.1 123.30021197128 6170 0 3 6829 14317
-15	279425 28088 171 184236 0.134566229487 123.30021197128 1026 0 2 1043 1573
-17	307513 311437 20960 184222 5 123.289476110684 9868 1000 1000 9868000 9868000000
-20	618950 311437 20975 184223 5 123.289476110684 9868 1008 1008 9946944 10026519552
-26	930387 84 34705 41617 15.303632544425 19.302666091696 3 1 1 3 3
-30	930471 86685 0 184230 0 123.3 3923 0 3 6257 11425
-31	1017156 136022 29 184237 0.1 123.300212138062 5722 0 3 5936 12086
-32	1153178 27750 108 183644 0.116776994895 122.801789554974 1014 0 2 1023 1539
-34	1180928 314536 20961 184225 5 123.299858200007 9967 1000 1000 9967000 9967000000
-37	1495464 314536 20977 184226 5 123.299858200007 9967 1008 1008 10046736 10127109888
-42	1810000 84 31147 33743 12.503491781515 14.503491781515 3 1 1 3 3
-43	1810084 78 22640 26493 6.3025170046 9.302819669767 3 1 1 3 3
-47	1810162 86699 0 184231 0 123.3 3923 0 3 6257 11425
-48	1896861 136163 30 184238 0.1 123.300212138062 5728 0 3 5948 12116
-49	2033024 34062 33 183054 0.100347028903 122.407650330618 1232 0 2 1350 2084
-51	2067086 312021 20962 184209 5 123.269514589008 9882 1000 1000 9882000 9882000000
-54	2379107 312021 20979 184210 5 123.269514589008 9882 1008 1008 9961056 10040744448
-60	2691128 83 25233 32172 8.303174930852 13.302766621263 3 1 1 3 3
-64	2691211 86702 0 184232 0 123.3 3923 0 3 6257 11425
-65	2777913 136141 31 184239 0.1 123.300212138062 5726 0 3 5944 12106
-66	2914054 33912 54 183232 0.105496639119 122.507212077308 1228 0 2 1344 2074
-68	2947966 314994 20963 184219 5 123.288978020465 9981 1000 1000 9981000 9981000000
-71	3262960 314994 20981 184220 5 123.288978020465 9981 1008 1008 10060848 10141334784
-77	3577954 84 29059 38587 11.302261738715 17.303800753872 3 1 1 3 3
-81	3578038 86681 0 184233 0 123.3 3923 0 3 6257 11425
-82	3664719 135982 32 184240 0.1 123.300212138062 5722 0 3 5936 12086
-83	3800701 27774 75 183365 0.108530617142 122.600159517946 1014 0 2 1023 1539
-85	3828475 24 45 45 0.100407264768 0.100407264768 1 4 4 4 16
+0	5518 575 4710 20571 6.903095002048 216.50223274233 20 13 284 2134 333920
+1	6093 802 4710 20571 6.903095002048 216.50223274233 20 0.026734950467 1.903095002048 16.222781068962 18.748124032021
+2	6895 556 4710 20571 6.903095002048 216.50223274233 20 0 19 190 2470
+4	7451 577 4709 20570 6.903095002048 216.50223274233 20 21 292 2294 369344
+5	8028 557 4709 20570 6.903095002048 216.50223274233 20 1 20 210 2870
+8	8585 53 4528 13787 5.303194833117 128.102067753534 2 1 1 2 2
+13	8638 129423 0 21546 0 230.1 5892 0 3 9920 19422
+14	138061 152164 13 21551 0.1 230.100753180688 6714 0 3 5676 10314
+15	290225 80492 32 21542 0.109664190752 230.001024896066 2918 0 2 2933 4407
+17	370717 582 4485 20531 5 216.117850455939 20 13 284 2134 333920
+20	371299 584 4491 20532 5 216.117850455939 20 21 292 2294 369344
+26	371883 55 4561 13820 5.602152094859 128.401787616465 2 1 1 2 2
+30	371938 129496 0 21552 0 230.100810013906 5894 0 3 9924 19432
+31	501434 150169 14 21548 0.1 230.100753013906 6644 0 3 5533 9955
+32	651603 82645 15 21552 0.100681242035 230.100810013906 2992 0 2 3042 4588
