@@ -15,17 +15,19 @@ import inet.environment.common.PhysicalEnvironment;
 import inet.physicallayer.contract.packetlevel.IRadioMedium;
 import inet.linklayer.lmac.LMacLayer;
 import inet.networklayer.configurator.ipv4.IPv4NetworkConfigurator;
-import inet.node.inet.WirelessHost;
+
 import inet.node.aodv.AODVRouter;
+import inet.node.inet.WirelessHost;
 
 network Base
 {
     parameters:
         int numMasters;
-//        int numSlaves;
+        int numSlaves;
+        int slavesPerMaster; // Not in use
         string radioMediumType = default("IdealRadioMedium");
 
-        @display("bgb=650,500;bgg=100,1,grey95");
+        @display("bgb=1000,1000;bgg=100,1,grey95");
         @figure[title](type=label; pos=0,-1; anchor=sw; color=darkblue);
 
 		@signal[nodeMaster0_rcvdPk];
@@ -35,19 +37,19 @@ network Base
 
     submodules: // Need to define loops for node creation
         visualizer: IntegratedCanvasVisualizer {
-            @display("p=580,125");
+            @display("p=100,25");
         }
         configurator: IPv4NetworkConfigurator {
-            @display("p=580,200");
+            @display("p=100,75");
         }
         radioMedium: <radioMediumType> like IRadioMedium {
-            @display("p=580,275");
+            @display("p=100,125");
         }
         physicalEnvironment: PhysicalEnvironment {
-            @display("p=580,425");
+            @display("p=100,175");
         }
         figureHelper: DelegateSignalConfigurator {
-            @display("p=580,350");
+            @display("p=100,225");
         }
         //
         // --- Nodes
@@ -55,11 +57,11 @@ network Base
         // Masters
         nodeMaster[numMasters]: AODVRouter{
             parameters:
-                @display("r=,,#707070");
+                @display("is=s;r=,,#707070");
         }
         // Slaves
-//        nodeSlave[numSlaves]: WirelessHost{
-//            parameters:
-//                @display("r=,,#707070"); 
-//        }    
+        nodeSlave[numSlaves]: AODVRouter{
+            parameters:
+                @display("is=s;r=,,#606060"); 
+        }    
 }
