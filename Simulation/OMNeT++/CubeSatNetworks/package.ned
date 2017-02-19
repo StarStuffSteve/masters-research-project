@@ -1,2 +1,0 @@
-//package cubesatnetworsk;
-@license(LGPL);

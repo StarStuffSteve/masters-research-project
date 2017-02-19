@@ -59,6 +59,7 @@
 									<listOptionValue builtIn="false" value="WITH_PACKETDRILL"/>
 									<listOptionValue builtIn="false" value="WITH_BMAC"/>
 									<listOptionValue builtIn="false" value="WITH_LMAC"/>
+									<listOptionValue builtIn="false" value="WITH_CUBEMAC"/>
 									<listOptionValue builtIn="false" value="WITH_CSMA"/>
 									<listOptionValue builtIn="false" value="WITH_CSMACA"/>
 								</option>
@@ -100,6 +101,7 @@
 									<listOptionValue builtIn="false" value="WITH_PACKETDRILL"/>
 									<listOptionValue builtIn="false" value="WITH_BMAC"/>
 									<listOptionValue builtIn="false" value="WITH_LMAC"/>
+									<listOptionValue builtIn="false" value="WITH_CUBEMAC"/>
 									<listOptionValue builtIn="false" value="WITH_CSMA"/>
 									<listOptionValue builtIn="false" value="WITH_CSMACA"/>
 								</option>
@@ -156,6 +158,7 @@
 									<listOptionValue builtIn="false" value="WITH_PACKETDRILL"/>
 									<listOptionValue builtIn="false" value="WITH_BMAC"/>
 									<listOptionValue builtIn="false" value="WITH_LMAC"/>
+									<listOptionValue builtIn="false" value="WITH_CUBEMAC"/>
 									<listOptionValue builtIn="false" value="WITH_CSMA"/>
 									<listOptionValue builtIn="false" value="WITH_CSMACA"/>
 								</option>
@@ -194,6 +197,7 @@
 									<listOptionValue builtIn="false" value="WITH_PACKETDRILL"/>
 									<listOptionValue builtIn="false" value="WITH_BMAC"/>
 									<listOptionValue builtIn="false" value="WITH_LMAC"/>
+									<listOptionValue builtIn="false" value="WITH_CUBEMAC"/>
 									<listOptionValue builtIn="false" value="WITH_CSMA"/>
 									<listOptionValue builtIn="false" value="WITH_CSMACA"/>
 								</option>
@@ -267,6 +271,7 @@
 									<listOptionValue builtIn="false" value="WITH_PACKETDRILL"/>
 									<listOptionValue builtIn="false" value="WITH_BMAC"/>
 									<listOptionValue builtIn="false" value="WITH_LMAC"/>
+									<listOptionValue builtIn="false" value="WITH_CUBEMAC"/>
 									<listOptionValue builtIn="false" value="WITH_CSMA"/>
 									<listOptionValue builtIn="false" value="WITH_CSMACA"/>
 								</option>
@@ -308,6 +313,7 @@
 									<listOptionValue builtIn="false" value="WITH_PACKETDRILL"/>
 									<listOptionValue builtIn="false" value="WITH_BMAC"/>
 									<listOptionValue builtIn="false" value="WITH_LMAC"/>
+									<listOptionValue builtIn="false" value="WITH_CUBEMAC"/>
 									<listOptionValue builtIn="false" value="WITH_CSMA"/>
 									<listOptionValue builtIn="false" value="WITH_CSMACA"/>
 								</option>
@@ -364,6 +370,7 @@
 									<listOptionValue builtIn="false" value="WITH_PACKETDRILL"/>
 									<listOptionValue builtIn="false" value="WITH_BMAC"/>
 									<listOptionValue builtIn="false" value="WITH_LMAC"/>
+									<listOptionValue builtIn="false" value="WITH_CUBEMAC"/>
 									<listOptionValue builtIn="false" value="WITH_CSMA"/>
 									<listOptionValue builtIn="false" value="WITH_CSMACA"/>
 								</option>
@@ -402,6 +409,7 @@
 									<listOptionValue builtIn="false" value="WITH_PACKETDRILL"/>
 									<listOptionValue builtIn="false" value="WITH_BMAC"/>
 									<listOptionValue builtIn="false" value="WITH_LMAC"/>
+									<listOptionValue builtIn="false" value="WITH_CUBEMAC"/>
 									<listOptionValue builtIn="false" value="WITH_CSMA"/>
 									<listOptionValue builtIn="false" value="WITH_CSMACA"/>
 								</option>

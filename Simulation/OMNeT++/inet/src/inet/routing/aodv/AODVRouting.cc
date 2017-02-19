@@ -40,6 +40,10 @@
 #include "inet/linklayer/lmac/LMacFrame_m.h"
 #endif // ifdef WITH_LMAC
 
+#ifdef WITH_CUBEMAC
+#include "inet/linklayer/cubemac/CubeMacFrame_m.h"
+#endif // ifdef WITH_CUBEMAC
+
 #ifdef WITH_BMAC
 #include "inet/linklayer/bmac/BMacFrame_m.h"
 #endif // ifdef WITH_BMAC
@@ -1027,6 +1031,9 @@ void AODVRouting::receiveSignal(cComponent *source, simsignal_t signalID, cObjec
 #ifdef WITH_LMAC
             || dynamic_cast<LMacFrame *>(frame)
 #endif // ifdef WITH_LMAC
+#ifdef WITH_CUBEMAC
+            || dynamic_cast<CubeMacFrame *>(frame)
+#endif // ifdef WITH_CUBEMAC
 #ifdef WITH_BMAC
             || dynamic_cast<BMacFrame *>(frame)
 #endif // ifdef WITH_BMAC

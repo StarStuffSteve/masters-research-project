@@ -1073,6 +1073,20 @@
         linkerFlags = ""
         />
     <feature
+        id="CUBEMAC"
+        name="CUBEMAC"
+        description = "Please work"
+        initiallyEnabled = "true"
+        requires = ""
+        labels = ""
+        nedPackages = "
+                       inet.linklayer.cubemac
+                      "
+        extraSourceFolders = ""
+        compileFlags = "-DWITH_CUBEMAC"
+        linkerFlags = ""
+        />
+    <feature
         id="CSMA"
         name="CSMA"
         description = "A CSMA (Carrier Sense Multiple Access) MAC protocol, similar to 802.15.4"

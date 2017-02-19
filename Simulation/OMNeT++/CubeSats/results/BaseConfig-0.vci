@@ -1,0 +1,315 @@
+file 518478 1487539297                                          
+version 2
+run BaseConfig-0-20170219-21:19:11-11380
+attr NM 6
+attr NS (6)
+attr SPM ((6)/6)
+attr configname BaseConfig
+attr datetime 20170219-21:19:11
+attr experiment BaseConfig
+attr inifile omnetpp.ini
+attr iterationvars "$NM=6, $NS=(6), $SPM=((6)/6)"
+attr iterationvars2 "$NM=6, $NS=(6), $SPM=((6)/6), $repetition=0"
+attr measurement "$NM=6, $NS=(6), $SPM=((6)/6)"
+attr network Base
+attr processid 11380
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+param **.forwarding true
+param *.configurator.addStaticRoutes false
+param *.node*[*].wlan[*].mac.address "\"auto\""
+param *.node*[*].wlan[*].mac.headerLength 10B
+param *.node*[*].wlan[*].mac.mtu 0B
+param *.node*[*].wlan[*].mac.numSlots 2*(${NM}+${NS})
+param *.node*[*].wlan[*].mac.queueLength 10*${NS}
+param *.node*[*].wlan[*].mac.slotDuration 100ms
+param *.node*[*].wlan[*].macType "\"CubeMacLayer\""
+param *.node*[*].wlan[*].radio.transmitter.bitrate 2Mbps
+param *.node*[*].wlan[*].radio.transmitter.detectionRange 0m
+param *.node*[*].wlan[*].radio.transmitter.headerBitLength 100b
+param *.node*[*].wlan[*].radio.transmitter.interferenceRange 0m
+param *.node*[*].wlan[*].radio.transmitter.preambleDuration 0s
+param *.node*[*].wlan[*].radioType "\"IdealRadio\""
+param *.node*[*].wlan[*].typename "\"WirelessNic\""
+param *.node*[*].wlan[0].radio.displayCommunicationRange true
+param *.node*[*].wlan[0].radio.receiver.ignoreInterference true
+param *.nodeMaster[*].**.cx 500m
+param *.nodeMaster[*].**.cy 500m
+param *.nodeMaster[*].**.cz 0m
+param *.nodeMaster[*].**.r 250m
+param *.nodeMaster[*].**.startAngle "parentIndex() * (360deg/${NM})"
+param *.nodeMaster[*].mobilityType "\"CircleMobility\""
+param *.nodeMaster[*].numUdpApps 1
+param *.nodeMaster[*].udpApp[0].localPort 5000
+param *.nodeMaster[*].udpApp[0].typename "\"UDPSink\""
+param *.nodeMaster[*].wlan[*].radio.transmitter.communicationRange 350m
+param *.nodeSlave[*].**.cx 500m
+param *.nodeSlave[*].**.cy 500m
+param *.nodeSlave[*].**.cz 0m
+param *.nodeSlave[*].**.r 275m
+param *.nodeSlave[*].mobilityType "\"CircleMobility\""
+param *.nodeSlave[*].numUdpApps 1
+param *.nodeSlave[*].udpApp[0].destAddresses "\"nodeMaster[0]\""
+param *.nodeSlave[*].udpApp[0].destPort 5000
+param *.nodeSlave[*].udpApp[0].messageLength exponential(128B)
+param *.nodeSlave[*].udpApp[0].packetName "\"UDPData\""
+param *.nodeSlave[*].udpApp[0].sendInterval exponential(100ms)
+param *.nodeSlave[*].udpApp[0].startTime 5s
+param *.nodeSlave[*].udpApp[0].typename "\"UDPBasicApp\""
+param *.nodeSlave[*].wlan[*].radio.transmitter.communicationRange 75m
+param *.nodeSlave[..5].**.startAngle "(parentIndex() * (360deg/${NM})) + 10deg"
+param *.numMasters ${NM=6}
+param *.numSlaves ${NS=(${NM})}
+param *.radioMediumType "\"IdealRadioMedium\""
+param *.slavesPerMaster ${SPM=(${NS}/${NM})}
+param *.visualizer.dataLinkVisualizer.packetNameFilter "\"UDPData*\""
+param *.visualizer.networkRouteVisualizer.packetNameFilter "\"UDPData*\""
+param *.visualizer.physicalLinkVisualizer.packetNameFilter "\"UDPData*\""
+
+vector 13  Base.nodeMaster[0].wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 29  Base.nodeMaster[1].wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 45  Base.nodeMaster[2].wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 61  Base.nodeMaster[3].wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 77  Base.nodeMaster[4].wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 93  Base.nodeMaster[5].wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 110  Base.nodeSlave[0].wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 127  Base.nodeSlave[1].wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 144  Base.nodeSlave[2].wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 161  Base.nodeSlave[3].wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 178  Base.nodeSlave[4].wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 195  Base.nodeSlave[5].wlan[0].radio  radioMode:vector  ETV
+attr interpolationmode  sample-hold
+attr source  radioModeChanged
+attr title  "Radio mode, vector"
+vector 14  Base.nodeMaster[0].wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 30  Base.nodeMaster[1].wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 46  Base.nodeMaster[2].wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 62  Base.nodeMaster[3].wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 78  Base.nodeMaster[4].wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 94  Base.nodeMaster[5].wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 111  Base.nodeSlave[0].wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 128  Base.nodeSlave[1].wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 145  Base.nodeSlave[2].wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 162  Base.nodeSlave[3].wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 179  Base.nodeSlave[4].wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 196  Base.nodeSlave[5].wlan[0].radio  receptionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  receptionStateChanged
+attr title  "Radio reception state, vector"
+vector 129  Base.nodeSlave[1].wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 199  Base.nodeMaster[1].wlan[0].mac  slotChange  ETV
+vector 47  Base.nodeMaster[2].wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 63  Base.nodeMaster[3].wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 79  Base.nodeMaster[4].wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 95  Base.nodeMaster[5].wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 31  Base.nodeMaster[1].wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 146  Base.nodeSlave[2].wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 163  Base.nodeSlave[3].wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 180  Base.nodeSlave[4].wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 197  Base.nodeSlave[5].wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 15  Base.nodeMaster[0].wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 204  Base.nodeSlave[0].wlan[0].mac  slotChange  ETV
+vector 112  Base.nodeSlave[0].wlan[0].radio  transmissionState:vector  ETV
+attr interpolationmode  sample-hold
+attr source  transmissionStateChanged
+attr title  "Radio transmission state, vector"
+vector 97  Base.nodeSlave[0].udpApp[0]  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+vector 114  Base.nodeSlave[1].udpApp[0]  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+vector 131  Base.nodeSlave[2].udpApp[0]  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+vector 148  Base.nodeSlave[3].udpApp[0]  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+vector 165  Base.nodeSlave[4].udpApp[0]  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+vector 182  Base.nodeSlave[5].udpApp[0]  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+vector 100  Base.nodeSlave[0].udp  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+vector 117  Base.nodeSlave[1].udp  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+vector 134  Base.nodeSlave[2].udp  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+vector 151  Base.nodeSlave[3].udp  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+vector 168  Base.nodeSlave[4].udp  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+vector 185  Base.nodeSlave[5].udp  sentPk:vector(packetBytes)  ETV
+attr interpolationmode  none
+attr source  sentPk
+attr title  "packets sent, vector(packetBytes)"
+13	12003 13499 0 50789 0 7.163410355634 507 0 3 843 1629
+14	25502 21024 73 50789 0.1 7.163410355634 788 0 3 901 1915
+15	46526 5972 897 50300 0.220324605815 7.096067552535 224 0 2 224 336
+29	52498 13643 0 50782 0 7.163409521724 512 0 3 852 1648
+30	66141 21179 74 50768 0.1 7.163342521724 794 0 3 907 1927
+31	87320 6092 501 50782 0.163762367434 7.163409521724 228 0 2 228 342
+45	93412 13648 0 50790 0 7.163410355634 512 0 3 852 1648
+46	107060 21199 75 50790 0.1 7.163410355634 794 0 3 907 1927
+47	128259 6084 303 50574 0.14409255433 7.142813531473 228 0 2 228 342
+61	134343 13659 0 50699 0 7.157291666215 513 0 3 854 1652
+62	148002 21211 76 50699 0.1 7.157291666215 795 0 3 908 1928
+63	169213 6080 352 50626 0.148306412695 7.147834115866 228 0 2 228 342
+77	175293 13665 0 50751 0 7.162499999548 513 0 3 854 1652
+78	188958 21207 77 50751 0.1 7.162499999548 795 0 3 908 1928
+79	210165 6096 402 50682 0.154551381796 7.152909024854 228 0 2 228 342
+93	216261 13592 0 50753 0 7.162499999548 511 0 3 851 1647
+94	229853 21081 78 50753 0.1 7.162499999548 791 0 3 903 1917
+95	250934 6084 452 50732 0.158425318729 7.159048193852 228 0 2 228 342
+97	257018 498 34861 48676 5 6.884117890692 18 2 322 2219 423127
+100	257516 518 34880 48677 5 6.884117890692 18 10 330 2363 459783
+110	258034 13983 0 50786 0 7.163410265667 506 0 3 840 1620
+111	272017 21853 79 50786 0.1 7.163410265667 790 0 3 905 1925
+112	293870 6108 1687 50202 0.330465003026 7.080115876209 220 0 2 220 330
+114	299978 573 34862 49444 5 6.978263830382 20 12 265 1875 274131
+117	300551 575 34882 49445 5 6.978263830382 20 20 273 2035 305411
+127	301126 14140 0 50784 0 7.163409695496 512 0 3 852 1648
+128	315266 21959 80 50784 0.1 7.163409695496 794 0 3 907 1927
+129	337225 6296 85 50349 0.100481984587 7.102465551993 228 0 2 228 342
+131	343521 750 34863 49155 5 6.938944906141 26 7 686 3264 969948
+134	344271 753 34884 49156 5 6.938944906141 26 15 694 3472 1023836
+144	345024 14113 0 50792 0 7.163410528498 511 0 3 849 1639
+145	359137 22012 81 50792 0.1 7.163410528498 796 0 3 911 1937
+146	381149 6184 577 49945 0.174011374479 7.04844277302 224 0 2 224 336
+148	387333 901 34864 50409 5 7.110933399146 31 5 408 4088 812686
+151	388234 903 34886 50410 5 7.110933399146 31 13 416 4336 880078
+161	389137 14128 0 50700 0 7.157291666215 512 0 3 851 1643
+162	403265 22009 82 50700 0.1 7.157291666215 797 0 3 912 1938
+163	425274 6200 626 49997 0.178959730298 7.055627295287 224 0 2 224 336
+165	431474 719 34865 50591 5 7.146116700254 25 3 593 4179 1384161
+168	432193 721 34888 50592 5 7.146116700254 25 11 601 4379 1452625
+178	432914 14146 0 50752 0 7.162499999548 512 0 3 851 1643
+179	447060 22046 83 50752 0.1 7.162499999548 797 0 3 912 1938
+180	469106 6212 676 50050 0.184193580256 7.059973616319 224 0 2 224 336
+182	475318 454 34866 50664 5 7.152737030503 16 0 498 1994 624888
+185	475772 456 34890 50665 5 7.152737030503 16 8 506 2122 657816
+195	476228 14074 0 50754 0 7.162499999548 510 0 3 848 1638
+196	490302 21920 84 50754 0.1 7.162499999548 793 0 3 907 1927
+197	512222 6204 725 50099 0.188943819462 7.064145378816 224 0 2 224 336
+199	518426 26 101 101 0.100549158359 0.100549158359 1 4 4 4 16
+204	518452 26 913 913 0.220391779587 0.220391779587 1 9 9 9 81
