@@ -128,7 +128,9 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         CUBEMAC_SOMEBODY = 173,
         CUBEMAC_DATA = 174,
         CUBEMAC_START_CUBEMAC = 175,
-        CUBEMAC_SEND_CONTROL = 176
+        CUBEMAC_SEND_CONTROL = 176,
+        CUBEMAC_SLAVE_CONTROL = 177, // --- Added --- Pray these don't brake something odd
+        CUBEMAC_SLAVE_DATA = 178 // --- Added
     };
 
     //
@@ -140,6 +142,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     /** @brief dummy receiver address to indicate no pending packets in the control packet */
     static const MACAddress CUBEMAC_NO_RECEIVER;
     static const MACAddress CUBEMAC_FREE_SLOT;
+    static const MACAddress CUBEMAC_BROADCAST;
 
     /** @brief the setup phase is the beginning of the simulation, where only control packets at very small slot durations are exchanged. */
     bool SETUP_PHASE;
