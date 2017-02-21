@@ -1,15 +1,3 @@
-/*
- *  LMACLayer.cc
- *  LMAC for MF 2.02, omnetpp 3.4
- *
- *  Created by Anna Förster on 10/10/08.
- *  Copyright 2008 Universita della Svizzera Italiana. All rights reserved.
- *
- *  Converted to MiXiM by Kapourniotis Theodoros
- *
- */
-
-// --- Keep these? Will they affect upper layers?
 #ifndef __INET_CUBEMACLAYER_H
 #define __INET_CUBEMACLAYER_H
 
@@ -24,12 +12,7 @@ namespace inet {
 using namespace physicallayer;
 
 /**
- * @brief Implementation of L-MAC (Lightweight Medium Access Protocol for
- * Wireless Sensor Networks [van Hoesel 04] ).
- *
- * Each node has its own unique timeslot. Nodes can use their timeslots to
- * transfer data without having to contend for the medium or having to deal
- * with energy wasting collisions or retransmissions.
+ * @brief LMAC Base
  *
  * During the first 5 full frames nodes will be waking up every controlDuration
  * to setup the network first by assigning a different timeslot to each node.
@@ -48,34 +31,22 @@ using namespace physicallayer;
  * timeslot. If it receives a control packet addressed for itself it stays awake
  * for the rest of the timeslot to receive the incoming data packet.
  *
- * The finite state machine of the protocol is given in the below figure:
- *
- * \image html LMAC-FSM.jpg "State chart for LMAC layer"
- *
- * A paper describing the protocol is:
- *
- * L. van Hoesel and P. Havinga. A lightweight medium access
- * protocol (LMAC) for wireless sensor networks. In Proceedings of the 3rd
- * International Symposium on Information Processing in Sensor Networks (IPSN),
- * pages 55-60, Berkeley, CA, February 2004. April.
- *
  * @ingroup macLayer
  **/
 
 class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
 {
   private:
-    /** @brief Copy constructor is not allowed.
-     */
+    /** @brief Copy constructor is not allowed.*/
     CubeMacLayer(const CubeMacLayer&);
-    /** @brief Assignment operator is not allowed.
-     */
+    /** @brief Assignment operator is not allowed. */
     CubeMacLayer& operator=(const CubeMacLayer&);
 
   public:
     CubeMacLayer()
         : MACProtocolBase()
         , SETUP_PHASE(true)
+        , isSlave(false) // --- Added
         , slotChange()
         , macState()
         , slotDuration(0)
@@ -84,6 +55,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         , mySlot(0)
         , numSlots(0)
         , currSlot()
+        // TODO: Remove
         , reservedMobileSlots(0)
         , macQueue()
         , radio(nullptr)
@@ -159,6 +131,12 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         CUBEMAC_SEND_CONTROL = 176
     };
 
+    //
+    // --- Added
+    //
+    bool isSlave;
+    // ---
+
     /** @brief dummy receiver address to indicate no pending packets in the control packet */
     static const MACAddress CUBEMAC_NO_RECEIVER;
     static const MACAddress CUBEMAC_FREE_SLOT;
@@ -178,7 +156,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     /** @brief Length of the header*/
     int headerLength;
 
-    /** @brief Duration of teh control time in each slot */
+    /** @brief Duration of the control time in each slot */
     double controlDuration;
 
     /** @brief my slot ID */
@@ -190,12 +168,16 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     /** @brief The current slot of the simulation */
     int currSlot;
 
+    //
+    // ??? Still not 100% clear on how these are being used and why they are being used that way
+    //
     /** @brief Occupied slots from nodes, from which I hear directly */
     MACAddress occSlotsDirect[64];
 
     /** @brief Occupied slots of two-hop neighbors */
     MACAddress occSlotsAway[64];
 
+    // TODO: Remove
     /** @brief The first couple of slots are reserved for nodes with special needs to avoid changing slots for them (mobile nodes) */
     int reservedMobileSlots;
 

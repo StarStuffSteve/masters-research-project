@@ -2,7 +2,7 @@
 # OMNeT++/OMNEST Makefile for CubeSats
 #
 # This file was generated with the command:
-#  opp_makemake -f --deep -O out -L../inet/out/$$\(CONFIGNAME\)/src -lINET -KINET_PROJ=../inet
+#  opp_makemake -f --deep -M debug
 #
 
 # Name of target to be created (-o option)
@@ -21,8 +21,7 @@ INCLUDE_PATH = -I. -Iresults
 EXTRA_OBJS =
 
 # Additional libraries (-L, -l options)
-LIBS = -L../inet/out/$(CONFIGNAME)/src  -lINET
-LIBS += -Wl,-rpath,`abspath ../inet/out/$(CONFIGNAME)/src`
+LIBS =
 
 # Output directory
 PROJECT_OUTPUT_DIR = out
@@ -38,8 +37,10 @@ MSGFILES =
 # SM files
 SMFILES =
 
-# Other makefile variables (-K)
-INET_PROJ=../inet
+# Default mode (-M option); can be overridden with make MODE=debug (or =release)
+ifndef MODE
+MODE = debug
+endif
 
 #------------------------------------------------------------------------------
 

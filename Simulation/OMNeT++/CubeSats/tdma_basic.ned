@@ -16,7 +16,6 @@ import inet.physicallayer.contract.packetlevel.IRadioMedium;
 import inet.networklayer.configurator.ipv4.IPv4NetworkConfigurator;
 
 import inet.linklayer.cubemac.CubeMacLayer;
-//import inet.linklayer.lmac.LMacLayer;
 
 import inet.node.aodv.AODVRouter;
 import inet.node.inet.WirelessHost;
@@ -62,6 +61,8 @@ network Base
                 @display("is=s;r=,,#707070");
         }
         // Slaves
+        // Has to be AODV or else packets will never get picker up
+        // by local cluster master for reasons yet unknown
         nodeSlave[numSlaves]: AODVRouter{
             parameters:
                 @display("is=s;r=,,#606060"); 

@@ -22,9 +22,16 @@ import inet.linklayer.contract.IMACProtocol;
 // See C++ documentation for details
 //
 
+// --- MACProtocolBase is parent of IdealMac
 simple CubeMacLayer extends MACProtocolBase like IMACProtocol
 {
     parameters:
+        // 
+        // --- Added
+        //
+        bool isSlave = default(false);
+        // ---
+        
         string address = default("auto"); 
         // MAC address as hex string (12 hex digits), or
         // "auto". "auto" values will be replaced by
