@@ -45,8 +45,12 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
   public:
     CubeMacLayer()
         : MACProtocolBase()
-        , SETUP_PHASE(true)
+        , startTime(0.0) // --- Added
+        , myId(0) // --- Added
+        , masterId(0) // --- Added
+        , slaveId(0) // --- Added
         , isSlave(false) // --- Added
+        , slavesInCluster(0) // --- Added
         , slotChange()
         , macState()
         , slotDuration(0)
@@ -55,19 +59,16 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         , mySlot(0)
         , numSlots(0)
         , currSlot()
-        // TODO: Remove
-        , reservedMobileSlots(0)
         , macQueue()
         , radio(nullptr)
         , transmissionState(IRadio::TRANSMISSION_STATE_UNDEFINED)
         , queueLength(0)
-        , wakeup(nullptr)
+        , wakeUp(nullptr)
         , timeout(nullptr)
         , sendData(nullptr)
-        , initChecker(nullptr)
         , checkChannel(nullptr)
-        , start_cubemac(nullptr)
-        , send_control(nullptr)
+        , startCubemac(nullptr)
+        , sendControl(nullptr)
         , bitrate(0)
     {} // --- What do you do?
     
@@ -110,12 +111,12 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
      *  SLEEP -- the node sleeps but accepts packets from the network layer
      *  RX  -- MAC accepts packets from PHY layer
      *  TX  -- MAC transmits a packet
-     *  CCA -- Clear Channel Assessment - MAC checks
-     *         whether medium is busy
+     *  CCA -- Clear Channel Assessment - MAC checks whether medium is busy
+     *
      */
 
     enum States {
-        INIT, SLEEP, CCA, WAIT_CONTROL, WAIT_DATA, SEND_CONTROL, SEND_DATA
+        INIT, SLEEP, CCA, WAIT_CONTROL, WAIT_DATA, SEND_CONTROL, SEND_DATA, WAIT_SLAVE_DATA
     };
 
     enum TYPES {
@@ -123,7 +124,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         CUBEMAC_TIMEOUT = 168,
         CUBEMAC_WAKEUP = 169,
         CUBEMAC_SEND_DATA = 170,
-        CUBEMAC_SETUP_PHASE_END = 171,
+//        CUBEMAC_SETUP_PHASE_END = 171,
         CUBEMAC_CHECK_CHANNEL = 172,
         CUBEMAC_SOMEBODY = 173,
         CUBEMAC_DATA = 174,
@@ -136,12 +137,23 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     //
     // --- Added
     //
+    simtime_t startTime;
+
+    int myId;
+    int masterId;
+    int slaveId;
+
     bool isSlave;
+
+    // --- Used by masters to collect multiple slave packets during uplink
+    int slavesInCluster;
+    int expectedSlaveControlPackets;
     // ---
 
     /** @brief dummy receiver address to indicate no pending packets in the control packet */
     static const MACAddress CUBEMAC_NO_RECEIVER;
     static const MACAddress CUBEMAC_FREE_SLOT;
+    // --- Added
     static const MACAddress CUBEMAC_BROADCAST;
 
     /** @brief the setup phase is the beginning of the simulation, where only control packets at very small slot durations are exchanged. */
@@ -171,19 +183,6 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     /** @brief The current slot of the simulation */
     int currSlot;
 
-    //
-    // ??? Still not 100% clear on how these are being used and why they are being used that way
-    //
-    /** @brief Occupied slots from nodes, from which I hear directly */
-    MACAddress occSlotsDirect[64];
-
-    /** @brief Occupied slots of two-hop neighbors */
-    MACAddress occSlotsAway[64];
-
-    // TODO: Remove
-    /** @brief The first couple of slots are reserved for nodes with special needs to avoid changing slots for them (mobile nodes) */
-    int reservedMobileSlots;
-
     /** @brief The MAC address of the interface. */
     MACAddress address;
 
@@ -198,19 +197,15 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     /** @brief length of the queue*/
     unsigned queueLength;
 
-    cMessage *wakeup;
+    cMessage *wakeUp;
     cMessage *timeout;
     cMessage *sendData;
-    cMessage *initChecker;
     cMessage *checkChannel;
-    cMessage *start_cubemac;
-    cMessage *send_control;
+    cMessage *startCubemac;
+    cMessage *sendControl;
 
     /** @brief the bit rate at which we transmit */
     double bitrate;
-
-    /** @brief find a new slot */
-    void findNewSlot();
 
     /** @brief Internal function to attach a signal to the packet */
     void attachSignal(CubeMacFrame *macPkt);

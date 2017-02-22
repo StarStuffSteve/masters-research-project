@@ -13,7 +13,5 @@ class MACFrameBase;
 
 packet CubeMacFrame extends MACFrameBase
 {
-    int mySlot; // the node's current slot number
-       
-    MACAddress occupiedSlots[]; // currently known occupied slots
+    int mySlot; // the node's current slot number // --- Not in use anymore
 }

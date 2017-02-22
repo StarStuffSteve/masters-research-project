@@ -29,7 +29,11 @@ simple CubeMacLayer extends MACProtocolBase like IMACProtocol
         // 
         // --- Added
         //
+        double startTime @unit(s) = default(this.slotDuration);
+        int masterId = default(0);
         bool isSlave = default(false);
+        int slaveId = default(0);
+        int slavesInCluster = default(0);
         // ---
         
         string address = default("auto"); 
@@ -55,9 +59,8 @@ simple CubeMacLayer extends MACProtocolBase like IMACProtocol
         
         // level at which we consider medium busy FIXME not used currently
         // double busyRSSI;
-
-        int reservedMobileSlots = default(2);
         
+        // --- Should never use the default
         int numSlots = default(64);
         
         // The path to the Radio module
