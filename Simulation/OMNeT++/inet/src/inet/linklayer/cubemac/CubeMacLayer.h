@@ -66,11 +66,10 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         , radio(nullptr)
         , transmissionState(IRadio::TRANSMISSION_STATE_UNDEFINED)
         , queueLength(0)
+        , startCubemac(nullptr)
         , wakeUp(nullptr)
         , timeout(nullptr)
         , sendData(nullptr)
-        , checkChannel(nullptr)
-        , startCubemac(nullptr)
         , sendControl(nullptr)
         , bitrate(0)
     {} // --- What do you do?
@@ -119,22 +118,18 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
      */
 
     enum States {
-        INIT, SLEEP, CCA, WAIT_CONTROL, WAIT_DATA, SEND_CONTROL, SEND_DATA, WAIT_SLAVE_CONTROL , WAIT_SLAVE_DATA
+        INIT, SLEEP, WAIT_CONTROL, WAIT_DATA, SEND_CONTROL, SEND_DATA, WAIT_SLAVE_DATA
     };
 
     enum TYPES {
-        CUBEMAC_CONTROL = 167,
-        CUBEMAC_TIMEOUT = 168,
-        CUBEMAC_WAKEUP = 169,
-        CUBEMAC_SEND_DATA = 170,
-//        CUBEMAC_SETUP_PHASE_END = 171,
-        CUBEMAC_CHECK_CHANNEL = 172,
-        CUBEMAC_SOMEBODY = 173,
-        CUBEMAC_DATA = 174,
-        CUBEMAC_START_CUBEMAC = 175,
-        CUBEMAC_SEND_CONTROL = 176,
-        CUBEMAC_SLAVE_CONTROL = 177, // --- Added --- Pray these don't brake something odd
-        CUBEMAC_SLAVE_DATA = 178 // --- Added
+        CUBEMAC_START_CUBEMAC = 167, // Self
+        CUBEMAC_WAKEUP = 168, // Self
+        CUBEMAC_TIMEOUT = 169, // Self
+        CUBEMAC_SEND_DATA = 170, // Self
+        CUBEMAC_DATA = 171,
+        CUBEMAC_SEND_CONTROL = 172,
+        CUBEMAC_CONTROL = 173, // Self
+        CUBEMAC_SLAVE_DATA = 174
     };
 
     //
@@ -152,14 +147,12 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
 
     // --- Used by masters to collect multiple slave packets during uplink
     int slavesInCluster;
-    int expectedSlaveControlPackets;
+    int expectedSlaveDataPackets;
+
     // ---
 
     /** @brief dummy receiver address to indicate no pending packets in the control packet */
-    static const MACAddress CUBEMAC_NO_RECEIVER;
-    static const MACAddress CUBEMAC_FREE_SLOT;
-    // --- Added
-    static const MACAddress CUBEMAC_BROADCAST;
+    static const MACAddress CUBEMAC_NO_DATA;
 
     /** @brief the setup phase is the beginning of the simulation, where only control packets at very small slot durations are exchanged. */
     bool SETUP_PHASE;
@@ -202,11 +195,10 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     /** @brief length of the queue*/
     unsigned queueLength;
 
+    cMessage *startCubemac;
     cMessage *wakeUp;
     cMessage *timeout;
     cMessage *sendData;
-    cMessage *checkChannel;
-    cMessage *startCubemac;
     cMessage *sendControl;
 
     /** @brief the bit rate at which we transmit */
