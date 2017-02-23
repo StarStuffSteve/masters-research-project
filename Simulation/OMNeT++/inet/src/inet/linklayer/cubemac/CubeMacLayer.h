@@ -45,12 +45,15 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
   public:
     CubeMacLayer()
         : MACProtocolBase()
-        , startTime(0.0) // --- Added
-        , myId(0) // --- Added
-        , masterId(0) // --- Added
-        , slaveId(0) // --- Added
-        , isSlave(false) // --- Added
-        , slavesInCluster(0) // --- Added
+        // --- Added --- //
+        , startTime(0.0)
+        , myId(0)
+        , myClusterId(0)
+        , masterId(0)
+        , slaveId(0)
+        , isSlave(false)
+        , slavesInCluster(0)
+        // --- Added --- //
         , slotChange()
         , macState()
         , slotDuration(0)
@@ -116,7 +119,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
      */
 
     enum States {
-        INIT, SLEEP, CCA, WAIT_CONTROL, WAIT_DATA, SEND_CONTROL, SEND_DATA, WAIT_SLAVE_DATA
+        INIT, SLEEP, CCA, WAIT_CONTROL, WAIT_DATA, SEND_CONTROL, SEND_DATA, WAIT_SLAVE_CONTROL , WAIT_SLAVE_DATA
     };
 
     enum TYPES {
@@ -140,6 +143,8 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     simtime_t startTime;
 
     int myId;
+    int myClusterId;
+
     int masterId;
     int slaveId;
 

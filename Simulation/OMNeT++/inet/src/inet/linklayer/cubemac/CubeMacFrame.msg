@@ -13,5 +13,5 @@ class MACFrameBase;
 
 packet CubeMacFrame extends MACFrameBase
 {
-    int mySlot; // the node's current slot number // --- Not in use anymore
+    int clusterId; // Identifies the origin cluster of this message
 }
