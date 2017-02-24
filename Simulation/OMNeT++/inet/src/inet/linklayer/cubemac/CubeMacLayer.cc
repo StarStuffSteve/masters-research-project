@@ -17,7 +17,7 @@ Define_Module(CubeMacLayer)
 // --- Might use again in future
 //#define myId    (getParentModule()->getParentModule()->getIndex())
 
-const MACAddress CubeMacLayer::CUBEMAC_NO_RECEIVER = MACAddress(-2);
+const MACAddress CubeMacLayer::CUBEMAC_BROADCAST = MACAddress::BROADCAST_ADDRESS;
 
 void CubeMacLayer::initialize(int stage)
 {
@@ -26,12 +26,13 @@ void CubeMacLayer::initialize(int stage)
         //
         // --- Added
         //
-        masterId = par("masterId"); // --- Used to assigned fixed slots to masters
-        slaveId = par("slaveId"); // --- May need to offset transmission within uplink slot
-
+        //TODO: Remove
         startTime = par("startTime").doubleValue(); // --- Used to synchronize nodes
 
         isSlave = par("isSlave");
+
+        masterId = par("masterId"); // --- Used to assigned fixed slots to masters
+        slaveId = par("slaveId"); // --- May need to offset transmission within uplink slot
 
         if (isSlave)
             myId = slaveId;
@@ -44,8 +45,9 @@ void CubeMacLayer::initialize(int stage)
             myClusterId = myId;
 
         slavesInCluster = par("slavesInCluster");
-
         expectedSlaveDataPackets = slavesInCluster; // --- Reset during each sleep state
+
+        timeoutDuration = par("timeoutDuration").doubleValue();
 
         // ---
 
@@ -60,25 +62,25 @@ void CubeMacLayer::initialize(int stage)
 
         numSlots = par("numSlots");
 
-        EV_DETAIL << "My Mac address is" << address << " and my Id is " << myId << endl;
+        uplinkSlot = (numSlots - 1);
+
+        EV_DETAIL << "My Mac address is" << myAddress
+                  << " my cluster ID is " << myClusterId
+                  << " my ID is " << myId << endl;
 
         macState = INIT;
 
         // TODO: Add vectors
-        slotChange = new cOutVector("slotChange");
+//        slotChange = new cOutVector("slotChange");
 
-        // how long does it take to send/receive a control packet
-        // --- Where does 16 come from?
-        // --- Control packet length / bitrate
-        controlDuration = ((double)headerLength + (double)numSlots + 16) / (double)bitrate;
-        EV << "Control packets take : " << controlDuration << " seconds to transmit\n";
+        // TODO: Calculations for sending 'empty' packets
 
         initializeMACAddress();
 
         // --- Comes from MACProtocolBase
         registerInterface();
 
-        // --- NB: Signal subscriptions for receiveSignal function
+        // --- Important: Signal subscriptions for receiveSignal function
         cModule *radioModule = getModuleFromPar<cModule>(par("radioModule"), this);
         radioModule->subscribe(IRadio::radioModeChangedSignal, this);
         radioModule->subscribe(IRadio::transmissionStateChangedSignal, this);
@@ -93,11 +95,12 @@ void CubeMacLayer::initialize(int stage)
 
         EV_DETAIL << " startTime = " << startTime
                   << " isSlave = " << isSlave
-                  << " slavesInCluster = " << slavesInCluster
+                  << " myClusterId = " << myClusterId
                   << " myId = " << myId
+                  << " slavesInCluster = " << slavesInCluster
                   << " queueLength = " << queueLength
                   << " slotDuration = " << slotDuration
-                  << " controlDuration = " << controlDuration
+                  << " timeoutDuration = " << timeoutDuration
                   << " numSlots = " << numSlots
                   << " bitrate = " << bitrate << endl;
 
@@ -114,24 +117,20 @@ void CubeMacLayer::initialize(int stage)
         sendData = new cMessage("sendData");
         sendData->setKind(CUBEMAC_SEND_DATA);
 
-        sendControl = new cMessage("sendControl");
-        sendControl->setKind(CUBEMAC_SEND_CONTROL);
-
-        // --- TODO: Just make this 0.0? Does it really matter?
+        // --- TODO: Just make this 0.0
         scheduleAt(startTime, startCubemac);
     }
 }
 
 CubeMacLayer::~CubeMacLayer()
 {
-    // --- cOutVector for vector output file
-    delete slotChange;
+    // TODO: Add vectors
+//    delete slotChange;
 
     cancelAndDelete(startCubemac);
     cancelAndDelete(timeout);
     cancelAndDelete(wakeUp);
     cancelAndDelete(sendData);
-    cancelAndDelete(sendControl);
 
     // --- Clearing the queue
     for (auto & elem : macQueue) {
@@ -145,18 +144,18 @@ void CubeMacLayer::initializeMACAddress()
 {
     const char *addrstr = par("address");
 
-    if (!strcmp(addrstr, "auto")) { // --- If == "auto"
-        address = MACAddress::generateAutoAddress();
+    if (!strcmp(addrstr, "auto")) {
+        myAddress = MACAddress::generateAutoAddress();
 
         // change module parameter from "auto" to concrete address
-        par("address").setStringValue(address.str().c_str());
+        par("address").setStringValue(myAddress.str().c_str());
     }
     else {
-        address.setAddress(addrstr);
+        myAddress.setAddress(addrstr);
     }
 }
 
-// TODO Read more into Interfaces
+// TODO: Read more into Interfaces
 // --- Same as IdealMac
 InterfaceEntry *CubeMacLayer::createInterfaceEntry()
 {
@@ -165,8 +164,8 @@ InterfaceEntry *CubeMacLayer::createInterfaceEntry()
     // --- Who is using this i/f?
     e->setDatarate(bitrate);
     // generate a link-layer address to be used as interface token for IPv6
-    e->setMACAddress(address);
-    e->setInterfaceToken(address.formInterfaceIdentifier());
+    e->setMACAddress(myAddress);
+    e->setInterfaceToken(myAddress.formInterfaceIdentifier());
     e->setMtu(par("mtu").longValue());
     e->setMulticast(false);
     e->setBroadcast(true);
@@ -175,8 +174,6 @@ InterfaceEntry *CubeMacLayer::createInterfaceEntry()
 
 void CubeMacLayer::handleSelfMessage(cMessage *msg)
 {
-    int uplinkSlot = (numSlots - 1);
-
     if (isSlave)
     {
         switch (macState) {
@@ -204,12 +201,9 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
             case SLEEP:
                 if (msg->getKind() == CUBEMAC_WAKEUP) {
                     currSlot++;
-                    currSlot %= numSlots; // 0 .. (numSlots - 1)
+                    currSlot %= numSlots; // 0 .. uplinkSlot
 
                     EV_DETAIL << "Slave: In slot: " << currSlot << " My slot: " << mySlot << endl;
-
-                    // TODO: Modify Master code so it is every Nth slot
-                    // if ((currSlot%(numSlots - 1)) == 0) {
 
                     // ---> SEND_DATA
                     if (currSlot == uplinkSlot) {
@@ -220,19 +214,17 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
                         EV_DETAIL << "Slave: Old: SLEEP, New: SEND_DATA" << endl;
                     }
-                    // --- Slave awaits control in all non-uplink slots
-                    // ---> WAIT_CONROL
+                    // ---> WAIT_MASTER_DATA
                     else {
                         EV_DETAIL << "Slave: Woken during non-uplink slot.\n";
 
-                        macState = WAIT_CONTROL;
+                        macState = WAIT_MASTER_DATA;
                         radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
 
                         // --- Wait for duration of timeout for a control message
-                        // TODO: Adjust controlDuration?
-//                        scheduleAt(simTime() + 2.f * controlDuration, timeout);
+                        scheduleAt(simTime() + timeoutDuration, timeout);
 
-                        EV_DETAIL << "Slave: Old: SLEEP, New: WAIT_CONTROL" << endl;
+                        EV_DETAIL << "Slave: Old: SLEEP, New: WAIT_MASTER_DATA" << endl;
                     }
                 }
                 else {
@@ -246,139 +238,76 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
             // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- //
 
-            case WAIT_CONTROL:
+            case WAIT_MASTER_DATA:
                 /* Start Errors */
-                if (msg->getKind() == CUBEMAC_SLAVE_DATA)
-                    throw cRuntimeError("Slave: Expected master control received slave data\n");
-
-                if (msg->getKind() == CUBEMAC_DATA)
-                    throw cRuntimeError("Slave: Expected master control received master data\n");
-                /* End Errors */
-
-                if (msg->getKind() == CUBEMAC_TIMEOUT) {
-                    EV_DETAIL << "Slave: Control timeout. Going back to sleep.\n";
-
-                    macState = SLEEP;
-                    radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
-
-                    EV_DETAIL << "Slave: Old: WAIT_CONTROL, New: SLEEP" << endl;
-                }
-
-                else if (msg->getKind() == CUBEMAC_CONTROL) {
-                    // TODO: Check out sim manual and other (conditional?) casting functions
-                    CubeMacFrame *const mac = static_cast<CubeMacFrame *>(msg);
-
-                    const MACAddress& dest = mac->getDestAddr();
-                    const bool containsData = mac->getContainsData();
-                    const int senderId = mac->getSenderId();
-
-                    EV_DETAIL << "Slave: Received master control packet from src " << mac->getSrcAddr()
-                              << " with dest " << dest
-                              << " and sender ID " << senderId << endl;
-
-                    if (!containsData)
-                        EV_DETAIL << "Slave: Master has signaled it has no data to send with packet" << endl;
-
-                    if ((dest == address || dest.isBroadcast() || dest == CUBEMAC_NO_RECEIVER) && containsData) {
-                        EV_DETAIL << "Slave: Master data incoming.\n";
-
-                        macState = WAIT_DATA;
-
-                        EV_DETAIL << "Slave: Old: WAIT_CONTROL, New: WAIT_DATA" << endl;
-                    }
-                    else {
-                        EV_DETAIL << "Slave: No incoming master data for me. Going back to sleep.\n";
-
-                        macState = SLEEP;
-                        radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
-
-                        EV_DETAIL << "Slave: Old: WAIT_CONTROL, New: SLEEP" << endl;
-                    }
-
-//                    if (timeout->isScheduled())
-//                        cancelEvent(timeout);
-
-                    delete mac;
-                }
-                else if ((msg->getKind() == CUBEMAC_WAKEUP)) {
-                    EV_DETAIL << "Slave: Stuck in wait control until end of slot";
-
-                    macState = SLEEP;
-
-                    EV_DETAIL << "Slave: Old: WAIT_DATA, New: SLEEP" << endl;
-
-                    scheduleAt(simTime(), wakeUp); // --- Wake up immediately
-
-//                    if (timeout->isScheduled())
-//                        cancelEvent(timeout);
-                }
-                else {
-                    EV << "Slave: Unknown packet" << msg->getKind() << "in state" << macState << endl;
-                }
-
-                break;
-
-            // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- //
-
-            case WAIT_DATA:
-                /* Start Errors */
-                if (msg->getKind() == CUBEMAC_CONTROL)
-                    throw cRuntimeError("Slave: Expecting master data, received master control.\n");
-
                 if (msg->getKind() == CUBEMAC_SLAVE_DATA)
                     throw cRuntimeError("Slave: Expecting master data, received slave data.\n");
                 /* End Errors */
 
-                // TODO: Data timeout
-                if (msg->getKind() == CUBEMAC_DATA) {
+                if (msg->getKind() == CUBEMAC_TIMEOUT) {
+                    EV_DETAIL << "Slave: Data timeout. Going back to sleep.\n";
+
+                    macState = SLEEP;
+                    radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
+
+                    EV_DETAIL << "Slave: Old: WAIT_MASTER_DATA, New: SLEEP" << endl;
+                }
+
+                else if (msg->getKind() == CUBEMAC_MASTER_DATA) {
+                    if (timeout->isScheduled())
+                        cancelEvent(timeout);
+
                     CubeMacFrame *const mac = static_cast<CubeMacFrame *>(msg);
 
                     const MACAddress& dest = mac->getDestAddr();
+
                     const bool containsData = mac->getContainsData();
+
                     const int senderId = mac->getSenderId();
-                    // --- Not checking for cluster ID, can receive from any master during this slot
+                    const int clusterId = mac->getClusterId();
 
                     EV_DETAIL << "Slave: Received master data packet from src " << mac->getSrcAddr()
                               << " with dest " << dest
+                              << " cluster ID " << clusterId
                               << " and sender ID " << senderId << endl;
 
-                    if (!containsData)
-                        EV_DETAIL << "Slave: Master has signaled it has no data to send with packet" << endl;
-
-                    // TODO: Multicast
-                    if ((dest == address || dest.isBroadcast() || dest == CUBEMAC_NO_RECEIVER) && containsData) {
-                        EV_DETAIL << "Slave: Sending packet up\n";
-
-                        sendUp(decapsMsg(mac));
+                    if (!containsData) {
+                        EV_DETAIL << "Slave: Data packet from master is empty" << endl;
+                        delete mac;
                     }
                     else {
-                        // --- Shouldn't happen thanks to control packet from master
-                        EV_DETAIL << "Slave: No data for me, deleting\n";
+                        // TODO: Multicast
+                        if (dest == myAddress || dest.isBroadcast() || dest == CUBEMAC_BROADCAST) {
+                            EV_DETAIL << "Slave: Sending packet up\n";
 
-                        delete mac;
+                            sendUp(decapsMsg(mac));
+                        }
+                        else {
+                            EV_DETAIL << "Slave: Data not broadcast or for me, deleting\n";
+                            delete mac;
+                        }
                     }
 
                     // --- Will only ever get one master data packet per slot
                     macState = SLEEP;
                     radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
 
-                    EV_DETAIL << "Slave: Old: WAIT_DATA, New: SLEEP" << endl;
-
-//                    if (timeout->isScheduled())
-//                        cancelEvent(timeout);
+                    EV_DETAIL << "Slave: Old: WAIT_MASTER_DATA, New: SLEEP" << endl;
                 }
+
+                // --- Timeouts should make this impossible, something is wrong if we reach this
                 else if (msg->getKind() == CUBEMAC_WAKEUP) {
-                    EV_DETAIL << "Slave: Stuck in wait data until end of slot" << endl;
+                    if (timeout->isScheduled())
+                        cancelEvent(timeout);
+
+                    EV_DETAIL << "Slave: Waited for data until end of slot" << endl;
 
                     macState = SLEEP;
                     radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
 
-                    EV_DETAIL << "Slave: Old: WAIT_DATA, New: SLEEP" << endl;
+                    EV_DETAIL << "Slave: Old: WAIT_MASTER_DATA, New: SLEEP" << endl;
 
                     scheduleAt(simTime(), wakeUp);
-
-//                    if (timeout->isScheduled())
-//                        cancelEvent(timeout);
                 }
                 else {
                     EV << "Slave: Unknown packet " << msg->getKind() << " in state " << macState << endl;
@@ -396,15 +325,16 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                     if (macQueue.size() > 0) {
                         // --- Copy next packet on queue
                         CubeMacFrame *data = macQueue.front()->dup();
+                        data->setContainsData(true);
 
                         data->setKind(CUBEMAC_SLAVE_DATA);
+
                         data->setClusterId(myClusterId);
-                        data->setContainsData(true);
                         data->setSenderId(myId);
 
                         const MACAddress& dest = data->getDestAddr();
-
                         EV << "Slave: Sending data packet to dest " << dest << endl;
+
                         sendDown(data);
 
                         delete macQueue.front(); // --- Frees pointer and deletes
@@ -416,17 +346,19 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         CubeMacFrame *data = new CubeMacFrame();
 
                         data->setKind(CUBEMAC_SLAVE_DATA);
-                        data->setClusterId(myClusterId);
-                        data->setSenderId(myId);
                         data->setContainsData(false);
 
-                        data->setSrcAddr(address);
-                        data->setDestAddr(CUBEMAC_NO_RECEIVER); // --- Signal master that there is no data from this slave
+                        data->setClusterId(myClusterId);
+                        data->setSenderId(myId);
+
+                        data->setSrcAddr(myAddress);
+                        data->setDestAddr(CUBEMAC_BROADCAST);
 
                         // ??? Is header just blank?
-                        data->setBitLength(headerLength + numSlots); // TODO: Need to make sure nothing is going wrong here
+                        data->setBitLength(headerLength); // TODO: Need to make sure nothing is going wrong here
 
-                        EV << "Slave: No data on queue. Sending empty packet"<< endl;
+                        EV << "Slave: No data on queue. Sending empty broacast packet"<< endl;
+
                         sendDown(data);
                     }
                 }
@@ -486,39 +418,40 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
                     EV_DETAIL << "Master: In slot: " << currSlot << " My slot: " << mySlot << endl;
 
+                    // ---> SEND_DATA
+                    if (currSlot == mySlot) {
+                        EV_DETAIL << "Master: Woken during my slot." << endl;
+
+                        macState = SEND_DATA;
+                        radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
+
+                        EV_DETAIL << "Master: Old: SLEEP, New: SEND_DATA" << endl;
+                    }
                     // ---> WAIT_SLAVE_DATA
-                    if (currSlot == uplinkSlot){
+                    else if (currSlot == uplinkSlot){
                         EV_DETAIL << "Master: Woken during uplink slot." << endl;
                         EV_DETAIL << "Master: expecting " << expectedSlaveDataPackets << " data packets from slaves " << endl;
 
                         macState = WAIT_SLAVE_DATA;
                         radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
 
+                        scheduleAt(simTime() + timeoutDuration, timeout);
+
                         EV_DETAIL << "Master: Old: SLEEP, New: WAIT_SLAVE_DATA" << endl;
-
-//                        scheduleAt(simTime() + 2.f * controlDuration, timeout);
                     }
-                    // ---> SEND_CONTROL
-                    else if (mySlot == currSlot) {
-                        EV_DETAIL << "Master: Woken during my slot.\n";
-
-                        macState = SEND_CONTROL;
-                        radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
-
-                        EV_DETAIL << "Master: Old: SLEEP, New: SEND_CONTROL" << endl;
-                    }
-                    // ---> WAIT_CONTROL
+                    // ---> WAIT_MASTER_DATA
                     else {
-                        EV_DETAIL << "Master: Woken up in slot of another master. Getting ready to receive master control.\n";
+                        EV_DETAIL << "Master: Woken up in slot of another master" << endl;
 
-                        macState = WAIT_CONTROL;
+                        macState = WAIT_MASTER_DATA;
                         radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
 
-                        EV_DETAIL << "Master: Old: SLEEP, New: WAIT_CONTROL" << endl;
+                        scheduleAt(simTime() + timeoutDuration, timeout);
 
-//                        scheduleAt(simTime() + 2.f * controlDuration, timeout);
+                        EV_DETAIL << "Master: Old: SLEEP, New: WAIT_MASTER_DATA" << endl;
                     }
                 }
+
                 else {
                     EV << "Master: Unknown packet " << msg->getKind() << " in state " << macState << endl;
                 }
@@ -529,140 +462,73 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
             // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- //
 
-            case WAIT_CONTROL:
-                /* Start Errors */
-                if (msg->getKind() == CUBEMAC_SLAVE_DATA)
-                    throw cRuntimeError("Master: Expected master control received slave data\n");
-
-                if (msg->getKind() == CUBEMAC_DATA)
-                    throw cRuntimeError("Master: Expected master control received master data\n");
-                /* End Errors */
-
-                if (msg->getKind() == CUBEMAC_TIMEOUT) {
-                    EV_DETAIL << "Master: Control timeout. Go back to sleep" << endl;
-
-                    macState = SLEEP;
-                    radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
-
-                    EV_DETAIL << "Master: Old: WAIT_CONTROL, New: SLEEP" << endl;
-                }
-
-                if (msg->getKind() == CUBEMAC_CONTROL) {
-                    CubeMacFrame *const mac = static_cast<CubeMacFrame *>(msg);
-
-                    const MACAddress& dest = mac->getDestAddr();
-                    const bool containsData = mac->getContainsData();
-                    const int senderId = mac->getSenderId();
-
-                    EV_DETAIL << "Master: Received master control packet from src " << mac->getSrcAddr()
-                              << " with dest " << dest
-                              << " and sender ID " << senderId << endl;
-
-                    if (!containsData)
-                        EV_DETAIL << "Master: Master has signaled it has no data to send" << endl;
-
-                    // TODO: Multicast
-                    if ((dest == address || dest.isBroadcast() || dest == CUBEMAC_NO_RECEIVER)  && containsData) {
-                        EV_DETAIL << "Master: Data incoming from master" << endl;
-
-                        macState = WAIT_DATA;
-
-                        EV_DETAIL << "Master: Old: WAIT_CONTROL, New: WAIT_DATA" << endl;
-                    }
-                    else {
-                        EV_DETAIL << "Master: No incoming master data for me. Going back to sleep.\n";
-
-                        macState = SLEEP;
-                        radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
-
-                        EV_DETAIL << "Master: Old: WAIT_CONTROL, New: SLEEP" << endl;
-                    }
-
-//                    if (timeout->isScheduled())
-//                        cancelEvent(timeout);
-
-                    // --- We don't do anything with control packets
-                    delete mac;
-                }
-
-                else if ((msg->getKind() == CUBEMAC_WAKEUP)) {
-                    EV_DETAIL << "Master: left waiting for master control packet until end of slot" << endl;
-
-                    macState = SLEEP;
-                    radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
-
-                    EV_DETAIL << "Master: Old: WAIT_CONTROL, New: SLEEP" << endl;
-
-//                    if (timeout->isScheduled())
-//                        cancelEvent(timeout);
-
-                    scheduleAt(simTime(), wakeUp); // --- Wake up immediately
-                }
-
-                else {
-                    EV << "Master: Unknown packet " << msg->getKind() << " in state " << macState << endl;
-                }
-
-                break;
-
-            // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- //
-
-            case WAIT_DATA:
+            case WAIT_MASTER_DATA:
                 /* Start Errors */
                 if (msg->getKind() == CUBEMAC_SLAVE_DATA)
                     throw cRuntimeError("Master: Expected master data received slave data\n");
-
-                if (msg->getKind() == CUBEMAC_CONTROL)
-                    throw cRuntimeError("Master: Expected master data received master control\n");
                 /* End Errors */
 
-                // TODO: Timeout
-                if (msg->getKind() == CUBEMAC_DATA) {
+                if (msg->getKind() == CUBEMAC_TIMEOUT) {
+                    EV_DETAIL << "Master: Master data timeout. Go back to sleep" << endl;
+
+                    macState = SLEEP;
+                    radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
+
+                    EV_DETAIL << "Master: Old: WAIT_MASTER_DATA, New: SLEEP" << endl;
+                }
+
+                else if (msg->getKind() == CUBEMAC_MASTER_DATA) {
+                    if (timeout->isScheduled())
+                        cancelEvent(timeout);
+
                     CubeMacFrame *const mac = static_cast<CubeMacFrame *>(msg);
 
                     const MACAddress& dest = mac->getDestAddr();
+
                     const bool containsData = mac->getContainsData();
+
                     const int senderId = mac->getSenderId();
+                    const int clusterId = mac->getClusterId();
 
                     EV_DETAIL << "Master: Received master data packet from src " << mac->getSrcAddr()
                               << " with dest " << dest
+                              << " with cluster ID " << clusterId
                               << " and sender ID " << senderId << endl;
 
-                    if (!containsData) // --- Master should have signalled this in the control packet
-                        EV_DETAIL << "Master: Master has signaled it has no data to send" << endl;
-
-                    // TODO: Multicast
-                    if ((dest == address || dest.isBroadcast() || dest == CUBEMAC_NO_RECEIVER) && containsData) {
-                        EV_DETAIL << "Master: Sending data up\n";
-
-                        sendUp(decapsMsg(mac));
+                    if (!containsData) {
+                        EV_DETAIL << "Master: Data packet from master is empty" << endl;
+                        delete mac;
                     }
                     else {
-                        EV_DETAIL << "Master: No data for me, deleting\n";
+                        // TODO: Multicast
+                        if (dest == myAddress || dest.isBroadcast() || dest == CUBEMAC_BROADCAST) {
+                            EV_DETAIL << "Master: Sending data up" << endl;
 
-                        delete mac;
+                            sendUp(decapsMsg(mac));
+                        }
+                        else {
+                            EV_DETAIL << "Master: Data not broadcast or for me, deleting" << endl;
+                            delete mac;
+                        }
                     }
 
                     // --- It's ok to go to sleep, only one master can send packets per master slot
                     macState = SLEEP;
                     radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
 
-                    EV_DETAIL << "Master: Old: WAIT_DATA, New: SLEEP" << endl;
-
-//                    if (timeout->isScheduled())
-//                        cancelEvent(timeout);
+                    EV_DETAIL << "Master: Old: WAIT_MASTER_DATA, New: SLEEP" << endl;
                 }
 
                 else if (msg->getKind() == CUBEMAC_WAKEUP) {
-                    EV_DETAIL << "Master: Slot " << currSlot
-                              << " ended while waiting for data" << endl;
+                    if (timeout->isScheduled())
+                        cancelEvent(timeout);
+
+                    EV_DETAIL << "Master: Waited for master data until end of slot" << endl;
 
                     macState = SLEEP;
+                    radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
 
-                    EV_DETAIL << "Master: Old: WAIT_DATA, New: SLEEP" << endl;
-
-//                    if (timeout->isScheduled())
-//                        cancelEvent(timeout);
+                    EV_DETAIL << "Master: Old: WAIT_MASTER_DATA, New: SLEEP" << endl;
 
                     scheduleAt(simTime(), wakeUp);
                 }
@@ -677,11 +543,8 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
             case WAIT_SLAVE_DATA:
                 /* Start Errors */
-                if (msg->getKind() == CUBEMAC_DATA)
+                if (msg->getKind() == CUBEMAC_MASTER_DATA)
                     throw cRuntimeError("Master: Expected slave data received master data\n");
-
-                if (msg->getKind() == CUBEMAC_CONTROL)
-                    throw cRuntimeError("Master: Expected slave data received master control\n");
                 /* End Errors */
 
                 if (msg->getKind() == CUBEMAC_TIMEOUT) {
@@ -696,19 +559,20 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                 }
 
                 if (msg->getKind() == CUBEMAC_SLAVE_DATA) {
-                    // --- Keep at top
-//                    if (timeout->isScheduled())
-//                        cancelEvent(timeout);
+                    if (timeout->isScheduled())
+                        cancelEvent(timeout);
 
                     CubeMacFrame *const mac = static_cast<CubeMacFrame *>(msg);
 
                     const MACAddress& dest = mac->getDestAddr();
-                    const int clusterId = mac->getClusterId();
                     const int containsData = mac->getContainsData();
+
+                    const int clusterId = mac->getClusterId();
                     const int senderId = mac->getSenderId();
 
                     EV_DETAIL << "Master: Received slave data packet from src " << mac->getSrcAddr()
                               << " with dest " << dest
+                              << " with cluster ID " << clusterId
                               << " and sender ID " << senderId << endl;
 
                     // --- Ignore data from outside of my cluster
@@ -731,54 +595,57 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         expectedSlaveDataPackets--;
 
                     // --- Handle packet
-                    if ((dest == address || dest.isBroadcast() || dest == CUBEMAC_NO_RECEIVER) && containsData) {
-                        EV_DETAIL << "Master: Sending slave data up" << endl;
-
-                        sendUp(decapsMsg(mac));
-                    }
-                    else {
-                        // --- Could be addressed to someone else or slave may have no data to send
-                        EV_DETAIL << "Master: No slave data for me, deleting" << endl;
-
+                    if (!containsData)
+                    {
+                        EV_DETAIL << "Master: Slave data is empty" << endl;
                         delete mac;
                     }
-
-                    // --- Checking if we need to stay awake for further packets
-                    if (expectedSlaveDataPackets > 0)
+                    else
                     {
+                        if (dest == myAddress || dest.isBroadcast() || dest == CUBEMAC_BROADCAST) {
+                            EV_DETAIL << "Master: Sending slave data up" << endl;
+
+                            sendUp(decapsMsg(mac));
+                        }
+                        else {
+                            EV_DETAIL << "Master: Slave data not broadcast or for me, deleting" << endl;
+                            delete mac;
+                        }
+                    }
+
+                    // --- Check if we need to stay awake for further packets
+                    if (expectedSlaveDataPackets > 0) {
                         EV_DETAIL << "Master: Expecting a further " << expectedSlaveDataPackets
                                   << " slave control packet(s)." << endl;
 
-                        macState = WAIT_SLAVE_DATA;
-
                         // --- Schedule new timeout
-//                        scheduleAt(simTime() + 2.f * controlDuration, timeout);
+                        scheduleAt(simTime() + timeoutDuration, timeout);
 
                         // --- Stay in WAIT_SLAVE_DATA
                         break;
                     }
-                    else
-                    {
+                    else {
                         EV_DETAIL << "Master: Expecting no further slave control packets." << endl;
 
                         macState = SLEEP;
                         radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
 
-                        EV_DETAIL << "Master: Old: WAIT_DATA, New: SLEEP" << endl;
+                        EV_DETAIL << "Master: Old: WAIT_MASTER_DATA, New: SLEEP" << endl;
                     }
                 }
 
                 else if (msg->getKind() == CUBEMAC_WAKEUP) {
-                    EV_DETAIL << "Master: Slot " << currSlot
-                              << " ended while waiting for data" << endl;
+                    if (timeout->isScheduled())
+                        cancelEvent(timeout);
+
+                    EV_DETAIL << "Master: Waited for master data until end of slot" << endl;
+                    EV_DETAIL << "Master: Expecting a further " << expectedSlaveDataPackets
+                              << " slave control packet(s)." << endl;
 
                     macState = SLEEP;
                     radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
 
-                    EV_DETAIL << "Master: Old: WAIT_DATA, New: SLEEP" << endl;
-
-//                    if (timeout->isScheduled())
-//                        cancelEvent(timeout);
+                    EV_DETAIL << "Master: Old: WAIT_MASTER_DATA, New: SLEEP" << endl;
 
                     scheduleAt(simTime(), wakeUp);
                 }
@@ -790,75 +657,59 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
             // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- //
 
-            case SEND_CONTROL:
-
-                if (msg->getKind() == CUBEMAC_SEND_CONTROL) {
-                    EV << "Master: Sending a control packet.\n";
-
-                    CubeMacFrame *control = new CubeMacFrame(); // ??? Does constructor set up a default address?
-                    control->setBitLength(headerLength + numSlots); // ??? Should this be changed?
-                    control->setKind(CUBEMAC_CONTROL);
-                    control->setClusterId(myClusterId);
-                    control->setSenderId(myId);
-                    control->setSrcAddr(address);
-
+            case SEND_DATA:
+                if (msg->getKind() == CUBEMAC_SEND_DATA) {
                     if (macQueue.size() > 0) {
-                        control->setContainsData(true);
-                        control->setDestAddr((macQueue.front())->getDestAddr());
+                        /* Start Errors */
+                        if (currSlot != mySlot)
+                            throw cRuntimeError("Master: ERROR: Attempting to send data in a slot which is not our own. Repairs needed.\n");
+                        /* End Errors */
+
+                        CubeMacFrame *data = macQueue.front()->dup();
+                        data->setContainsData(true);
+
+                        data->setClusterId(myClusterId);
+                        data->setSenderId(myId);
+
+                        data->setKind(CUBEMAC_MASTER_DATA);
+
+                        const MACAddress& dest = data->getDestAddr();
+                        EV << "Master: Sending data packet to dest " << dest << endl;
+
+                        sendDown(data);
+
+                        delete macQueue.front();
+                        macQueue.pop_front();
                     }
                     else {
-                        control->setContainsData(false); // ??? Will no having an address cause issues?
-                        control->setDestAddr(CUBEMAC_NO_RECEIVER); // --- Seems to overlap with other useful address
+                        // --- Create new empty packet
+                        CubeMacFrame *data = new CubeMacFrame();
+
+                        data->setKind(CUBEMAC_MASTER_DATA);
+
+                        data->setContainsData(false);
+
+                        data->setClusterId(myClusterId);
+                        data->setSenderId(myId);
+
+                        data->setSrcAddr(myAddress);
+                        data->setDestAddr(CUBEMAC_BROADCAST);
+
+                        // ??? Is header just blank?
+                        data->setBitLength(headerLength); // TODO: Need to make sure nothing is going wrong here
+
+                        EV << "Master: No data on queue. Sending empty broadcast packet"<< endl;
+
+                        sendDown(data);
                     }
-
-                    sendDown(control);
-
-                    // --- Schedule the sending of data
-                    if (macQueue.size() > 0)
-                        scheduleAt(simTime() + controlDuration, sendData); // --- Won't send data if no data to send
                 }
-
-                // TODO: Move this to SEND_DATA
-                // --- Actual data sending
-                else if (msg->getKind() == CUBEMAC_SEND_DATA) {
-                    /* Start Errors */
-                    if (currSlot != mySlot)
-                        throw cRuntimeError("Master: ERROR: Attempting to send data in a slot which is not our own. Repairs needed.\n");
-                    /* End Errors */
-
-                    CubeMacFrame *data = macQueue.front()->dup();
-                    data->setContainsData(true);
-                    data->setClusterId(myClusterId);
-                    data->setSenderId(myId);
-                    data->setKind(CUBEMAC_DATA);
-
-                    EV << "Sending down data packet\n";
-                    sendDown(data);
-
-                    delete macQueue.front();
-                    macQueue.pop_front();
-
-                    macState = SEND_DATA;
-
-                    EV_DETAIL << "Master: Old: SEND_CONTROL, New: SEND_DATA" << endl;
-                }
-                else {
-                    EV << "Master: Unknown packet " << msg->getKind() << " in state " << macState << endl;
-                }
-                break;
-
-            // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- //
-
-            case SEND_DATA:
-                if (msg->getKind() == CUBEMAC_WAKEUP) {
-                    throw cRuntimeError("Master: WARNING: New slot starting while still transmitting data. Check data packet size and/or bitrate\n");
+                else if (msg->getKind() == CUBEMAC_WAKEUP) {
+                    throw cRuntimeError("Master: New slot starting while still transmitting data. Check data packet size and/or bitrate\n");
                 }
                 else {
                     EV << "Unknown packet" << msg->getKind() << "in state" << macState << endl;
                 }
                 break;
-
-            // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- //
 
             default:
                 throw cRuntimeError("Master: Unknown mac state: %d", macState);
@@ -885,11 +736,9 @@ void CubeMacLayer::handleUpperPacket(cPacket *msg)
     // message has to be queued if another message is waiting to be send
     // or if we are already trying to send another message
     if (macQueue.size() <= queueLength) {
-
         macQueue.push_back(mac);
-        EV_DETAIL << "Packet put in queue\n  queue size: " << macQueue.size() << " macState: " << macState
-                  << "; mySlot is " << mySlot << "; current slot is " << currSlot << endl;
-        ;
+
+        EV_DETAIL << "Packet put in queue\n  queue size: " << macQueue.size() << " macState: " << macState << endl;
     }
     else {
         // queue is full, message has to be deleted
@@ -905,14 +754,13 @@ void CubeMacLayer::handleUpperPacket(cPacket *msg)
 void CubeMacLayer::handleLowerPacket(cPacket *msg)
 {
     if (msg->hasBitError()) {
-        EV << "Received " << msg << " contains bit errors or collision, dropping it\n";
+        EV << "Received " << msg << " which contains bit errors or collision, dropping it\n";
         delete msg;
         return;
     }
     // simply pass the massage as self message, to be processed by the FSM.
     handleSelfMessage(msg);
 }
-
 
 /**
  * Attaches a "control info" (MacToNetw) structure (object) to the message pMsg.
@@ -930,15 +778,9 @@ cObject *CubeMacLayer::setUpControlInfo(cMessage *const pMsg, const MACAddress& 
 //
 // --- Signals
 //
-
-/**
- * Handle transmission over messages: send the data packet or don;t do anything.
- */
-// --- Signals that transmission and/or radio states have changed
 void CubeMacLayer::receiveSignal(cComponent *source, simsignal_t signalID, long value DETAILS_ARG)
 {
-    // --- Looking for radio state transitions from transmitting to idle
-    // TODO: Will have to modify for the sending of multiple within slot
+    // --- Dectecting radio state transitions from transmitting to idle
     if (signalID == IRadio::transmissionStateChangedSignal) {
         IRadio::TransmissionState newRadioTransmissionState = (IRadio::TransmissionState)value;
 
@@ -948,41 +790,37 @@ void CubeMacLayer::receiveSignal(cComponent *source, simsignal_t signalID, long 
             }
 
             else {
-                EV_DETAIL << "Signal: Transmission over. nothing else is scheduled, get back to sleep." << endl;
-
-                EV_DETAIL << "Old state: ?, New state: SLEEP" << endl;
+                EV_DETAIL << "Signal: Transmission over. Going to sleep." << endl;
 
                 macState = SLEEP;
                 radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
 
-//                if (timeout->isScheduled())
-//                    cancelEvent(timeout);
+                EV_DETAIL << "Old state: SEND_DATA, New state: SLEEP" << endl;
             }
         }
 
-        transmissionState = newRadioTransmissionState; // --- Should be RADIO_MODE_SLEEP?
+        transmissionState = newRadioTransmissionState;
     }
+    // --- Detecting switch to transmitter mode
     else if (signalID == IRadio::radioModeChangedSignal) {
         IRadio::RadioMode radioMode = (IRadio::RadioMode)value;
 
         if (isSlave && macState == SEND_DATA && radioMode == IRadio::RADIO_MODE_TRANSMITTER) {
 
             EV_DETAIL << "Slave: Radio set to transmitter mode" << endl;
-            EV_DETAIL << "Slave: Send self-message to trigger sending of data packet" << endl;
+            EV_DETAIL << "Slave: Sending self-message to trigger sending of data packet" << endl;
 
-            scheduleAt(simTime() + (0.01 * (myId + 1)), sendData); // --- 10ms ??? What if slave transmissions longer than 10ms?
+            scheduleAt(simTime() + (0.01 * (myId + 1)), sendData); // ??? What if slave transmissions longer than 10ms?
 
-//            scheduleAt(simTime() + (controlDuration * (slaveId + 1)), sendData);
-
-//            scheduleAt(simTime(), sendData); // Simultaneous transmission always fails thanks to radio state machine
-              // TODO: Debug the path to ignoring the packet
+            // TODO: Debug the path to figure out how to stop colliding packet ignorance
+//            scheduleAt(simTime(), sendData);
         }
-        else if (macState == SEND_CONTROL && radioMode == IRadio::RADIO_MODE_TRANSMITTER) {
+        else if (macState == SEND_DATA && radioMode == IRadio::RADIO_MODE_TRANSMITTER) {
 
             EV_DETAIL << "Master: Radio set to transmitter mode" << endl;
-            EV_DETAIL << "Master: Send self-message to trigger sending of control packet" << endl;
+            EV_DETAIL << "Master: Sending self-message to trigger sending of data packet" << endl;
 
-            scheduleAt(simTime() +  controlDuration, sendControl);
+            scheduleAt(simTime(), sendData);
         }
     }
 }
@@ -1022,18 +860,18 @@ CubeMacFrame *CubeMacLayer::encapsMsg(cPacket *netwPkt)
     // copy dest address from the Control Info attached to the network
     // message by the network layer
     IMACProtocolControlInfo *cInfo = check_and_cast<IMACProtocolControlInfo *>(netwPkt->removeControlInfo());
-    EV_DETAIL << "CInfo removed, mac addr=" << cInfo->getDestinationAddress() << endl;
+    EV_DETAIL << "CInfo removed, mac address = " << cInfo->getDestinationAddress() << endl;
     pkt->setDestAddr(cInfo->getDestinationAddress());
 
     //delete the control info
     delete cInfo;
 
     //set the src address to own mac address (nic module getId())
-    pkt->setSrcAddr(address);
+    pkt->setSrcAddr(myAddress);
 
     //encapsulate the network packet
     pkt->encapsulate(netwPkt);
-    EV_DETAIL << "pkt encapsulated\n";
+    EV_DETAIL << "Packet encapsulated\n";
 
     return pkt;
 }
@@ -1041,10 +879,8 @@ CubeMacFrame *CubeMacLayer::encapsMsg(cPacket *netwPkt)
 //
 // --- Queue
 //
-
 void CubeMacLayer::flushQueue()
 {
-    // TODO: ?
     macQueue.clear();
 }
 

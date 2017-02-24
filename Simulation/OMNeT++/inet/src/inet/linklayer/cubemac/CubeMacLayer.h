@@ -53,12 +53,12 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         , slaveId(0)
         , isSlave(false)
         , slavesInCluster(0)
+        , uplinkSlot(0)
+        , timeoutDuration(0.01)
         // --- Added --- //
-        , slotChange()
         , macState()
         , slotDuration(0)
         , headerLength(0)
-        , controlDuration(0)
         , mySlot(0)
         , numSlots(0)
         , currSlot()
@@ -70,7 +70,6 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         , wakeUp(nullptr)
         , timeout(nullptr)
         , sendData(nullptr)
-        , sendControl(nullptr)
         , bitrate(0)
     {} // --- What do you do?
     
@@ -118,7 +117,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
      */
 
     enum States {
-        INIT, SLEEP, WAIT_CONTROL, WAIT_DATA, SEND_CONTROL, SEND_DATA, WAIT_SLAVE_DATA
+        INIT, SLEEP, SEND_DATA, WAIT_MASTER_DATA, WAIT_SLAVE_DATA
     };
 
     enum TYPES {
@@ -126,15 +125,14 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         CUBEMAC_WAKEUP = 168, // Self
         CUBEMAC_TIMEOUT = 169, // Self
         CUBEMAC_SEND_DATA = 170, // Self
-        CUBEMAC_DATA = 171,
-        CUBEMAC_SEND_CONTROL = 172,
-        CUBEMAC_CONTROL = 173, // Self
-        CUBEMAC_SLAVE_DATA = 174
+        CUBEMAC_MASTER_DATA = 171,
+        CUBEMAC_SLAVE_DATA = 172
     };
 
     //
     // --- Added
     //
+    // TODO: Comments
     simtime_t startTime;
 
     int myId;
@@ -145,20 +143,15 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
 
     bool isSlave;
 
-    // --- Used by masters to collect multiple slave packets during uplink
     int slavesInCluster;
     int expectedSlaveDataPackets;
 
+    int uplinkSlot;
+
+    double timeoutDuration;
     // ---
 
-    /** @brief dummy receiver address to indicate no pending packets in the control packet */
-    static const MACAddress CUBEMAC_NO_RECEIVER;
-
-    /** @brief the setup phase is the beginning of the simulation, where only control packets at very small slot durations are exchanged. */
-    bool SETUP_PHASE;
-
-    /** @brief indicate how often the node needs to change its slot because of collisions */
-    cOutVector *slotChange;
+    static const MACAddress CUBEMAC_BROADCAST;
 
     /** @brief keep track of MAC state */
     States macState;
@@ -168,9 +161,6 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
 
     /** @brief Length of the header*/
     int headerLength;
-
-    /** @brief Duration of the control time in each slot */
-    double controlDuration;
 
     /** @brief my slot ID */
     int mySlot;
@@ -182,7 +172,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     int currSlot;
 
     /** @brief The MAC address of the interface. */
-    MACAddress address;
+    MACAddress myAddress;
 
     /** @brief A queue to store packets from upper layer in case another
        packet is still waiting for transmission..*/
@@ -199,7 +189,6 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     cMessage *wakeUp;
     cMessage *timeout;
     cMessage *sendData;
-    cMessage *sendControl;
 
     /** @brief the bit rate at which we transmit */
     double bitrate;

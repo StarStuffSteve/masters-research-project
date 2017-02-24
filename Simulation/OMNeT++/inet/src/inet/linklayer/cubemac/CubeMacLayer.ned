@@ -32,11 +32,15 @@ simple CubeMacLayer extends MACProtocolBase like IMACProtocol
         double startTime @unit(s) = default(this.slotDuration);
         
         int clusterId = default(0);
+        
         int slaveId = default(0);
         int masterId = default(0);
         
         bool isSlave = default(false);
+        
         int slavesInCluster = default(0);
+        
+        double timeoutDuration @unit(s) = default((this.slotDuration/10));
         // ---
         
         string address = default("auto"); 
