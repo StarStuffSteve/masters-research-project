@@ -56,13 +56,13 @@ network Base
         // --- Nodes
         //
         // Masters
+        // AODVRouter
+        // WirelessHost
         nodeMaster[numMasters]: WirelessHost{
             parameters:
                 @display("is=s;r=,,#707070");
         }
         // Slaves
-        // Has to be AODV or else packets will never get picker up
-        // by local cluster master for reasons yet unknown
         nodeSlave[numSlaves]: WirelessHost{
             parameters:
                 @display("is=s;r=,,#606060"); 

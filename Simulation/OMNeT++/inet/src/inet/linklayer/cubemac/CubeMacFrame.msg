@@ -13,5 +13,8 @@ class MACFrameBase;
 
 packet CubeMacFrame extends MACFrameBase
 {
+//    int numIncoming; // used to signal other nodes of the number of incoming data packet *following* this one 
+    bool containsData; // used to signal other nodes that there is no data and no data coming
     int clusterId; // Identifies the origin cluster of this message
+    int senderId; // Identifies sender
 }

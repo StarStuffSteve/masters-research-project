@@ -152,7 +152,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     // ---
 
     /** @brief dummy receiver address to indicate no pending packets in the control packet */
-    static const MACAddress CUBEMAC_NO_DATA;
+    static const MACAddress CUBEMAC_NO_RECEIVER;
 
     /** @brief the setup phase is the beginning of the simulation, where only control packets at very small slot durations are exchanged. */
     bool SETUP_PHASE;
