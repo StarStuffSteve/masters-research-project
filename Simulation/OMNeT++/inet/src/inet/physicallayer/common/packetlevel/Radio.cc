@@ -298,6 +298,9 @@ void Radio::handleUpperPacket(cPacket *packet)
     }
 }
 
+//
+// --- There's yer problem ...
+//
 void Radio::handleLowerPacket(RadioFrame *radioFrame)
 {
     auto receptionTimer = createReceptionTimer(radioFrame);

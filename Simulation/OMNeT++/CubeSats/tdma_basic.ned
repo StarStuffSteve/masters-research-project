@@ -20,6 +20,7 @@ import inet.linklayer.cubemac.CubeMacLayer;
 import inet.node.aodv.AODVRouter;
 import inet.node.inet.WirelessHost;
 
+// TODO Parameterize further
 network Base
 {
     parameters:
@@ -58,12 +59,12 @@ network Base
         // Masters
         // AODVRouter
         // WirelessHost
-        nodeMaster[numMasters]: WirelessHost{
+        nodeMaster[numMasters]: AODVRouter{
             parameters:
                 @display("is=s;r=,,#707070");
         }
         // Slaves
-        nodeSlave[numSlaves]: WirelessHost{
+        nodeSlave[numSlaves]: AODVRouter{
             parameters:
                 @display("is=s;r=,,#606060"); 
         }    
