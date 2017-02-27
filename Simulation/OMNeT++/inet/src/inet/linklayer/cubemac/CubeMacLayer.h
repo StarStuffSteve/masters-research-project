@@ -53,6 +53,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         , slaveId(0)
         , isSlave(false)
         , slavesInCluster(0)
+        , slaveOffset(0.01)
         , uplinkSlot(0)
         , timeoutDuration(0.01)
         // --- Added --- //
@@ -144,6 +145,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     bool isSlave;
 
     int slavesInCluster;
+    double slaveOffset;
     int expectedSlaveDataPackets;
 
     int uplinkSlot;

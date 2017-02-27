@@ -45,6 +45,7 @@ void CubeMacLayer::initialize(int stage)
             myClusterId = myId;
 
         slavesInCluster = par("slavesInCluster");
+        slaveOffset = par("slaveOffset").doubleValue();
         expectedSlaveDataPackets = slavesInCluster; // --- Reset during each sleep state
 
         timeoutDuration = par("timeoutDuration").doubleValue();
@@ -810,7 +811,7 @@ void CubeMacLayer::receiveSignal(cComponent *source, simsignal_t signalID, long 
             EV_DETAIL << "Slave: Radio set to transmitter mode" << endl;
             EV_DETAIL << "Slave: Sending self-message to trigger sending of data packet" << endl;
 
-            scheduleAt(simTime() + (0.01 * (myId + 1)), sendData); // ??? What if slave transmissions longer than 10ms?
+            scheduleAt(simTime() + (slaveOffset * (myId + 1)), sendData); // ??? What if slave transmissions longer than 10ms?
 
             // TODO: Debug the path to figure out how to stop colliding packet ignorance
 //            scheduleAt(simTime(), sendData);
