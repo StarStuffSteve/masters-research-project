@@ -26,7 +26,6 @@ network Base
     parameters:
         int numMasters;
         int numSlaves;
-        int slavesPerMaster; // Not in use
         string radioMediumType = default("IdealRadioMedium");
 
         @display("bgb=1000,1000;bgg=100,1,grey95");
@@ -42,23 +41,21 @@ network Base
             @display("p=100,25");
         }
         configurator: IPv4NetworkConfigurator {
-            @display("p=100,75");
+            @display("p=100,100");
         }
         radioMedium: <radioMediumType> like IRadioMedium {
-            @display("p=100,125");
-        }
-        physicalEnvironment: PhysicalEnvironment {
             @display("p=100,175");
         }
-        figureHelper: DelegateSignalConfigurator {
-            @display("p=100,225");
+        physicalEnvironment: PhysicalEnvironment {
+            @display("p=100,250");
         }
+        figureHelper: DelegateSignalConfigurator {
+            @display("p=100,325");
+        }
+        
         //
         // --- Nodes
         //
-        // Masters
-        // AODVRouter
-        // WirelessHost
         nodeMaster[numMasters]: AODVRouter{
             parameters:
                 @display("is=s;r=,,#707070");

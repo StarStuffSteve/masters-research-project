@@ -180,6 +180,11 @@ class INET_API Radio : public PhysicalLayerBase, public virtual IRadio
     //@}
 
   private:
+    // Added
+    int receptionCounter = 0;
+    const int maxReceptionTimers = 32;
+    cMessage *receptionTimers[32];
+
     void parseRadioModeSwitchingTimes();
     void startRadioModeSwitch(RadioMode newRadioMode, simtime_t switchingTime);
     void completeRadioModeSwitch(RadioMode newRadioMode);
