@@ -26,26 +26,13 @@ void CubeMacLayer::initialize(int stage)
         //
         // --- Added
         //
-        //TODO: Remove
         startTime = par("startTime").doubleValue(); // --- Used to synchronize nodes
 
         isSlave = par("isSlave");
 
-        masterId = par("masterId"); // --- Used to assigned fixed slots to masters
-        slaveId = par("slaveId"); // --- May need to offset transmission within uplink slot
-
-        if (isSlave)
-            myId = slaveId;
-        else
-            myId = masterId;
-
-        if (isSlave)
-            myClusterId = par("clusterId");
-        else
-            myClusterId = myId;
+        myClusterId = par("clusterId");
 
         slavesInCluster = par("slavesInCluster");
-        slaveOffset = par("slaveOffset").doubleValue();
         expectedSlaveDataPackets = slavesInCluster; // --- Reset during each sleep state
 
         timeoutDuration = par("timeoutDuration").doubleValue();
@@ -66,8 +53,7 @@ void CubeMacLayer::initialize(int stage)
         uplinkSlot = (numSlots - 1);
 
         EV_DETAIL << "My Mac address is" << myAddress
-                  << " my cluster ID is " << myClusterId
-                  << " my ID is " << myId << endl;
+                  << " my cluster ID is " << myClusterId << endl;
 
         macState = INIT;
 
@@ -97,7 +83,6 @@ void CubeMacLayer::initialize(int stage)
         EV_DETAIL << " startTime = " << startTime
                   << " isSlave = " << isSlave
                   << " myClusterId = " << myClusterId
-                  << " myId = " << myId
                   << " slavesInCluster = " << slavesInCluster
                   << " queueLength = " << queueLength
                   << " slotDuration = " << slotDuration
@@ -118,7 +103,6 @@ void CubeMacLayer::initialize(int stage)
         sendData = new cMessage("sendData");
         sendData->setKind(CUBEMAC_SEND_DATA);
 
-        // --- TODO: Just make this 0.0
         scheduleAt(startTime, startCubemac);
     }
 }
@@ -261,16 +245,12 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                     CubeMacFrame *const mac = static_cast<CubeMacFrame *>(msg);
 
                     const MACAddress& dest = mac->getDestAddr();
-
                     const bool containsData = mac->getContainsData();
-
-                    const int senderId = mac->getSenderId();
                     const int clusterId = mac->getClusterId();
 
                     EV_DETAIL << "Slave: Received master data packet from src " << mac->getSrcAddr()
                               << " with dest " << dest
-                              << " cluster ID " << clusterId
-                              << " and sender ID " << senderId << endl;
+                              << " cluster ID " << clusterId << endl;
 
                     if (!containsData) {
                         EV_DETAIL << "Slave: Data packet from master is empty" << endl;
@@ -326,12 +306,10 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                     if (macQueue.size() > 0) {
                         // --- Copy next packet on queue
                         CubeMacFrame *data = macQueue.front()->dup();
+
                         data->setContainsData(true);
-
                         data->setKind(CUBEMAC_SLAVE_DATA);
-
                         data->setClusterId(myClusterId);
-                        data->setSenderId(myId);
 
                         const MACAddress& dest = data->getDestAddr();
                         EV << "Slave: Sending data packet to dest " << dest << endl;
@@ -346,11 +324,9 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         // --- Create new empty packet
                         CubeMacFrame *data = new CubeMacFrame();
 
-                        data->setKind(CUBEMAC_SLAVE_DATA);
                         data->setContainsData(false);
-
+                        data->setKind(CUBEMAC_SLAVE_DATA);
                         data->setClusterId(myClusterId);
-                        data->setSenderId(myId);
 
                         data->setSrcAddr(myAddress);
                         data->setDestAddr(CUBEMAC_BROADCAST);
@@ -389,7 +365,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
         switch (macState) {
             case INIT:
                 if (msg->getKind() == CUBEMAC_START_CUBEMAC) {
-                    mySlot = masterId; // --- Fixed time slot
+                    mySlot = myClusterId; // --- Fixed time slot
 
                     currSlot = -1; // --- Will be woken up first in slot 0
 
@@ -485,16 +461,12 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                     CubeMacFrame *const mac = static_cast<CubeMacFrame *>(msg);
 
                     const MACAddress& dest = mac->getDestAddr();
-
                     const bool containsData = mac->getContainsData();
-
-                    const int senderId = mac->getSenderId();
                     const int clusterId = mac->getClusterId();
 
                     EV_DETAIL << "Master: Received master data packet from src " << mac->getSrcAddr()
                               << " with dest " << dest
-                              << " with cluster ID " << clusterId
-                              << " and sender ID " << senderId << endl;
+                              << " with cluster ID " << clusterId<< endl;
 
                     if (!containsData) {
                         EV_DETAIL << "Master: Data packet from master is empty" << endl;
@@ -567,14 +539,11 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
                     const MACAddress& dest = mac->getDestAddr();
                     const int containsData = mac->getContainsData();
-
                     const int clusterId = mac->getClusterId();
-                    const int senderId = mac->getSenderId();
 
                     EV_DETAIL << "Master: Received slave data packet from src " << mac->getSrcAddr()
                               << " with dest " << dest
-                              << " with cluster ID " << clusterId
-                              << " and sender ID " << senderId << endl;
+                              << " with cluster ID " << clusterId << endl;
 
                     // --- Ignore data from outside of my cluster
                     if (clusterId != myClusterId) {
@@ -667,14 +636,13 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         /* End Errors */
 
                         CubeMacFrame *data = macQueue.front()->dup();
+
                         data->setContainsData(true);
-
-                        data->setClusterId(myClusterId);
-                        data->setSenderId(myId);
-
                         data->setKind(CUBEMAC_MASTER_DATA);
+                        data->setClusterId(myClusterId);
 
                         const MACAddress& dest = data->getDestAddr();
+
                         EV << "Master: Sending data packet to dest " << dest << endl;
 
                         sendDown(data);
@@ -686,18 +654,15 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         // --- Create new empty packet
                         CubeMacFrame *data = new CubeMacFrame();
 
-                        data->setKind(CUBEMAC_MASTER_DATA);
-
                         data->setContainsData(false);
-
+                        data->setKind(CUBEMAC_MASTER_DATA);
                         data->setClusterId(myClusterId);
-                        data->setSenderId(myId);
 
                         data->setSrcAddr(myAddress);
                         data->setDestAddr(CUBEMAC_BROADCAST);
 
                         // ??? Is header just blank?
-                        data->setBitLength(headerLength); // TODO: Need to make sure nothing is going wrong here
+                        data->setBitLength(headerLength);
 
                         EV << "Master: No data on queue. Sending empty broadcast packet"<< endl;
 
@@ -766,7 +731,7 @@ void CubeMacLayer::handleLowerPacket(cPacket *msg)
 /**
  * Attaches a "control info" (MacToNetw) structure (object) to the message pMsg.
  */
-// --- Not sure what this is doing
+// --- TODO: Look into control info
 cObject *CubeMacLayer::setUpControlInfo(cMessage *const pMsg, const MACAddress& pSrcAddr)
 {
     SimpleLinkLayerControlInfo *const cCtrlInfo = new SimpleLinkLayerControlInfo();
@@ -781,7 +746,7 @@ cObject *CubeMacLayer::setUpControlInfo(cMessage *const pMsg, const MACAddress& 
 //
 void CubeMacLayer::receiveSignal(cComponent *source, simsignal_t signalID, long value DETAILS_ARG)
 {
-    // --- Dectecting radio state transitions from transmitting to idle
+    // --- Detecting radio state transitions from transmitting to idle
     if (signalID == IRadio::transmissionStateChangedSignal) {
         IRadio::TransmissionState newRadioTransmissionState = (IRadio::TransmissionState)value;
 
@@ -811,10 +776,7 @@ void CubeMacLayer::receiveSignal(cComponent *source, simsignal_t signalID, long 
             EV_DETAIL << "Slave: Radio set to transmitter mode" << endl;
             EV_DETAIL << "Slave: Sending self-message to trigger sending of data packet" << endl;
 
-            scheduleAt(simTime() + (slaveOffset * (myId + 1)), sendData); // ??? What if slave transmissions longer than 10ms?
-
-            // TODO: Debug the path to figure out how to stop colliding packet ignorance
-//            scheduleAt(simTime(), sendData);
+            scheduleAt(simTime(), sendData);
         }
         else if (macState == SEND_DATA && radioMode == IRadio::RADIO_MODE_TRANSMITTER) {
 

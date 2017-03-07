@@ -67,6 +67,12 @@ class INET_API Radio : public PhysicalLayerBase, public virtual IRadio
     static simsignal_t symbolErrorRateSignal;
 
   protected:
+    // Added
+    int receptionCounter = 0;
+    // TODO Increase
+    const int maxReceptionTimers = 16;
+    cMessage *receptionTimers[16];
+
     /**
      * An identifier which is globally unique for the whole lifetime of the
      * simulation among all radios.
@@ -180,11 +186,6 @@ class INET_API Radio : public PhysicalLayerBase, public virtual IRadio
     //@}
 
   private:
-    // Added
-    int receptionCounter = 0;
-    const int maxReceptionTimers = 32;
-    cMessage *receptionTimers[32];
-
     void parseRadioModeSwitchingTimes();
     void startRadioModeSwitch(RadioMode newRadioMode, simtime_t switchingTime);
     void completeRadioModeSwitch(RadioMode newRadioMode);

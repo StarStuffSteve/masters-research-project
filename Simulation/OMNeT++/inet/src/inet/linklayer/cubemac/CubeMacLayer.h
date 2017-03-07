@@ -47,13 +47,9 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         : MACProtocolBase()
         // --- Added --- //
         , startTime(0.0)
-        , myId(0)
         , myClusterId(0)
-        , masterId(0)
-        , slaveId(0)
         , isSlave(false)
         , slavesInCluster(0)
-        , slaveOffset(0.01)
         , uplinkSlot(0)
         , timeoutDuration(0.01)
         // --- Added --- //
@@ -136,11 +132,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     // TODO: Comments
     simtime_t startTime;
 
-    int myId;
     int myClusterId;
-
-    int masterId;
-    int slaveId;
 
     bool isSlave;
 

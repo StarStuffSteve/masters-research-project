@@ -6,5 +6,5 @@ CubeSats.exe -u Tkenv \
 					-r 0 \
 					-n '.;../inet/src;' \
 					-l ../inet/src/libINET.dll \
-					--debug-on-errors=false \
+					--debug-on-errors=true \
 					omnetpp.ini;
