@@ -52,6 +52,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         , slavesInCluster(0)
         , uplinkSlot(0)
         , timeoutDuration(0.01)
+        , slotPadding(0.01)
         // --- Added --- //
         , macState()
         , slotDuration(0)
@@ -137,12 +138,16 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     bool isSlave;
 
     int slavesInCluster;
-    double slaveOffset;
     int expectedSlaveDataPackets;
 
     int uplinkSlot;
 
     double timeoutDuration;
+
+    simtime_t slotPadding; // Used to pad end of slot when sending multiple packets in slot
+
+    simtime_t currentSlotEndTime;
+    bool canSendNextPacket;
     // ---
 
     static const MACAddress CUBEMAC_BROADCAST;
