@@ -30,6 +30,8 @@ void CubeMacLayer::initialize(int stage)
 
         isSlave = par("isSlave");
 
+        isGround = par("isGround");
+
         myClusterId = par("clusterId");
 
         slavesInCluster = par("slavesInCluster");
@@ -177,6 +179,8 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                     macState = SLEEP;
                     radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
 
+                    if (wakeUp->isScheduled())
+                        cancelEvent(wakeUp);
                     scheduleAt(simTime() + slotDuration, wakeUp);
                     currentSlotEndTime = simTime() + slotDuration;
 
@@ -218,14 +222,13 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
                         EV_DETAIL << "Slave: Old: SLEEP, New: WAIT_MASTER_DATA" << endl;
                     }
+
+                    scheduleAt(simTime() + slotDuration, wakeUp);
+                    currentSlotEndTime = simTime() + slotDuration;
                 }
                 else {
                     EV << "Slave: Unknown packet " << msg->getKind() << " in state " << macState << endl;
                 }
-
-                // Always schedule the next wakeUp
-                scheduleAt(simTime() + slotDuration, wakeUp);
-                currentSlotEndTime = simTime() + slotDuration;
 
                 break;
 
@@ -306,6 +309,8 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
                     EV_DETAIL << "Slave: Old: WAIT_MASTER_DATA, New: SLEEP" << endl;
 
+                    if (wakeUp->isScheduled())
+                        cancelEvent(wakeUp);
                     scheduleAt(simTime(), wakeUp);
                 }
                 else {
@@ -475,14 +480,15 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
                         EV_DETAIL << "Master: Old: SLEEP, New: WAIT_MASTER_DATA" << endl;
                     }
+
+                    scheduleAt(simTime() + slotDuration, wakeUp);
+                    currentSlotEndTime = simTime() + slotDuration;
                 }
 
                 else {
                     EV << "Master: Unknown packet " << msg->getKind() << " in state " << macState << endl;
                 }
 
-                scheduleAt(simTime() + slotDuration, wakeUp);
-                currentSlotEndTime = simTime() + slotDuration;
 
                 break;
 
@@ -564,6 +570,8 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
                     EV_DETAIL << "Master: Old: WAIT_MASTER_DATA, New: SLEEP" << endl;
 
+                    if (wakeUp->isScheduled())
+                        cancelEvent(wakeUp);
                     scheduleAt(simTime(), wakeUp);
                 }
 
@@ -680,6 +688,8 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
                     EV_DETAIL << "Master: Old: WAIT_MASTER_DATA, New: SLEEP" << endl;
 
+                    if (wakeUp->isScheduled())
+                        cancelEvent(wakeUp);
                     scheduleAt(simTime(), wakeUp);
                 }
                 else {

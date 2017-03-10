@@ -26,15 +26,16 @@ network Base
     parameters:
         int numMasters;
         int numSlaves;
+        int numGround;
         string radioMediumType = default("IdealRadioMedium");
 
         @display("bgb=1000,1000;bgg=100,1,grey95");
         @figure[title](type=label; pos=0,-1; anchor=sw; color=darkblue);
 
-		@signal[nodeMaster0_rcvdPk];
+		@signal[nodeGround0_rcvdPk];
         @figure[rcvdPkText](type=indicatorText; pos=420,20; anchor=w; font=,20; textFormat="packets received: %g"; initialValue=0);
-        @statistic[rcvdPk](source=nodeMaster0_rcvdPk; record=figure(count); targetFigure=rcvdPkText);
-        @delegatesignal[rcvdPk](source=nodeMaster[0].udpApp[0].rcvdPk; target=nodeMaster0_rcvdPk);
+        @statistic[rcvdPk](source=nodeGround0_rcvdPk; record=figure(count); targetFigure=rcvdPkText);
+        @delegatesignal[rcvdPk](source=nodeGround[0].udpApp[0].rcvdPk; target=nodeGround0_rcvdPk);
 
     submodules: // Need to define loops for node creation
         visualizer: IntegratedCanvasVisualizer {
@@ -56,12 +57,18 @@ network Base
         //
         // --- Nodes
         //
+        // Masters
         nodeMaster[numMasters]: AODVRouter{
             parameters:
                 @display("is=s;r=,,#707070");
         }
         // Slaves
         nodeSlave[numSlaves]: AODVRouter{
+            parameters:
+                @display("is=s;r=,,#606060"); 
+        }
+        // Ground Station
+        nodeGround[numGround]: AODVRouter{
             parameters:
                 @display("is=s;r=,,#606060"); 
         }    

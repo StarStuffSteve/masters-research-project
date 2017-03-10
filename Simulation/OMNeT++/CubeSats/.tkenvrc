@@ -1,4 +1,4 @@
 # Partial OMNeT++/Tkenv config file -- see $HOME/.tkenvrc as well
-config default-configname	{TwoClustersMoving}
+config default-configname	{FourClustersGSMoving}
 config default-runnumber	{0}
 
