@@ -15,7 +15,7 @@ USERIF_LIBS = $(ALL_ENV_LIBS) # that is, $(TKENV_LIBS) $(QTENV_LIBS) $(CMDENV_LI
 #USERIF_LIBS = $(QTENV_LIBS)
 
 # C++ include paths (with -I)
-INCLUDE_PATH = -I. -Iresults
+INCLUDE_PATH = -I. -Ianalysis -Iresults
 
 # Additional object and library files to link with
 EXTRA_OBJS =
@@ -121,6 +121,7 @@ clean:
 	$(Q)-rm -rf $O
 	$(Q)-rm -f CubeSats CubeSats.exe libCubeSats.so libCubeSats.a libCubeSats.dll libCubeSats.dylib
 	$(Q)-rm -f ./*_m.cc ./*_m.h ./*_sm.cc ./*_sm.h
+	$(Q)-rm -f analysis/*_m.cc analysis/*_m.h analysis/*_sm.cc analysis/*_sm.h
 	$(Q)-rm -f results/*_m.cc results/*_m.h results/*_sm.cc results/*_sm.h
 
 cleanall: clean
@@ -128,7 +129,7 @@ cleanall: clean
 
 depend:
 	$(qecho) Creating dependencies...
-	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES) $(SM_CC_FILES)  ./*.cc results/*.cc
+	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES) $(SM_CC_FILES)  ./*.cc analysis/*.cc results/*.cc
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 
