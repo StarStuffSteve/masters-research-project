@@ -1,13 +1,3 @@
-//
-// This file is part of an OMNeT++/OMNEST simulation example.
-//
-// Copyright (C) 2003 Ahmet Sekercioglu
-// Copyright (C) 2003-2015 Andras Varga
-//
-// This file is distributed WITHOUT ANY WARRANTY. See the file
-// `license' for details on this and other legal matters.
-//
-
 import inet.common.figures.DelegateSignalConfigurator;
 import inet.visualizer.integrated.IntegratedCanvasVisualizer;
 
@@ -20,38 +10,40 @@ import inet.linklayer.cubemac.CubeMacLayer;
 import inet.node.aodv.AODVRouter;
 import inet.node.inet.WirelessHost;
 
-// TODO Parameterize further
 network Base
 {
     parameters:
-        int numMasters;
-        int numSlaves;
-        int numGround;
+        int numMasters = default(1);
+        int numSlaves = default(1);
         string radioMediumType = default("IdealRadioMedium");
 
+		// Sandbox
         @display("bgb=1000,1000;bgg=100,1,grey95");
+        
+        // Title
         @figure[title](type=label; pos=0,-1; anchor=sw; color=darkblue);
 
-		@signal[nodeGround0_rcvdPk];
-        @figure[rcvdPkText](type=indicatorText; pos=420,20; anchor=w; font=,20; textFormat="packets received: %g"; initialValue=0);
-        @statistic[rcvdPk](source=nodeGround0_rcvdPk; record=figure(count); targetFigure=rcvdPkText);
-        @delegatesignal[rcvdPk](source=nodeGround[0].udpApp[0].rcvdPk; target=nodeGround0_rcvdPk);
+        // Signal config and display
+		@signal[dest_rcvdPk];
+        @delegatesignal[rcvdPk](source=nodeMaster[0].udpApp[0].rcvdPk; target=dest_rcvdPk);
+        @figure[rcvdPkText](type=indicatorText; pos=420,20; anchor=w; font=,20; textFormat="Packets received: %g"; initialValue=0);
+        @statistic[rcvdPk](source=dest_rcvdPk; record=figure(count); targetFigure=rcvdPkText);
 
-    submodules: // Need to define loops for node creation
+    submodules:
         visualizer: IntegratedCanvasVisualizer {
-            @display("p=100,25");
+            @display("p=100,950");
         }
         configurator: IPv4NetworkConfigurator {
-            @display("p=100,100");
+            @display("p=250,950");
         }
         radioMedium: <radioMediumType> like IRadioMedium {
-            @display("p=100,175");
+            @display("p=400,950");
         }
         physicalEnvironment: PhysicalEnvironment {
-            @display("p=100,250");
+            @display("p=550,950");
         }
         figureHelper: DelegateSignalConfigurator {
-            @display("p=100,325");
+            @display("p=700,950");
         }
         
         //
@@ -60,13 +52,27 @@ network Base
         // Masters
         nodeMaster[numMasters]: AODVRouter{
             parameters:
-                @display("is=s;r=,,#707070");
+                @display("is=s;r=,,#7F7F7F");
         }
         // Slaves
         nodeSlave[numSlaves]: AODVRouter{
             parameters:
-                @display("is=s;r=,,#606060"); 
-        }
+                @display("is=s;r=,,#606060");
+        }    
+}
+
+network GroundStation extends Base
+{
+    parameters:
+        int numGround = default(1);
+        
+        // Signal config and display
+		@signal[dest_rcvdPk];
+        @delegatesignal[rcvdPk](source=nodeGround[0].udpApp[0].rcvdPk; target=dest_rcvdPk);
+        @figure[rcvdPkText](type=indicatorText; pos=420,20; anchor=w; font=,20; textFormat="Packets received: %g"; initialValue=0);
+        @statistic[rcvdPk](source=dest_rcvdPk; record=figure(count); targetFigure=rcvdPkText);
+        
+    submodules:
         // Ground Station
         nodeGround[numGround]: AODVRouter{
             parameters:
