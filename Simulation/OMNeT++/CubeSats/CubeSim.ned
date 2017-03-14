@@ -18,7 +18,7 @@ network Base
         string radioMediumType = default("IdealRadioMedium");
 
 		// Sandbox
-        @display("bgb=1000,1000;bgg=100,1,grey95");
+        //@display("bgb=1000,1000;bgg=100,1,grey95");
         
         // Title
         @figure[title](type=label; pos=0,-1; anchor=sw; color=darkblue);

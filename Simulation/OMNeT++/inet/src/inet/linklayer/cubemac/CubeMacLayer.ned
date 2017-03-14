@@ -1,26 +1,7 @@
-//
-//  LMACLayer.cc
-//  BMAC for MF 2.02, omnetpp 4
-//
-//  Created by Anna Foerster on 10/10/08.
-//  Copyright 2008 Universita della Svizzera Italiana. All rights reserved.
-//
-//  Coverted to OMNeT++ 4 by Rudolf Hornig
-//
-//  Converted to MiXiM by Kapourniotis Theodoros
-//
-
 package inet.linklayer.cubemac;
 
 import inet.linklayer.base.MACProtocolBase;
 import inet.linklayer.contract.IMACProtocol;
-
-//
-// Implementation of L-MAC (Lightweight Medium Access Protocol for
-// Wireless Sensor Networks)
-//
-// See C++ documentation for details
-//
 
 // --- MACProtocolBase is parent of IdealMac
 simple CubeMacLayer extends MACProtocolBase like IMACProtocol
@@ -42,6 +23,10 @@ simple CubeMacLayer extends MACProtocolBase like IMACProtocol
         double timeoutDuration @unit(s) = default((this.slotDuration/10));
         
         double slotPadding @unit(s) = default((this.slotDuration/10));
+        
+        //  Results, Stats, etc.
+        
+        
         // ---
         
         string address = default("auto"); 

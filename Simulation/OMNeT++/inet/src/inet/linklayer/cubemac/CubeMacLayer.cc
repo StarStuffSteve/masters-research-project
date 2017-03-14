@@ -44,6 +44,10 @@ void CubeMacLayer::initialize(int stage)
         currentSlotEndTime = 0.0;
 
         canSendNextPacket = false;
+
+        // --- Results =, Stats etc.
+        packetsOnQueue = 0;
+
         // ---
 
         queueLength = par("queueLength");
@@ -64,11 +68,6 @@ void CubeMacLayer::initialize(int stage)
 
         macState = INIT;
 
-        // TODO: Add vectors
-//        slotChange = new cOutVector("slotChange");
-
-        // TODO: Calculations for sending 'empty' packets
-
         initializeMACAddress();
 
         // Comes from MACProtocolBase
@@ -80,6 +79,11 @@ void CubeMacLayer::initialize(int stage)
         radioModule->subscribe(IRadio::transmissionStateChangedSignal, this);
         radio = check_and_cast<IRadio *>(radioModule);
 
+        // Results, Stats, Watches etc.
+
+        accessDelayMAC.setName("MAC Access Delay");
+
+        WATCH(packetsOnQueue);
         WATCH(macState);
     }
     else if (stage == INITSTAGE_LINK_LAYER) {
@@ -364,6 +368,9 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
                         const MACAddress& dest = data->getDestAddr();
                         EV << "Slave: Sending data packet to dest " << dest << endl;
+
+                        simtime_t adm = simTime() - data->getArrivalTimeMac();
+                        accessDelayMAC.record(adm);
 
                         sendDown(data);
                     }
@@ -746,9 +753,13 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
                         EV << "Master: Sending data packet to dest " << dest << endl;
 
+                        simtime_t adm = simTime() - data->getArrivalTimeMac();
+                        accessDelayMAC.record(adm);
+
                         sendDown(data);
 
                     }
+                    // No data to send
                     else {
                         canSendNextPacket = false; // No packets in queue
 
@@ -800,20 +811,26 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 // Just adds to macQueue which is of type MacQueue
 void CubeMacLayer::handleUpperPacket(cPacket *msg)
 {
+    // TODO: Modify casting to be more flexible
     CubeMacFrame *mac = static_cast<CubeMacFrame *>(encapsMsg(static_cast<cPacket *>(msg)));
+
 
     // message has to be queued if another message is waiting to be send
     // or if we are already trying to send another message
     if (macQueue.size() <= queueLength) {
         macQueue.push_back(mac);
 
-        EV_DETAIL << "Packet put in queue\n  queue size: " << macQueue.size() << " macState: " << macState << endl;
+        mac->setArrivalTimeMac(simTime());
+
+        EV_DETAIL << "Packet placed on MAC queue\n  queue size: " << macQueue.size() << " macState: " << macState << endl;
     }
     else {
         // queue is full, message has to be deleted
         EV_DETAIL << "!!! WARNING !!!: Queue is full, forced to delete packet.\n";
         delete mac;
     }
+
+    packetsOnQueue = macQueue.size();
 }
 
 /**

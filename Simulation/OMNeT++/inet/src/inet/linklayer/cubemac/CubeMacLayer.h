@@ -54,6 +54,8 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         , uplinkSlot(0)
         , timeoutDuration(0.01)
         , slotPadding(0.01)
+        // --- Results =, Stats etc.
+        , packetsOnQueue(0)
         // --- Added --- //
         , macState()
         , slotDuration(0)
@@ -151,6 +153,11 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
 
     simtime_t currentSlotEndTime;
     bool canSendNextPacket;
+
+    // --- Results, Stats, Watched etc.
+    int packetsOnQueue;
+    cOutVector accessDelayMAC;
+
     // ---
 
     static const MACAddress CUBEMAC_BROADCAST;
