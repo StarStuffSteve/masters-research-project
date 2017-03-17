@@ -3,10 +3,11 @@
 opp_makemake -f --deep -M debug;
 make; 
 CubeSats.exe -u Cmdenv \
-					-r 0 \
-					-c "BaseConfig" \
+					-c "GroundStation" \
 					-n '.;../inet/src;' \
 					-l ../inet/src/libINET.dll \
-					--record-eventlog=true \
+					--record-eventlog=false \
 					--debug-on-errors=false \
+					--**.cmdenv-log-level="FATAL"\
+					--cmdenv-status-frequency=10s \
 					omnetpp.ini;
