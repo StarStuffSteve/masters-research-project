@@ -3,7 +3,7 @@
 opp_makemake -f --deep -M debug;
 make; 
 CubeSats.exe -u Cmdenv \
-					-c "GroundStation" \
+					-c "DemoData" \
 					-n '.;../inet/src;' \
 					-l ../inet/src/libINET.dll \
 					--record-eventlog=false \
