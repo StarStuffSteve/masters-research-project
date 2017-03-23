@@ -36,7 +36,7 @@ network Base
         configurator: IPv4NetworkConfigurator {
             @display("p=250,950");
         }
-        radioMedium: <radioMediumType> like IRadioMedium {
+        radioMedium[2]: <radioMediumType> like IRadioMedium {
             @display("p=400,950");
         }
         physicalEnvironment: PhysicalEnvironment {
