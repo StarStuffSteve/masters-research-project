@@ -7,6 +7,8 @@ import inet.networklayer.configurator.ipv4.IPv4NetworkConfigurator;
 
 import inet.linklayer.cubemac.CubeMacLayer;
 
+import inet.node.inet.INetworkNode;
+
 import inet.node.aodv.AODVRouter;
 import inet.node.inet.WirelessHost;
 
@@ -16,6 +18,7 @@ network Base
         int numMasters = default(1);
         int numSlaves = default(1);
         string radioMediumType = default("IdealRadioMedium");
+        string hostType = default("AODVRouter");
 
 		// Sandbox
         //@display("bgb=1000,1000;bgg=100,1,grey95");
@@ -50,15 +53,24 @@ network Base
         // --- Nodes
         //
         // Masters
-        nodeMaster[numMasters]: AODVRouter{
+        nodeMaster[numMasters]: <hostType> like INetworkNode {
             parameters:
                 @display("is=s;r=,,#7F7F7F");
         }
         // Slaves
-        nodeSlave[numSlaves]: AODVRouter{
+        nodeSlave[numSlaves]: <hostType> like INetworkNode {
             parameters:
                 @display("is=s;r=,,#606060");
-        }    
+        }
+//        nodeMaster[numMasters]: AODVRouter {
+//            parameters:
+//                @display("is=s;r=,,#7F7F7F");
+//        }
+//        // Slaves
+//        nodeSlave[numSlaves]: AODVRouter {
+//            parameters:
+//                @display("is=s;r=,,#606060");
+//        }   
 }
 
 network GroundStation extends Base

@@ -796,11 +796,14 @@ void AODVRouting::handleRREQ(AODVRREQ *rreq, const L3Address& sourceAddr, unsign
 
     RREQIdentifier rreqIdentifier(rreq->getOriginatorAddr(), rreq->getRreqId());
     auto checkRREQArrivalTime = rreqsArrivalTime.find(rreqIdentifier);
-    if (checkRREQArrivalTime != rreqsArrivalTime.end() && simTime() - checkRREQArrivalTime->second <= pathDiscoveryTime) {
-        EV_WARN << "The same packet has arrived within PATH_DISCOVERY_TIME= " << pathDiscoveryTime << ". Discarding it" << endl;
-        delete rreq;
-        return;
-    }
+    //
+    // --- Removed
+    //
+//    if (checkRREQArrivalTime != rreqsArrivalTime.end() && simTime() - checkRREQArrivalTime->second <= pathDiscoveryTime) {
+//        EV_WARN << "The same packet has arrived within PATH_DISCOVERY_TIME= " << pathDiscoveryTime << ". Discarding it" << endl;
+//        delete rreq;
+//        return;
+//    }
 
     // update or create
     rreqsArrivalTime[rreqIdentifier] = simTime();
