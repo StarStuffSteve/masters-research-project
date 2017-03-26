@@ -274,8 +274,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         delete mac;
                     }
                     else {
-                        // TODO: Multicast
-                        if (dest == myAddress || dest.isBroadcast() || dest == CUBEMAC_BROADCAST) {
+                        if (dest == myAddress || dest.isBroadcast() || dest.isMulticast() || dest == CUBEMAC_BROADCAST) {
                             EV_DETAIL << "Slave: Sending packet up\n";
 
                             sendUp(decapsMsg(mac));
@@ -537,8 +536,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         delete mac;
                     }
                     else {
-                        // TODO: Multicast
-                        if (dest == myAddress || dest.isBroadcast() || dest == CUBEMAC_BROADCAST) {
+                        if (dest == myAddress || dest.isBroadcast() || dest.isMulticast() || dest == CUBEMAC_BROADCAST) {
                             EV_DETAIL << "Master: Sending data up" << endl;
 
                             sendUp(decapsMsg(mac));
@@ -648,9 +646,8 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         EV_DETAIL << "Master: Slave data is empty" << endl;
                         delete mac;
                     }
-                    else
-                    {
-                        if (dest == myAddress || dest.isBroadcast() || dest == CUBEMAC_BROADCAST) {
+                    else {
+                        if (dest == myAddress || dest.isBroadcast() || dest.isMulticast() || dest == CUBEMAC_BROADCAST) {
                             EV_DETAIL << "Master: Sending slave data up" << endl;
 
                             sendUp(decapsMsg(mac));
