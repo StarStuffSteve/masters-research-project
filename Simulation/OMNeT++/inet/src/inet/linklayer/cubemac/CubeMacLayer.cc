@@ -164,7 +164,8 @@ InterfaceEntry *CubeMacLayer::createInterfaceEntry()
     e->setMACAddress(myAddress);
     e->setInterfaceToken(myAddress.formInterfaceIdentifier());
     e->setMtu(par("mtu").longValue());
-    e->setMulticast(false);
+    // e->setMulticast(false);
+    e->setMulticast(true);
     e->setBroadcast(true);
     return e;
 }
@@ -343,13 +344,16 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         data->setIsLastPacket(true);
                         canSendNextPacket = false; // There must be a next packet and enough time to send it for this to true
 
+                        // Current packet
+                        double bitLength = (double) data->getBitLength();
+                        double estTimeToSend = bitLength/bitrate;
+
+                        if ((simTime() + estTimeToSend) >= (currentSlotEndTime + slotPadding)) {
+                            throw cRuntimeError("Master: ERROR: Cannot send current packet before end of slot");
+                        }
+
                         // Checking if we can send the next packet on our queue before the slot ends
                         if (macQueue.size() > 0) {
-                            // Current packet
-                            // TODO: Throw errors if this alone exceeds the end of the slot
-                            double bitLength = (double) data->getBitLength();
-                            double estTimeToSend = bitLength/bitrate;
-
                             // Next packet
                             double nextBitLength = (double) macQueue.front()->getBitLength();
                             double nextEstTimeToSend = nextBitLength/bitrate;
@@ -724,13 +728,16 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         data->setIsLastPacket(true);
                         canSendNextPacket = false; // There must be a next packet and enough time to send it for this to true
 
+                        // Current packet
+                        double bitLength = (double) data->getBitLength();
+                        double estTimeToSend = bitLength/bitrate;
+
+                        if ((simTime() + estTimeToSend) >= (currentSlotEndTime + slotPadding)) {
+                            throw cRuntimeError("Master: ERROR: Cannot send current packet before end of slot");
+                        }
+
                         // Checking if we can send the next packet on our queue before the slot ends
                         if (macQueue.size() > 0) {
-                            // Current packet
-                            // TODO: Throw errors if this alone exceeds the end of the slot
-                            double bitLength = (double) data->getBitLength();
-                            double estTimeToSend = bitLength/bitrate;
-
                             // Next packet
                             double nextBitLength = (double) macQueue.front()->getBitLength();
                             double nextEstTimeToSend = nextBitLength/bitrate;
@@ -923,11 +930,17 @@ void CubeMacLayer::attachSignal(CubeMacFrame *macPkt)
 
 cPacket *CubeMacLayer::decapsMsg(CubeMacFrame *msg)
 {
+//    const MACAddress& dest = msg->getDestAddr();
+
     cPacket *m = msg->decapsulate();
     setUpControlInfo(m, msg->getSrcAddr());
     // delete the macPkt // ?
     delete msg;
     EV_DETAIL << "Message decapsulated" << endl;
+
+//    if (dest.isMulticast()) {
+//
+//    }
     return m;
 }
 

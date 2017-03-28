@@ -140,6 +140,8 @@ void DYMO::initialize(int stage)
         }
     }
     else if (stage == INITSTAGE_ROUTING_PROTOCOLS) {
+        EV_DETAIL << "DYMO: INITSTAGE_ROUTING_PROTOCOLS" << endl;
+
         IPSocket socket(gate("ipOut"));
         socket.registerProtocol(IP_PROT_MANET);
 
@@ -654,6 +656,7 @@ void DYMO::sendRREQ(RREQ *rreq)
     const L3Address& originator = rreq->getOriginatorNode().getAddress();
     rreq->setBitLength(computeRREQBitLength(rreq));
     EV_DETAIL << "Sending RREQ: originator = " << originator << ", target = " << target << endl;
+//    sendDYMOPacket(rreq, nullptr, addressType->getBroadcastAddress(), uniform(0, maxJitter).dbl());
     sendDYMOPacket(rreq, nullptr, addressType->getLinkLocalManetRoutersMulticastAddress(), uniform(0, maxJitter).dbl());
 }
 
@@ -765,6 +768,7 @@ void DYMO::sendRREP(RREP *rrep)
     const L3Address& originator = rrep->getOriginatorNode().getAddress();
     rrep->setBitLength(computeRREPBitLength(rrep));
     EV_DETAIL << "Sending broadcast RREP: originator = " << originator << ", target = " << target << endl;
+//    sendDYMOPacket(rrep, nullptr, addressType->getBroadcastAddress(), 0);
     sendDYMOPacket(rrep, nullptr, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
 }
 
@@ -862,6 +866,7 @@ void DYMO::sendRERR(RERR *rerr)
 {
     rerr->setBitLength(computeRERRBitLength(rerr));
     EV_DETAIL << "Sending RERR: unreachableNodeCount = " << rerr->getUnreachableNodeArraySize() << endl;
+//    sendDYMOPacket(rerr, nullptr, addressType->getBroadcastAddress(), 0);
     sendDYMOPacket(rerr, nullptr, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
 }
 
@@ -1293,10 +1298,14 @@ bool DYMO::isNodeUp()
 
 void DYMO::configureInterfaces()
 {
+    EV_DETAIL << "DYMO: Configuring Interfaces" << endl;
+
     // join multicast groups
     cPatternMatcher interfaceMatcher(interfaces, false, true, false);
     for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
         InterfaceEntry *interfaceEntry = interfaceTable->getInterface(i);
+        EV_DETAIL << "DYMO: Configuring Interface: " << interfaceEntry->getName() << endl;
+
         if (interfaceEntry->isMulticast() && interfaceMatcher.matches(interfaceEntry->getName()))
             // Most AODVv2 messages are sent with the IP destination address set to the link-local
             // multicast address LL-MANET-Routers [RFC5498] unless otherwise specified. Therefore,

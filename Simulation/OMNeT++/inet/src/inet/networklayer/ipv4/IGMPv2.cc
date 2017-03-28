@@ -35,7 +35,6 @@ Define_Module(IGMPv2);
 //                          |                |
 //                          |                |
 //                          |                |
-//                          |                |
 //                --------->|   Non-Member   |<---------
 //               |          |                |          |
 //               |          |                |          |
@@ -491,6 +490,8 @@ void IGMPv2::handleMessage(cMessage *msg)
 
 void IGMPv2::multicastGroupJoined(InterfaceEntry *ie, const IPv4Address& groupAddr)
 {
+    EV_DETAIL << "IGMPv2: multicastGroupJoined() Interface: " << ie->getFullName() << endl;
+
     ASSERT(ie && ie->isMulticast());
     ASSERT(groupAddr.isMulticast());
 

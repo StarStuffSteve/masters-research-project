@@ -18,7 +18,7 @@ network Base
         int numMasters = default(1);
         int numSlaves = default(1);
         string radioMediumType = default("IdealRadioMedium");
-        string hostType = default("AODVRouter");
+        string hostType = default("DYMORouter");
 
 		// Sandbox
         //@display("bgb=1000,1000;bgg=100,1,grey95");
@@ -86,7 +86,7 @@ network GroundStation extends Base
         
     submodules:
         // Ground Station
-        nodeGround[numGround]: AODVRouter{
+        nodeGround[numGround]: <hostType> like INetworkNode {
             parameters:
                 @display("is=s;r=,,#606060"); 
         }    
