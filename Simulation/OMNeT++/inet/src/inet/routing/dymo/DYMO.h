@@ -49,8 +49,8 @@ namespace dymo {
  *  - 13.1. Expanding Rings Multicast
  *    Increase hop limit from min to max with each retry.
  *  - 13.2. Intermediate RREP
- *    Allow intermediate DYMO routers to reply with RREP.
- *  - 13.6. Message Aggregation
+ *    Allow intermediate DYMO routers to reply with RREP. // - Working?
+ *  - 13.6. Message Aggregation // - Working?
  *    RFC5148 add jitter to broadcasts
  */
 class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener, public INetfilter::IHook
@@ -87,9 +87,12 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
 
     // internal
     cMessage *expungeTimer;
-    DYMOSequenceNumber sequenceNumber;
+    DYMOSequenceNumber sequenceNumber; // uint32_t
+
+    // - Each address has a seq num and RREQTimer
     std::map<L3Address, DYMOSequenceNumber> targetAddressToSequenceNumber;
     std::map<L3Address, RREQTimer *> targetAddressToRREQTimer;
+
     std::multimap<L3Address, INetworkDatagram *> targetAddressToDelayedPackets;
     std::vector<std::pair<L3Address, int> > clientAddressAndPrefixLengthPairs;    // 5.3.  Router Clients and Client Networks
 

@@ -34,6 +34,8 @@ class noncobject DYMOMetricType;
 // classes
 //
 
+// - How do we get a unicast RREP out of these?
+
 class AddressBlock {
     L3Address address;
     int prefixLength;
@@ -78,7 +80,7 @@ packet RteMsg extends DYMOPacket {
     int hopCount;
     AddressBlock originatorNode;
     AddressBlock targetNode;
-    AddressBlock addedNode[];
+    AddressBlock addedNode[]; // - addedNodes 'should' be in array in order from origin to target
 }
 
 //
