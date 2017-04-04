@@ -826,6 +826,8 @@ void DYMO::processRREQ(RREQ *rreqIncoming)
     EV_DETAIL << "Processing RREQ: originator = " << originator << ", target = " << target << endl;
 
     if (permissibleRteMsg(rreqIncoming)) {
+    // ADDED
+    //if (permissibleRteMsg(rreqIncoming) && originator != getSelfAddress() && !isAddedNodeRREQ(rreqIncoming, getSelfAddress())) {
 
         // - Contains the logic for calling updateRoute
         processRteMsg(rreqIncoming);
@@ -848,43 +850,33 @@ void DYMO::processRREQ(RREQ *rreqIncoming)
             //   router towards the RREQ OrigNode, as specified in Section 7.4.
             //   Afterwards, TargRtr processing for the RREQ is complete.
 
-            if (originator != getSelfAddress()) {
-                EV_DETAIL << "Received RREQ for client: originator = " << originator << ", target = " << target << endl;
+            EV_DETAIL << "Received RREQ for client: originator = " << originator << ", target = " << target << endl;
 
-                if (useMulticastRREP)
-                    sendRREP(createRREP(rreqIncoming));
-                else {
-                    // - TODO: Investigate findBestMatchingRoute()
-                    IRoute *route = routingTable->findBestMatchingRoute(originator);
-                    RREP *rrep = createRREP(rreqIncoming, route);
-                    sendRREP(rrep, route);
-                }
+            if (useMulticastRREP)
+                sendRREP(createRREP(rreqIncoming));
+            else {
+                // - TODO: Investigate findBestMatchingRoute()
+                IRoute *route = routingTable->findBestMatchingRoute(originator);
+                RREP *rrep = createRREP(rreqIncoming, route);
+                sendRREP(rrep, route);
             }
-            // - This should never happen
-            else
-                throw cRuntimeError("ERROR: Received RREQ for a client (or self) that we originated.");
         }
         // - Other routers, propagation of RREQ
         // - ***
-        // - TODO: Should probably check the origin against own address before processing the RteMsg
         else {
             // o If HandlingRtr is not the TargetNode, then the outgoing RREQ (as
             //   altered by the procedure defined above) SHOULD be sent to the IP
             //   *multicast* address LL-MANET-Routers [RFC5498].  If the RREQ is
             //   unicast, the IP.DestinationAddress is set to the NextHopAddress.
 
-            if (originator != getSelfAddress()) {
-                EV_DETAIL << "Forwarding RREQ: originator = " << originator << ", target = " << target << endl;
+            EV_DETAIL << "Forwarding RREQ: originator = " << originator << ", target = " << target << endl;
 
-                RREQ *rreqOutgoing = rreqIncoming->dup();
+            RREQ *rreqOutgoing = rreqIncoming->dup();
 
-                if (appendInformation)
-                    addSelfNode(rreqOutgoing);
+            if (appendInformation)
+                addSelfNode(rreqOutgoing);
 
-                sendRREQ(rreqOutgoing);
-            }
-            else
-                EV_WARN << "WARNING: Received RREQ that we originated. Not forwarding." << endl;
+            sendRREQ(rreqOutgoing);
         }
     }
     else
@@ -992,6 +984,8 @@ void DYMO::processRREP(RREP *rrepIncoming)
     EV_DETAIL << "Processing RREP: originator = " << originator << ", target = " << target << endl;
 
     if (permissibleRteMsg(rrepIncoming)) {
+    // ADDED
+    //if (permissibleRteMsg(rrepIncoming) && originator != getSelfAddress() && !isAddedNodeRREP(rrepIncoming, getSelfAddress())) {
         processRteMsg(rrepIncoming);
 
         // 7.5.2. Additional Handling for Outgoing RREP
@@ -1657,6 +1651,28 @@ void DYMO::addNode(RteMsg *rteMsg, AddressBlock& addressBlock)
     int size = rteMsg->getAddedNodeArraySize();
     rteMsg->setAddedNodeArraySize(size + 1);
     rteMsg->setAddedNode(size, addressBlock);
+}
+
+// ADDED
+
+bool DYMO::isAddedNodeRREQ(RREQ *rreq, L3Address addr){
+    int count = rreq->getAddedNodeArraySize();
+    for (int i = 0; i < count; i++) {
+        L3Address a = (rreq->getAddedNode(i)).getAddress();
+        if (a == addr)
+            return true;
+    }
+    return false;
+}
+
+bool DYMO::isAddedNodeRREP(RREP *rrep, L3Address addr){
+    int count = rrep->getAddedNodeArraySize();
+    for (int i = 0; i < count; i++) {
+        L3Address a = (rrep->getAddedNode(i)).getAddress();
+        if (a == addr)
+            return true;
+    }
+    return false;
 }
 
 //

@@ -815,9 +815,14 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 // Just adds to macQueue which is of type MacQueue
 void CubeMacLayer::handleUpperPacket(cPacket *msg)
 {
+    //    std::string packetClass = msg->getClassName();
+    //    bool isDymo = (packetClass.std::string::find("dymo") != std::string::npos);
+
     // TODO: Modify casting to be more flexible
     CubeMacFrame *mac = static_cast<CubeMacFrame *>(encapsMsg(static_cast<cPacket *>(msg)));
 
+    //    if (isDymo)
+    //        mac->setBitLength(1); // bit length of cPacket *macFrame used by IdealTransmitter to calculate duration
 
     // message has to be queued if another message is waiting to be send
     // or if we are already trying to send another message
@@ -986,4 +991,3 @@ void CubeMacLayer::clearQueue()
 }
 
 } // namespace inet
-

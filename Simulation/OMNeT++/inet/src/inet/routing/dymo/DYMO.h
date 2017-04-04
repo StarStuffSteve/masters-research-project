@@ -206,6 +206,9 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
     // added node
     void addSelfNode(RteMsg *rteMsg);
     void addNode(RteMsg *rteMsg, AddressBlock& addressBlock);
+    // ADDED
+    bool isAddedNodeRREQ(RREQ *rreq, L3Address addr);
+    bool isAddedNodeRREP(RREP *rrep, L3Address addr);
 
     // sequence number
     void incrementSequenceNumber();
