@@ -130,7 +130,7 @@ void DYMO::initialize(int stage)
 
         // DYMO extension parameters
         maxJitter = par("maxJitter");
-        sendIntermediateRREP = par("sendIntermediateRREP"); // - Correctly implemented
+        sendIntermediateRREP = par("sendIntermediateRREP");
         minHopLimit = par("minHopLimit");
         maxHopLimit = par("maxHopLimit");
 
@@ -823,64 +823,96 @@ void DYMO::processRREQ(RREQ *rreqIncoming)
 {
     const L3Address& target = rreqIncoming->getTargetNode().getAddress();
     const L3Address& originator = rreqIncoming->getOriginatorNode().getAddress();
-    EV_DETAIL << "Processing RREQ: originator = " << originator << ", target = " << target << endl;
+    const L3Address my_address = getSelfAddress();
+    EV_DETAIL << my_address << " - Processing RREQ: originator = " << originator << ", target = " << target << endl;
 
-    if (permissibleRteMsg(rreqIncoming)) {
+
+//    if (permissibleRteMsg(rreqIncoming)) {
     // ADDED
-    //if (permissibleRteMsg(rreqIncoming) && originator != getSelfAddress() && !isAddedNodeRREQ(rreqIncoming, getSelfAddress())) {
+    if (permissibleRteMsg(rreqIncoming)) {
 
-        // - Contains the logic for calling updateRoute
-        processRteMsg(rreqIncoming);
+        if (originator != my_address) {
+            // - Contains the logic for calling updateRoute
+            processRteMsg(rreqIncoming);
 
-        // 7.5.1. Additional Handling for Outgoing RREQ
-        // o If the upstream router is in the Blacklist, and Current_Time <
-        //   BlacklistRmTime, then HandlingRtr MUST NOT transmit any outgoing
-        //   RREQ, and processing is complete.
-        // TO/DO: implement
-        // o Otherwise, if the upstream router is in the Blacklist, and
-        //   Current_Time >= BlacklistRmTime, then the upstream router SHOULD
-        //   be removed from the Blacklist, and message processing continued.
-        // TO/DO: implement
+            if (!isAddedNodeRREQ(rreqIncoming, getSelfAddress())) {
 
-        // - Clients
-        // - Router is always a client of itself
-        if (isClientAddress(target)) {
-            // o If TargNode is a client of HandlingRtr, then a RREP is generated
-            //   by the HandlingRtr (i.e., TargRtr) and unicast to the upstream
-            //   router towards the RREQ OrigNode, as specified in Section 7.4.
-            //   Afterwards, TargRtr processing for the RREQ is complete.
+                // 7.5.1. Additional Handling for Outgoing RREQ
+                // o If the upstream router is in the Blacklist, and Current_Time <
+                //   BlacklistRmTime, then HandlingRtr MUST NOT transmit any outgoing
+                //   RREQ, and processing is complete.
+                // TO/DO: implement
+                // o Otherwise, if the upstream router is in the Blacklist, and
+                //   Current_Time >= BlacklistRmTime, then the upstream router SHOULD
+                //   be removed from the Blacklist, and message processing continued.
+                // TO/DO: implement
 
-            EV_DETAIL << "Received RREQ for client: originator = " << originator << ", target = " << target << endl;
+                // RREQ has reached it's destination
+                // - Router is always a client of itself
+                if (isClientAddress(target)) {
+                    // o If TargNode is a client of HandlingRtr, then a RREP is generated
+                    //   by the HandlingRtr (i.e., TargRtr) and unicast to the upstream
+                    //   router towards the RREQ OrigNode, as specified in Section 7.4.
+                    //   Afterwards, TargRtr processing for the RREQ is complete.
 
-            if (useMulticastRREP)
-                sendRREP(createRREP(rreqIncoming));
-            else {
-                // - TODO: Investigate findBestMatchingRoute()
-                IRoute *route = routingTable->findBestMatchingRoute(originator);
-                RREP *rrep = createRREP(rreqIncoming, route);
-                sendRREP(rrep, route);
+                    EV_DETAIL << "Received RREQ for client: originator = " << originator << ", target = " << target << endl;
+
+                    if (useMulticastRREP)
+                        sendRREP(createRREP(rreqIncoming));
+                    else {
+                        // - TODO: Investigate findBestMatchingRoute()
+                        IRoute *route = routingTable->findBestMatchingRoute(originator);
+                        RREP *rrep = createRREP(rreqIncoming, route);
+                        sendRREP(rrep, route);
+                    }
+                }
+
+                // - Forwarding
+                else {
+                    // o If HandlingRtr is not the TargetNode, then the outgoing RREQ (as
+                    //   altered by the procedure defined above) SHOULD be sent to the IP
+                    //   *multicast* address LL-MANET-Routers [RFC5498].  If the RREQ is
+                    //   unicast, the IP.DestinationAddress is set to the NextHopAddress.
+
+                    // - Check if we have a route to the target and originator
+                    IRoute *t_route = routingTable->findBestMatchingRoute(target);
+                    IRoute *o_route = routingTable->findBestMatchingRoute(originator);
+
+
+                    if (sendIntermediateRREP && t_route != nullptr && o_route != nullptr
+                            && !t_route->getNextHopAsGeneric().isUnspecified()
+                            && !o_route->getNextHopAsGeneric().isUnspecified() ){
+                        EV_DETAIL << "Attempting intermediate RREQ: originator = " << originator << ", target = " << target << endl;
+                        EV_DETAIL << "Target route: " << t_route << " Originator route: " << o_route << endl;
+
+                        RREP *rrep = createRREP(rreqIncoming, t_route);
+                        sendRREP(rrep, o_route);
+                    }
+                    // TODO: Should only forward when we don't have an ongoing RREQ for the target
+                    //  IF we have an ongoing RREQ for target
+                    //  EITHER drop incomingRREQ
+                    //  OR cache incomingRREQ and on processing a RREP from the target generate new RREP
+                    else {
+                        EV_DETAIL << "Forwarding RREQ: originator = " << originator << ", target = " << target << endl;
+
+                        RREQ *rreqOutgoing = rreqIncoming->dup();
+
+                        if (appendInformation)
+                            addSelfNode(rreqOutgoing);
+
+                        sendRREQ(rreqOutgoing);
+                    }
+                }
             }
+            else
+                EV_WARN << "WARNING: Dropping non-permissible RREQ" << endl;
         }
-        // - Other routers, propagation of RREQ
-        // - ***
-        else {
-            // o If HandlingRtr is not the TargetNode, then the outgoing RREQ (as
-            //   altered by the procedure defined above) SHOULD be sent to the IP
-            //   *multicast* address LL-MANET-Routers [RFC5498].  If the RREQ is
-            //   unicast, the IP.DestinationAddress is set to the NextHopAddress.
-
-            EV_DETAIL << "Forwarding RREQ: originator = " << originator << ", target = " << target << endl;
-
-            RREQ *rreqOutgoing = rreqIncoming->dup();
-
-            if (appendInformation)
-                addSelfNode(rreqOutgoing);
-
-            sendRREQ(rreqOutgoing);
-        }
+        else
+            EV_WARN << "WARNING: Dropping RREQ that we originated" << endl;
     }
     else
-        EV_WARN << "WARNING: Dropping non-permissible RREQ" << endl;
+        EV_WARN << "WARNING: Dropping RREQ to which we have already added ourselves" << endl;
+
 
     delete rreqIncoming;
 }
@@ -981,54 +1013,69 @@ void DYMO::processRREP(RREP *rrepIncoming)
 {
     const L3Address& target = rrepIncoming->getTargetNode().getAddress();
     const L3Address& originator = rrepIncoming->getOriginatorNode().getAddress();
-    EV_DETAIL << "Processing RREP: originator = " << originator << ", target = " << target << endl;
+    const L3Address my_address = getSelfAddress();
+    EV_DETAIL << my_address << " - Processing RREP: originator = " << originator << ", target = " << target << endl;
 
-    if (permissibleRteMsg(rrepIncoming)) {
+    //    if (permissibleRteMsg(rrepIncoming)) {
     // ADDED
-    //if (permissibleRteMsg(rrepIncoming) && originator != getSelfAddress() && !isAddedNodeRREP(rrepIncoming, getSelfAddress())) {
-        processRteMsg(rrepIncoming);
+    if (permissibleRteMsg(rrepIncoming)) {
 
-        // 7.5.2. Additional Handling for Outgoing RREP
-        if (isClientAddress(originator)) {
-            EV_DETAIL << "Received RREP for client: originator = " << originator << ", target = " << target << endl;
+        if (target != my_address) {
+            // - Contains the logic for calling updateRoute
+            processRteMsg(rrepIncoming);
 
-            if (hasOngoingRouteDiscovery(target)) {
-                completeRouteDiscovery(target);
-                cancelRREQTimer(target);
-                deleteRREQTimer(target);
-                eraseRREQTimer(target); // - Erase?
+            if (!isAddedNodeRREP(rrepIncoming, getSelfAddress())) {
+                // 7.5.2. Additional Handling for Outgoing RREP
+                if (isClientAddress(originator)) {
+                    EV_DETAIL << "Received RREP for client: originator = " << originator << ", target = " << target << endl;
+
+                    // If this a RREQ we were expecting
+                    if (hasOngoingRouteDiscovery(target)) {
+                        completeRouteDiscovery(target);
+                        cancelRREQTimer(target);
+                        deleteRREQTimer(target);
+                        eraseRREQTimer(target); // - Erase?
+                    }
+                    else
+                        EV_DETAIL << "Received RREP but don't  hasOngoingRouteDiscovery(target)" << endl;
+                }
+                // - RREP not for us
+                else {
+                    // o If HandlingRtr is not OrigRtr then the outgoing RREP is sent to
+                    //   the Route.NextHopAddress for the RREP.AddrBlk[OrigNode].  If no
+                    //   forwarding route exists to OrigNode, then a RERR SHOULD be
+                    //   transmitted to RREP.AddrBlk[TargNode].  See Table 1 for notational
+                    //   conventions; OrigRtr, OrigNode, and TargNode are routers named in
+                    //   the context of OrigRtr, that is, the router originating the RREQ
+                    //   to which the RREP is responding.
+                    EV_DETAIL << "Forwarding RREP: originator = " << originator << ", target = " << target << endl;
+                    RREP *rrepOutgoing = rrepIncoming->dup();
+
+                    if (appendInformation)
+                        addSelfNode(rrepOutgoing);
+
+                    if (useMulticastRREP)
+                        sendRREP(rrepOutgoing);
+
+                    else {
+                        // - NB: How could we have a route back to the originator if this is the first time hearing from them?
+                        IRoute *route = routingTable->findBestMatchingRoute(originator);
+                        if (route)
+                            sendRREP(rrepOutgoing, route);
+                        // - TODO: Should be sending RRERs here? -> sendRERRForUndeliverablePacket(...)
+                        else
+                            EV_WARN << "No route found toward originator, dropping RREP: originator = " << originator << ", target = " << target << endl;
+                    }
+                }
             }
+            else
+                EV_WARN << "WARNING: Dropping non-permissible RREP" << endl;
         }
-        else {
-            // o If HandlingRtr is not OrigRtr then the outgoing RREP is sent to
-            //   the Route.NextHopAddress for the RREP.AddrBlk[OrigNode].  If no
-            //   forwarding route exists to OrigNode, then a RERR SHOULD be
-            //   transmitted to RREP.AddrBlk[TargNode].  See Table 1 for notational
-            //   conventions; OrigRtr, OrigNode, and TargNode are routers named in
-            //   the context of OrigRtr, that is, the router originating the RREQ
-            //   to which the RREP is responding.
-            EV_DETAIL << "Forwarding RREP: originator = " << originator << ", target = " << target << endl;
-            RREP *rrepOutgoing = rrepIncoming->dup();
-
-            if (appendInformation)
-                addSelfNode(rrepOutgoing);
-
-            if (useMulticastRREP)
-                sendRREP(rrepOutgoing);
-
-            else {
-                // - NB: How could we have a route back to the originator if this is the first time hearing from them?
-                IRoute *route = routingTable->findBestMatchingRoute(originator);
-                if (route)
-                    sendRREP(rrepOutgoing, route);
-                // - TODO: Should be sending RRERs here? -> sendRERRForUndeliverablePacket(...)
-                else
-                    EV_WARN << "No route found toward originator, dropping RREP: originator = " << originator << ", target = " << target << endl;
-            }
-        }
+        else
+            EV_WARN << "WARNING: Dropping RREP that we originated" << endl;
     }
     else
-        EV_WARN << "Dropping non-permissible RREQ" << endl;
+        EV_WARN << "WARNING: Dropping RREP to which we have already added ourselves" << endl;
 
     delete rrepIncoming;
 }
@@ -1656,21 +1703,31 @@ void DYMO::addNode(RteMsg *rteMsg, AddressBlock& addressBlock)
 // ADDED
 
 bool DYMO::isAddedNodeRREQ(RREQ *rreq, L3Address addr){
+    EV_DETAIL << "isAddedNodeRREQ: My address: " << addr << endl;
+
     int count = rreq->getAddedNodeArraySize();
     for (int i = 0; i < count; i++) {
         L3Address a = (rreq->getAddedNode(i)).getAddress();
-        if (a == addr)
+        EV_DETAIL << "Address added to RREQ: " << a << endl;
+        if (a == addr) {
             return true;
+            EV_DETAIL << "Match found returning True" << endl;
+        }
     }
     return false;
 }
 
 bool DYMO::isAddedNodeRREP(RREP *rrep, L3Address addr){
+    EV_DETAIL << "isAddedNodeRREP: My address: " << addr << endl;
+
     int count = rrep->getAddedNodeArraySize();
     for (int i = 0; i < count; i++) {
         L3Address a = (rrep->getAddedNode(i)).getAddress();
-        if (a == addr)
+        EV_DETAIL << "Address added to RREP: " << a << endl;
+        if (a == addr){
             return true;
+            EV_DETAIL << "Match found returning True" << endl;
+        }
     }
     return false;
 }

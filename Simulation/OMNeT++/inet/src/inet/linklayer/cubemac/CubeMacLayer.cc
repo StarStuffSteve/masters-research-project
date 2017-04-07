@@ -276,7 +276,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                     }
                     else {
                         if (dest == myAddress || dest.isBroadcast() || dest.isMulticast() || dest == CUBEMAC_BROADCAST) {
-                            EV_DETAIL << "Slave: Sending packet up\n";
+                            EV_DETAIL << "Slave: Sending packet '" << mac << "' up\n";
 
                             sendUp(decapsMsg(mac));
                         }
@@ -370,7 +370,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         }
 
                         const MACAddress& dest = data->getDestAddr();
-                        EV << "Slave: Sending data packet to dest " << dest << endl;
+                        EV << "Slave: Sending packet '" << data << "' to dest " << dest << endl;
 
                         simtime_t adm = simTime() - data->getArrivalTimeMac();
                         accessDelayMAC.record(adm);
@@ -541,7 +541,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                     }
                     else {
                         if (dest == myAddress || dest.isBroadcast() || dest.isMulticast() || dest == CUBEMAC_BROADCAST) {
-                            EV_DETAIL << "Master: Sending data up" << endl;
+                            EV_DETAIL << "Master: Sending packet '" << mac << "' up" << endl;
 
                             sendUp(decapsMsg(mac));
                         }
@@ -755,7 +755,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 
                         const MACAddress& dest = data->getDestAddr();
 
-                        EV << "Master: Sending data packet to dest " << dest << endl;
+                        EV << "Master: Sending packet '" << data << "' to dest " << dest << endl;
 
                         simtime_t adm = simTime() - data->getArrivalTimeMac();
                         accessDelayMAC.record(adm);
@@ -815,14 +815,14 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 // Just adds to macQueue which is of type MacQueue
 void CubeMacLayer::handleUpperPacket(cPacket *msg)
 {
-    //    std::string packetClass = msg->getClassName();
-    //    bool isDymo = (packetClass.std::string::find("dymo") != std::string::npos);
+//    std::string packetClass = msg->getClassName();
+//    bool isDymo = (packetClass.std::string::find("dymo") != std::string::npos);
 
     // TODO: Modify casting to be more flexible
     CubeMacFrame *mac = static_cast<CubeMacFrame *>(encapsMsg(static_cast<cPacket *>(msg)));
 
-    //    if (isDymo)
-    //        mac->setBitLength(1); // bit length of cPacket *macFrame used by IdealTransmitter to calculate duration
+//    if (isDymo)
+//        mac->setBitLength(1); // bit length of cPacket *macFrame used by IdealTransmitter to calculate duration
 
     // message has to be queued if another message is waiting to be send
     // or if we are already trying to send another message
@@ -831,11 +831,11 @@ void CubeMacLayer::handleUpperPacket(cPacket *msg)
 
         mac->setArrivalTimeMac(simTime());
 
-        EV_DETAIL << "Packet placed on MAC queue\n  queue size: " << macQueue.size() << " macState: " << macState << endl;
+        EV_DETAIL << "Packet '" << mac << "' placed on queue\n  queue size: " << macQueue.size() << " macState: " << macState << endl;
     }
     else {
         // queue is full, message has to be deleted
-        EV_DETAIL << "!!! WARNING !!!: Queue is full, forced to delete packet.\n";
+        EV_DETAIL << "WARNING: Queue is full, forced to delete packet.\n";
         delete mac;
     }
 
