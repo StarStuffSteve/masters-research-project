@@ -222,7 +222,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         macState = WAIT_MASTER_DATA;
                         radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
 
-                        // Wait for duration of timeout for a control message
+                        // Wait for duration of timeout for a message
                         scheduleAt(simTime() + timeoutDuration, timeout);
 
                         EV_DETAIL << "Slave: Old: SLEEP, New: WAIT_MASTER_DATA" << endl;
@@ -674,7 +674,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         break;
                     }
                     else {
-                        EV_DETAIL << "Master: Expecting no further slave control packets." << endl;
+                        EV_DETAIL << "Master: Expecting no further slave packets." << endl;
 
                         macState = SLEEP;
                         radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
@@ -842,9 +842,6 @@ void CubeMacLayer::handleUpperPacket(cPacket *msg)
     packetsOnQueue = macQueue.size();
 }
 
-/**
- * Handle LMAC control packets and data packets. Recognize collisions, change own slot if necessary and remember who is using which slot.
- */
 // Just passes packets into the FSM
 void CubeMacLayer::handleLowerPacket(cPacket *msg)
 {
@@ -857,10 +854,6 @@ void CubeMacLayer::handleLowerPacket(cPacket *msg)
     handleSelfMessage(msg);
 }
 
-/**
- * Attaches a "control info" (MacToNetw) structure (object) to the message pMsg.
- */
-// TODO: Look into control info
 cObject *CubeMacLayer::setUpControlInfo(cMessage *const pMsg, const MACAddress& pSrcAddr)
 {
     SimpleLinkLayerControlInfo *const cCtrlInfo = new SimpleLinkLayerControlInfo();

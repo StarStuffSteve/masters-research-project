@@ -878,7 +878,6 @@ void DYMO::processRREQ(RREQ *rreqIncoming)
                     IRoute *t_route = routingTable->findBestMatchingRoute(target);
                     IRoute *o_route = routingTable->findBestMatchingRoute(originator);
 
-
                     if (sendIntermediateRREP && t_route != nullptr && o_route != nullptr
                             && !t_route->getNextHopAsGeneric().isUnspecified()
                             && !o_route->getNextHopAsGeneric().isUnspecified() ){
@@ -905,14 +904,13 @@ void DYMO::processRREQ(RREQ *rreqIncoming)
                 }
             }
             else
-                EV_WARN << "WARNING: Dropping non-permissible RREQ" << endl;
+                EV_WARN << "Dropping RREQ to which we have already added ourselves" << endl;
         }
         else
-            EV_WARN << "WARNING: Dropping RREQ that we originated" << endl;
+            EV_WARN << "Dropping RREQ that we originated" << endl;
     }
     else
-        EV_WARN << "WARNING: Dropping RREQ to which we have already added ourselves" << endl;
-
+        EV_WARN << "Dropping non-permissible RREQ" << endl;
 
     delete rreqIncoming;
 }
@@ -1069,13 +1067,13 @@ void DYMO::processRREP(RREP *rrepIncoming)
                 }
             }
             else
-                EV_WARN << "WARNING: Dropping non-permissible RREP" << endl;
+                EV_WARN << "Dropping RREP to which we have already added ourselves" << endl;
         }
         else
-            EV_WARN << "WARNING: Dropping RREP that we originated" << endl;
+            EV_WARN << "Dropping RREP that we originated" << endl;
     }
     else
-        EV_WARN << "WARNING: Dropping RREP to which we have already added ourselves" << endl;
+        EV_WARN << "Dropping non-permissible RREP" << endl;
 
     delete rrepIncoming;
 }
