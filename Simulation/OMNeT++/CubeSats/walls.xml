@@ -1,5 +1,5 @@
 <environment>
-    <object position="min 580 460 0" orientation="0 0 90" shape="cuboid 5 40 10" material="concrete" fill-color="203 65 84" opacity="0.8"/>
-    <object position="min 580 500 0" orientation="0 0 90" shape="cuboid 5 40 10" material="concrete" fill-color="203 65 84" opacity="0.8"/>
-    <object position="min 560 480 0" orientation="0 0 0" shape="cuboid 5 40 10" material="concrete" fill-color="203 65 84" opacity="0.8"/>
+    <object position="min 580 460 10" orientation="0 0 90" shape="cuboid 10 50 20" material="concrete" fill-color="203 65 84" opacity="0.8"/>
+    <object position="min 580 500 10" orientation="0 0 90" shape="cuboid 10 50 20" material="concrete" fill-color="203 65 84" opacity="0.8"/>
+    <object position="min 560 480 10" orientation="0 0 0" shape="cuboid 10 50 20" material="concrete" fill-color="203 65 84" opacity="0.8"/>
 </environment>

@@ -1581,14 +1581,30 @@ simtime_t DYMO::getNextExpungeTime()
             DYMORouteData *routeData = check_and_cast<DYMORouteData *>(route->getProtocolData());
 
             const simtime_t& expirationTime = routeData->getExpirationTime();
-            if (expirationTime < nextExpirationTime)
-                nextExpirationTime = expirationTime;
+            // ADDED Second condition
+            if (expirationTime < nextExpirationTime) {
+                if (expirationTime > simTime()) {
+//                    EV_DETAIL << "EXPUNGE: nextExpirationTime set to 'routeData->getExpirationTime()': " << expirationTime << endl;
+
+                    nextExpirationTime = expirationTime;
+                }
+//                else
+//                    EV_DETAIL << "EXPUNGE: expirationTime <= simTime()" << endl;
+            }
 
             const simtime_t& defaultExpirationTime = routeData->getLastUsed() + maxSequenceNumberLifetime;
-            if (defaultExpirationTime < nextExpirationTime)
+            if (defaultExpirationTime < nextExpirationTime) {
+//                EV_DETAIL << "EXPUNGE: nextExpirationTime set to 'routeData->getLastUsed() + maxSequenceNumberLifetime': "
+//                          << routeData->getLastUsed() << " + "  << maxSequenceNumberLifetime << endl;
+
                 nextExpirationTime = defaultExpirationTime;
+            }
         }
     }
+
+//    if (nextExpirationTime == SimTime::getMaxTime())
+//        EV_DETAIL << "EXPUNGE: nextExpirationTime set to 'SimTime::getMaxTime()': "
+//                  << nextExpirationTime << endl;
 
     return nextExpirationTime;
 }
@@ -1672,8 +1688,6 @@ bool DYMO::isClientAddress(const L3Address& address)
 //
 // added node
 //
-
-// - Are they being handled correctly. Only done when appending of course.
 void DYMO::addSelfNode(RteMsg *rteMsg)
 {
     const L3Address& address = getSelfAddress();
@@ -1681,7 +1695,10 @@ void DYMO::addSelfNode(RteMsg *rteMsg)
     addressBlock.setAddress(address);
     addressBlock.setPrefixLength(addressType->getMaxPrefixLength());
     addressBlock.setHasValidityTime(false);
-    addressBlock.setValidityTime(-1);
+
+    // Default is 0
+    addressBlock.setValidityTime(0);
+
     addressBlock.setHasMetric(true);
     addressBlock.setMetric(0);
     addressBlock.setHasMetricType(true);
