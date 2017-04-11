@@ -39,6 +39,7 @@ class INET_API DYMORouteData : public cObject
     simtime_t lastUsed;
     simtime_t expirationTime;
     DYMOMetricType metricType;
+    double metric;
 
   public:
     DYMORouteData();
@@ -58,6 +59,9 @@ class INET_API DYMORouteData : public cObject
 
     DYMOMetricType getMetricType() const { return metricType; }
     void setMetricType(DYMOMetricType metricType) { this->metricType = metricType; }
+
+    bool getMetric() const { return metric; }
+    void setMetric(double metric) { this->metric = metric; }
 };
 
 } // namespace dymo

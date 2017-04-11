@@ -185,7 +185,7 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
     IRoute *createRoute(RteMsg *rteMsg, AddressBlock& addressBlock);
     void updateRoutes(RteMsg *rteMsg, AddressBlock& addressBlock);
     void updateRoute(RteMsg *rteMsg, AddressBlock& addressBlock, IRoute *route);
-    int getLinkCost(const InterfaceEntry *interfaceEntry, DYMOMetricType metricType);
+    double getLinkCost(const InterfaceEntry *interfaceEntry, DYMOMetricType metricType);
     bool isLoopFree(RteMsg *rteMsg, IRoute *route);
 
     // handling expunge timer

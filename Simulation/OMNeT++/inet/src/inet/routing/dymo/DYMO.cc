@@ -626,25 +626,49 @@ bool DYMO::permissibleRteMsg(RteMsg *rteMsg)
     return true;
 }
 
-// - NB: The *only* function in which updateRoutes is called locally
+// - NB: The *only* function in which updateRoutes is called
 // - Only gets called if rteMsg isPermissible
 void DYMO::processRteMsg(RteMsg *rteMsg)
 {
+    INetworkProtocolControlInfo *networkProtocolControlInfo = check_and_cast<INetworkProtocolControlInfo *>(rteMsg->getControlInfo());
+    InterfaceEntry *IE = interfaceTable->getInterfaceById(networkProtocolControlInfo->getInterfaceId());
+    if (!IE)
+        throw cRuntimeError("Received rteMsg but was unable to determine arrival interface");
+
     // 7.5. Handling a Received RteMsg
     // 1. HandlingRtr MUST process the routing information contained in the
-    //    RteMsg as speciied in Section 6.1.
-    if (dynamic_cast<RREQ *>(rteMsg))
-        updateRoutes(rteMsg, rteMsg->getOriginatorNode());
-    else if (dynamic_cast<RREP *>(rteMsg))
-        updateRoutes(rteMsg, rteMsg->getTargetNode());
+    //    RteMsg as specified in Section 6.1.
+    if (dynamic_cast<RREQ *>(rteMsg)){
+        // ADDED
+        AddressBlock& originator = rteMsg->getOriginatorNode();
+        double oldMetric = originator.getMetric();
+        originator.setMetric(oldMetric + getLinkCost(IE, HOP_COUNT));
 
+        updateRoutes(rteMsg, originator);
+    }
+
+    else if (dynamic_cast<RREP *>(rteMsg)){
+        // ADDED
+        AddressBlock& target = rteMsg->getTargetNode();
+        double oldMetric = target.getMetric();
+        target.setMetric(oldMetric + getLinkCost(IE, HOP_COUNT));
+
+        updateRoutes(rteMsg, target);
+    }
     // 2. HandlingRtr MAY process AddedNode routing information (if
     //    present) as specified in Section 13.7.1 Otherwise, if AddedNode
     //    information is not processed, it MUST be deleted.
-    // - We only ever want to route to the GroundStation
+    // TODO: Make sure we are properly handling routes to intermediate nodes
     int count = rteMsg->getAddedNodeArraySize();
-    for (int i = 0; i < count; i++)
-        updateRoutes(rteMsg, rteMsg->getAddedNode(i));
+    for (int i = 0; i < count; i++) {
+        // ADDED
+        AddressBlock& added = rteMsg->getAddedNode(i);
+        double oldMetric = added.getMetric();
+        added.setMetric(oldMetric + getLinkCost(IE, HOP_COUNT));
+
+        updateRoutes(rteMsg, added);
+    }
+
 
     // 3. By sending the updated RteMsg, HandlingRtr advertises that it
     //    will route for addresses contained in the outgoing RteMsg based
@@ -813,10 +837,22 @@ void DYMO::sendRREQ(RREQ *rreq)
     const L3Address& originator = rreq->getOriginatorNode().getAddress();
 
     int bl = computeRREQBitLength(rreq);
-    rreq->setBitLength(bl); // - Is this being read properly by lower layers?
-    EV_DETAIL << "Sending RREQ (" << bl << "b): originator = " << originator << ", target = " << target << endl;
+    rreq->setBitLength(bl);
 
+    EV_DETAIL << "Sending RREQ (" << bl << "b): originator = " << originator << ", target = " << target << endl;
     sendDYMOPacket(rreq, nullptr, addressType->getLinkLocalManetRoutersMulticastAddress(), uniform(0, maxJitter).dbl());
+
+//    // NOT WORKING
+//    for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
+//        InterfaceEntry *IE = interfaceTable->getInterface(i);
+//
+//        EV_DETAIL << "Sending RREQ (" << bl << "b) on interface: " << IE->getName()
+//                  << " originator = " << originator << ", target = " << target << endl;
+//
+//        sendDYMOPacket(rreq->dup(), IE, addressType->getLinkLocalManetRoutersMulticastAddress(), uniform(0, maxJitter).dbl());
+//    }
+//
+//    delete rreq;
 }
 
 void DYMO::processRREQ(RREQ *rreqIncoming)
@@ -825,7 +861,6 @@ void DYMO::processRREQ(RREQ *rreqIncoming)
     const L3Address& originator = rreqIncoming->getOriginatorNode().getAddress();
     const L3Address my_address = getSelfAddress();
     EV_DETAIL << my_address << " - Processing RREQ: originator = " << originator << ", target = " << target << endl;
-
 
 //    if (permissibleRteMsg(rreqIncoming)) {
     // ADDED
@@ -954,6 +989,9 @@ RREP *DYMO::createRREP(RteMsg *rteMsg, IRoute *route)
     originatorNode.setHasSequenceNumber(true);
     originatorNode.setSequenceNumber(rteMsg->getOriginatorNode().getSequenceNumber());
 
+    // ADDED
+    originatorNode.setMetric(0);
+
     // 6. RREP.SeqNumTLV[TargNode] := OwnSeqNum
     targetNode.setHasSequenceNumber(true);
     targetNode.setSequenceNumber(sequenceNumber);
@@ -970,7 +1008,7 @@ RREP *DYMO::createRREP(RteMsg *rteMsg, IRoute *route)
 
     // 9. RREP.Metric[TargNode] := Route[TargNode].Metric
     targetNode.setHasMetric(true);
-    targetNode.setMetric(route->getMetric());
+    targetNode.setMetric(routeData->getMetric());
 
     // 10. <msg-hop-limit> SHOULD be set to RteMsg.<msg-hop-count>.
     rrep->setHopLimit(rteMsg->getHopCount());
@@ -987,9 +1025,21 @@ void DYMO::sendRREP(RREP *rrep)
 
     int bl = computeRREPBitLength(rrep);
     rrep->setBitLength(bl);
-    EV_DETAIL << "Sending *multicast* RREP (" << bl << "b): originator = " << originator << ", target = " << target << endl;
 
+    EV_DETAIL << "Sending *multicast* RREP (" << bl << "b): originator = " << originator << ", target = " << target << endl;
     sendDYMOPacket(rrep, nullptr, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
+
+//    // NOT WORKING
+//    for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
+//        InterfaceEntry *IE = interfaceTable->getInterface(i);
+//
+//        EV_DETAIL << "Sending RREP (" << bl << "b) on interface: " << IE->getName()
+//                  << " originator = " << originator << ", target = " << target << endl;
+//
+//        sendDYMOPacket(rrep->dup(), IE, addressType->getLinkLocalManetRoutersMulticastAddress(), uniform(0, maxJitter).dbl());
+//    }
+//
+//    delete rrep;
 }
 
 void DYMO::sendRREP(RREP *rrep, IRoute *route)
@@ -1118,12 +1168,24 @@ RERR *DYMO::createRERR(std::vector<L3Address>& unreachableAddresses)
     return rerr;
 }
 
-// - Very rarely sending these as it stands (04/04)
 void DYMO::sendRERR(RERR *rerr)
 {
     rerr->setBitLength(computeRERRBitLength(rerr));
-    EV_DETAIL << "Sending RERR: unreachableNodeCount = " << rerr->getUnreachableNodeArraySize() << endl;
+
+    EV_DETAIL << "Sending RERR unreachableNodeCount = " << rerr->getUnreachableNodeArraySize() << endl;
     sendDYMOPacket(rerr, nullptr, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
+
+//    // NOT WORKING
+//    for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
+//        InterfaceEntry *IE = interfaceTable->getInterface(i);
+//
+//        EV_DETAIL << "Sending RERR on interface: " << IE->getName()
+//                  << " unreachableNodeCount = " << rerr->getUnreachableNodeArraySize() << endl;
+//
+//        sendDYMOPacket(rerr->dup(), IE, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
+//    }
+//
+//    delete rerr;
 }
 
 // - *Never used*
@@ -1381,6 +1443,7 @@ void DYMO::updateRoutes(RteMsg *rteMsg, AddressBlock& addressBlock)
         for (int i = 0; i < routingTable->getNumRoutes(); i++) {
             IRoute *routeCandidate = routingTable->getRoute(i);
 
+            // - If is a route that dymo created
             if (routeCandidate->getSource() == this) {
                 DYMORouteData *routeData = check_and_cast<DYMORouteData *>(routeCandidate->getProtocolData());
 
@@ -1396,7 +1459,8 @@ void DYMO::updateRoutes(RteMsg *rteMsg, AddressBlock& addressBlock)
         // in RteMsg against the already stored routing information in the route table
         // entry (Route) for RteMsg.Addr, as described below.
         if (!route) {
-            // - Redeclaration?
+            // - Will this work for added nodes?
+            // - createRoute calls updateRoute(..)
             IRoute *route = createRoute(rteMsg, addressBlock);
             EV_DETAIL << "Adding new route: " << route << endl;
             routingTable->addRoute(route);
@@ -1406,18 +1470,30 @@ void DYMO::updateRoutes(RteMsg *rteMsg, AddressBlock& addressBlock)
             // - *NB*
             // Offers improvement if
             // (RteMsg.SeqNum > Route.SeqNum) OR
-            // {(RteMsg.SeqNum == Route.SeqNum) AND
+            // {(RteMsg.SeqNum == Route.SeqNum) AND // ERROR?
             // [(RteMsg.Metric < Route.Metric) OR
             // ((Route.Broken == TRUE) && LoopFree (RteMsg, Route))]}    if
+
+
+            if ( addressBlock.getMetric() < routeData->getMetric() && (
+                addressBlock.getSequenceNumber() > routeData->getSequenceNumber() ||
+                addressBlock.getSequenceNumber() == routeData->getSequenceNumber() ||
+                (routeData->getBroken() && isLoopFree(rteMsg, route))
+                ))
+            /* OLD
             if ((addressBlock.getSequenceNumber() > routeData->getSequenceNumber()) ||
-                (addressBlock.getSequenceNumber() == routeData->getSequenceNumber() && addressBlock.getMetric() < route->getMetric()) ||
+                (addressBlock.getSequenceNumber() == routeData->getSequenceNumber() && addressBlock.getMetric() < routeData->getMetric()) ||
                 (routeData->getBroken() && isLoopFree(rteMsg, route)))
+            */
             {
                 // it's more recent, or it's not stale and is shorter, or it can safely repair a broken route
                 // TO/DO: should we simply update the route instead? only if the route change notification is sent exactly once
                 routingTable->removeRoute(route);
                 EV_DETAIL << "Updating existing route: " << route << endl;
+                EV_DETAIL << "Old Metric: " << routeData->getMetric() << " New Metric: " << addressBlock.getMetric() << endl;
+
                 updateRoute(rteMsg, addressBlock, route);
+
                 EV_DETAIL << "Route updated: " << route << endl;
                 routingTable->addRoute(route);
             }
@@ -1474,7 +1550,7 @@ void DYMO::updateRoute(RteMsg *rteMsg, AddressBlock& addressBlock, IRoute *route
         routeData->setMetricType(HOP_COUNT);
 
     // Route.Metric := RteMsg.Metric
-    route->setMetric(addressBlock.getMetric());
+    routeData->setMetric(addressBlock.getMetric());
 
     // Route.LastUsed := Current_Time
     routeData->setLastUsed(simTime());
@@ -1489,11 +1565,12 @@ void DYMO::updateRoute(RteMsg *rteMsg, AddressBlock& addressBlock, IRoute *route
 }
 
 // TODO: use
-int DYMO::getLinkCost(const InterfaceEntry *interfaceEntry, DYMOMetricType metricType)
+double DYMO::getLinkCost(const InterfaceEntry *IE, DYMOMetricType metricType)
 {
     switch (metricType) {
         case HOP_COUNT:
-            return 1;
+            EV_DETAIL << "getLinkCost: " << (11000000/IE->getDatarate()) << " Interface: " << IE->getName() << endl;
+            return (1000000/IE->getDatarate()); // ADDED: Higher data rate implies lower cost
 
         default:
             throw cRuntimeError("Unknown metric type");
