@@ -98,6 +98,7 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
 
     // Added
     bool isGroundMaster;
+    bool isGroundStation;
 
   public:
     DYMO();
@@ -205,6 +206,9 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
     // address
     L3Address getSelfAddress();
     L3Address getAddressForInterface(InterfaceEntry *ie);
+    L3Address getAddressByInterfaceName(const char *name);
+    L3Address getWLAN0Address();
+    L3Address getWLAN1Address();
     bool isClientAddress(const L3Address& address);
 
     // added node

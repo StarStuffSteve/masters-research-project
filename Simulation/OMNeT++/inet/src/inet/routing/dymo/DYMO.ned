@@ -84,6 +84,10 @@ simple DYMO like IDYMO
         bool sendIntermediateRREP = default(true);
         int minHopLimit = default(5);
         int maxHopLimit = default(10);
+        
+        // ADDED
+        bool isGroundMaster = default(false);
+        bool isGroundStation = default(false);
 
     gates:
         input ipIn;

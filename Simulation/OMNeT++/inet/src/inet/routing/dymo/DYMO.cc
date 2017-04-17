@@ -146,6 +146,8 @@ void DYMO::initialize(int stage)
 
         // ADDED
         isGroundMaster = par("isGroundMaster");
+        WATCH(isGroundMaster);
+        isGroundStation = par("isGroundStation");
     }
 
     else if (stage == INITSTAGE_NETWORK_LAYER_3) {
@@ -1737,28 +1739,28 @@ void DYMO::configureInterfaces()
         std::string interfaceName = interfaceEntry->getName();
         EV_DETAIL << "Configuring interface: " << interfaceName << endl;
 
-        if (interfaceEntry->isMulticast() && interfaceMatcher.matches(interfaceEntry->getName())) {
-            // Most AODVv2 messages are sent with the IP destination address set to the link-local
-            // multicast address LL-MANET-Routers [RFC5498] unless otherwise specified. Therefore,
-            // all AODVv2 routers MUST subscribe to LL-MANET-Routers [RFC5498] to receiving AODVv2 messages.
-            interfaceEntry->joinMulticastGroup(addressType->getLinkLocalManetRoutersMulticastAddress());
-        }
-
-//        // Won't affect ground as it only has wlan0
-//        if (!isGroundMaster && interfaceName.std::string::find("wlan1") != std::string::npos) {
-//            EV_DETAIL << "Setting interface " << interfaceName << " to state 'DOWN'" << endl;
-//            interfaceEntry->setState(interfaceEntry->State::DOWN);
-//
-//            if (interfaceEntry->getState() != interfaceEntry->State::DOWN)
-//                throw cRuntimeError("Unable to set interface to state 'DOWN'");
-//        }
-//        else if (interfaceEntry->isMulticast() && interfaceMatcher.matches(interfaceEntry->getName())) {
+//        if (interfaceEntry->isMulticast() && interfaceMatcher.matches(interfaceEntry->getName())) {
 //            // Most AODVv2 messages are sent with the IP destination address set to the link-local
 //            // multicast address LL-MANET-Routers [RFC5498] unless otherwise specified. Therefore,
 //            // all AODVv2 routers MUST subscribe to LL-MANET-Routers [RFC5498] to receiving AODVv2 messages.
-//
-//            interfaceEntry->joinMulticastGroup(getSelfAddress().getAddressType()->getLinkLocalManetRoutersMulticastAddress());
+//            interfaceEntry->joinMulticastGroup(addressType->getLinkLocalManetRoutersMulticastAddress());
 //        }
+
+        // Won't affect ground as it only has wlan0
+        if (!isGroundMaster && interfaceName.std::string::find("wlan1") != std::string::npos) {
+            EV_DETAIL << "Setting interface " << interfaceName << " to state 'DOWN'" << endl;
+            interfaceEntry->setState(interfaceEntry->State::DOWN);
+
+            if (interfaceEntry->getState() != interfaceEntry->State::DOWN)
+                throw cRuntimeError("Unable to set interface to state 'DOWN'");
+        }
+        else if (interfaceEntry->isMulticast() && interfaceMatcher.matches(interfaceEntry->getName())) {
+            // Most AODVv2 messages are sent with the IP destination address set to the link-local
+            // multicast address LL-MANET-Routers [RFC5498] unless otherwise specified. Therefore,
+            // all AODVv2 routers MUST subscribe to LL-MANET-Routers [RFC5498] to receiving AODVv2 messages.
+
+            interfaceEntry->joinMulticastGroup(getSelfAddress().getAddressType()->getLinkLocalManetRoutersMulticastAddress());
+        }
     }
 }
 
@@ -1769,37 +1771,6 @@ void DYMO::configureInterfaces()
 // Error: member access into incomplete type 'inet::GenericNetworkProtocolInterfaceData'
 L3Address DYMO::getSelfAddress()
 {
-//    L3Address addrs[2] = { L3Address(IPv4Address::UNSPECIFIED_ADDRESS), L3Address(IPv4Address::UNSPECIFIED_ADDRESS) };
-//
-//    cPatternMatcher interfaceMatcher(interfaces, false, true, false);
-//
-//    int a_i = 0;
-//    for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
-//        if (a_i > 1)
-//            throw cRuntimeError("More valid interfaces than expected");
-//
-//        InterfaceEntry *ie = interfaceTable->getInterface(i);
-//        L3Address addr = getAddressForInterface(ie);
-//        if (!addr.toIPv4().isUnspecified()) {
-//            addrs[a_i] = addr;
-//            a_i++;
-//        }
-//    }
-//
-//    L3Address a0 = addrs[0];
-//    L3Address a1 = addrs[1];
-//    bool a0_u = a0.toIPv4().isUnspecified();
-//    bool a1_u = a1.toIPv4().isUnspecified();
-//
-//    if (a0_u && a0_u)
-//        throw cRuntimeError("Unable to get an address from any interface");
-//
-//    if (!a0_u && !a0_u
-//        && a0.getType() != a1.getType())
-//        throw cRuntimeError("Got two interface addresses but types do not match");
-//
-//    return addrs;
-
     // void GenericRoutingTable::configureRouterId()
     // ...
     // L3Address interfaceAddr = ie->getGenericNetworkProtocolData()->getAddress();
@@ -1814,14 +1785,41 @@ L3Address DYMO::getSelfAddress()
     return routingTable->getRouterIdAsGeneric();
 }
 
-L3Address DYMO::getAddressForInterface(InterfaceEntry *ie){
+L3Address DYMO::getWLAN0Address(){
+    return getAddressByInterfaceName("wlan0");
+}
 
-    EV_DETAIL << "Attempting to get address for " << endl;
+L3Address DYMO::getWLAN1Address(){
+    return getAddressByInterfaceName("wlan1");
+}
+
+L3Address DYMO::getAddressByInterfaceName(const char *n){
+    std::string name = n;
+    EV_DETAIL << "Attempting to locate interface by the name " << name << endl;
+
+    for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
+        InterfaceEntry *ie = interfaceTable->getInterface(i);
+
+        std::string ieName = ie->getName();
+
+        if (ieName == name) {
+            return getAddressForInterface(ie);
+        }
+    }
+
+    throw cRuntimeError("Unable to identify interface for the given name");
+}
+
+L3Address DYMO::getAddressForInterface(InterfaceEntry *ie){
+    L3Address addr = L3Address(IPv4Address::UNSPECIFIED_ADDRESS);
+
+    const char *ieName = ie->getName();
+    EV_DETAIL << "Attempting to get address for " << ieName << endl;
 
     cPatternMatcher interfaceMatcher(interfaces, false, true, false);
 
     if (ie->isMulticast()
-        && interfaceMatcher.matches(ie->getName())
+        && interfaceMatcher.matches(ieName)
         && ie->getState() == ie->State::UP)
     {
           std::string info = ie->detailedInfo();
@@ -1835,10 +1833,9 @@ L3Address DYMO::getAddressForInterface(InterfaceEntry *ie){
           IPv4Address addrIPv4 = IPv4Address(addrC);
           L3Address addr = routingTable->getRouterIdAsGeneric();
           addr.set(addrIPv4);
-          return addr;
     }
-    else
-        return L3Address(IPv4Address::UNSPECIFIED_ADDRESS);
+
+    return addr;
 }
 
 bool DYMO::isClientAddress(const L3Address& address)
