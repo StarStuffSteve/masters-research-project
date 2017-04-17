@@ -15,7 +15,13 @@ USERIF_LIBS = $(ALL_ENV_LIBS) # that is, $(TKENV_LIBS) $(QTENV_LIBS) $(CMDENV_LI
 #USERIF_LIBS = $(QTENV_LIBS)
 
 # C++ include paths (with -I)
-INCLUDE_PATH = -I. -Ianalysis -Iresults -Iresults/demo_data
+INCLUDE_PATH = \
+    -I. \
+    -Ianalysis \
+    -Iresults \
+    -Iresults/demo_data \
+    -Iresults/ground_testing \
+    -Iresults/multi_testing
 
 # Additional object and library files to link with
 EXTRA_OBJS =
@@ -124,13 +130,15 @@ clean:
 	$(Q)-rm -f analysis/*_m.cc analysis/*_m.h analysis/*_sm.cc analysis/*_sm.h
 	$(Q)-rm -f results/*_m.cc results/*_m.h results/*_sm.cc results/*_sm.h
 	$(Q)-rm -f results/demo_data/*_m.cc results/demo_data/*_m.h results/demo_data/*_sm.cc results/demo_data/*_sm.h
+	$(Q)-rm -f results/ground_testing/*_m.cc results/ground_testing/*_m.h results/ground_testing/*_sm.cc results/ground_testing/*_sm.h
+	$(Q)-rm -f results/multi_testing/*_m.cc results/multi_testing/*_m.h results/multi_testing/*_sm.cc results/multi_testing/*_sm.h
 
 cleanall: clean
 	$(Q)-rm -rf $(PROJECT_OUTPUT_DIR)
 
 depend:
 	$(qecho) Creating dependencies...
-	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES) $(SM_CC_FILES)  ./*.cc analysis/*.cc results/*.cc results/demo_data/*.cc
+	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES) $(SM_CC_FILES)  ./*.cc analysis/*.cc results/*.cc results/demo_data/*.cc results/ground_testing/*.cc results/multi_testing/*.cc
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 

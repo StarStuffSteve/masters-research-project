@@ -1,4 +1,4 @@
 # Partial OMNeT++/Tkenv config file -- see $HOME/.tkenvrc as well
-config default-configname	{Clusters}
-config default-runnumber	{1}
+config default-configname	{MultiNIC}
+config default-runnumber	{0}
 
