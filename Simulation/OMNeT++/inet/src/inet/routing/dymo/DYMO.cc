@@ -143,6 +143,9 @@ void DYMO::initialize(int stage)
 
         // internal
         expungeTimer = new cMessage("ExpungeTimer");
+
+        // ADDED
+        isGroundMaster = par("isGroundMaster");
     }
 
     else if (stage == INITSTAGE_NETWORK_LAYER_3) {
@@ -176,8 +179,6 @@ void DYMO::initialize(int stage)
         }
     }
     else if (stage == INITSTAGE_ROUTING_PROTOCOLS) {
-        EV_DETAIL << "DYMO: INITSTAGE_ROUTING_PROTOCOLS" << endl;
-
         IPSocket socket(gate("ipOut"));
         socket.registerProtocol(IP_PROT_MANET);
 
@@ -846,10 +847,12 @@ void DYMO::sendRREQ(RREQ *rreq)
 //    for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
 //        InterfaceEntry *IE = interfaceTable->getInterface(i);
 //
-//        EV_DETAIL << "Sending RREQ (" << bl << "b) on interface: " << IE->getName()
-//                  << " originator = " << originator << ", target = " << target << endl;
+//        if (!IE->isLoopback()) {
+//            EV_DETAIL << "Sending RREQ (" << bl << "b) on interface: " << IE->getName()
+//                      << " originator = " << originator << ", target = " << target << endl;
 //
-//        sendDYMOPacket(rreq->dup(), IE, addressType->getLinkLocalManetRoutersMulticastAddress(), uniform(0, maxJitter).dbl());
+//            sendDYMOPacket(rreq->dup(), IE, addressType->getLinkLocalManetRoutersMulticastAddress(), uniform(0, maxJitter).dbl());
+//        }
 //    }
 //
 //    delete rreq;
@@ -1033,10 +1036,12 @@ void DYMO::sendRREP(RREP *rrep)
 //    for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
 //        InterfaceEntry *IE = interfaceTable->getInterface(i);
 //
-//        EV_DETAIL << "Sending RREP (" << bl << "b) on interface: " << IE->getName()
-//                  << " originator = " << originator << ", target = " << target << endl;
+//        if (!IE->isLoopback()) {
+//            EV_DETAIL << "Sending RREP (" << bl << "b) on interface: " << IE->getName()
+//                      << " originator = " << originator << ", target = " << target << endl;
 //
-//        sendDYMOPacket(rrep->dup(), IE, addressType->getLinkLocalManetRoutersMulticastAddress(), uniform(0, maxJitter).dbl());
+//            sendDYMOPacket(rrep->dup(), IE, addressType->getLinkLocalManetRoutersMulticastAddress(), uniform(0, maxJitter).dbl());
+//        }
 //    }
 //
 //    delete rrep;
@@ -1179,10 +1184,12 @@ void DYMO::sendRERR(RERR *rerr)
 //    for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
 //        InterfaceEntry *IE = interfaceTable->getInterface(i);
 //
-//        EV_DETAIL << "Sending RERR on interface: " << IE->getName()
-//                  << " unreachableNodeCount = " << rerr->getUnreachableNodeArraySize() << endl;
+//        if (!IE->isLoopback()) {
+//            EV_DETAIL << "Sending RERR on interface: " << IE->getName()
+//                      << " unreachableNodeCount = " << rerr->getUnreachableNodeArraySize() << endl;
 //
-//        sendDYMOPacket(rerr->dup(), IE, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
+//            sendDYMOPacket(rerr->dup(), IE, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
+//        }
 //    }
 //
 //    delete rerr;
@@ -1721,20 +1728,37 @@ bool DYMO::isNodeUp()
 
 void DYMO::configureInterfaces()
 {
-    EV_DETAIL << "DYMO: Configuring Interfaces" << endl;
-
     // join multicast groups
     cPatternMatcher interfaceMatcher(interfaces, false, true, false);
 
     for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
         InterfaceEntry *interfaceEntry = interfaceTable->getInterface(i);
-        EV_DETAIL << "DYMO: Configuring Interface: " << interfaceEntry->getName() << endl;
 
-        if (interfaceEntry->isMulticast() && interfaceMatcher.matches(interfaceEntry->getName()))
+        std::string interfaceName = interfaceEntry->getName();
+        EV_DETAIL << "Configuring interface: " << interfaceName << endl;
+
+        if (interfaceEntry->isMulticast() && interfaceMatcher.matches(interfaceEntry->getName())) {
             // Most AODVv2 messages are sent with the IP destination address set to the link-local
             // multicast address LL-MANET-Routers [RFC5498] unless otherwise specified. Therefore,
             // all AODVv2 routers MUST subscribe to LL-MANET-Routers [RFC5498] to receiving AODVv2 messages.
             interfaceEntry->joinMulticastGroup(addressType->getLinkLocalManetRoutersMulticastAddress());
+        }
+
+//        // Won't affect ground as it only has wlan0
+//        if (!isGroundMaster && interfaceName.std::string::find("wlan1") != std::string::npos) {
+//            EV_DETAIL << "Setting interface " << interfaceName << " to state 'DOWN'" << endl;
+//            interfaceEntry->setState(interfaceEntry->State::DOWN);
+//
+//            if (interfaceEntry->getState() != interfaceEntry->State::DOWN)
+//                throw cRuntimeError("Unable to set interface to state 'DOWN'");
+//        }
+//        else if (interfaceEntry->isMulticast() && interfaceMatcher.matches(interfaceEntry->getName())) {
+//            // Most AODVv2 messages are sent with the IP destination address set to the link-local
+//            // multicast address LL-MANET-Routers [RFC5498] unless otherwise specified. Therefore,
+//            // all AODVv2 routers MUST subscribe to LL-MANET-Routers [RFC5498] to receiving AODVv2 messages.
+//
+//            interfaceEntry->joinMulticastGroup(getSelfAddress().getAddressType()->getLinkLocalManetRoutersMulticastAddress());
+//        }
     }
 }
 
@@ -1742,9 +1766,79 @@ void DYMO::configureInterfaces()
 // address
 //
 
+// Error: member access into incomplete type 'inet::GenericNetworkProtocolInterfaceData'
 L3Address DYMO::getSelfAddress()
 {
+//    L3Address addrs[2] = { L3Address(IPv4Address::UNSPECIFIED_ADDRESS), L3Address(IPv4Address::UNSPECIFIED_ADDRESS) };
+//
+//    cPatternMatcher interfaceMatcher(interfaces, false, true, false);
+//
+//    int a_i = 0;
+//    for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
+//        if (a_i > 1)
+//            throw cRuntimeError("More valid interfaces than expected");
+//
+//        InterfaceEntry *ie = interfaceTable->getInterface(i);
+//        L3Address addr = getAddressForInterface(ie);
+//        if (!addr.toIPv4().isUnspecified()) {
+//            addrs[a_i] = addr;
+//            a_i++;
+//        }
+//    }
+//
+//    L3Address a0 = addrs[0];
+//    L3Address a1 = addrs[1];
+//    bool a0_u = a0.toIPv4().isUnspecified();
+//    bool a1_u = a1.toIPv4().isUnspecified();
+//
+//    if (a0_u && a0_u)
+//        throw cRuntimeError("Unable to get an address from any interface");
+//
+//    if (!a0_u && !a0_u
+//        && a0.getType() != a1.getType())
+//        throw cRuntimeError("Got two interface addresses but types do not match");
+//
+//    return addrs;
+
+    // void GenericRoutingTable::configureRouterId()
+    // ...
+    // L3Address interfaceAddr = ie->getGenericNetworkProtocolData()->getAddress();
+    // ...
+    // class INET_API GenericNetworkProtocolInterfaceData : public InterfaceProtocolData
+    // {
+    //   protected:
+    //      L3Address inetAddr;    ///< address of interface
+    // ...
+    // L3Address getAddress() const { return inetAddr; }
+
     return routingTable->getRouterIdAsGeneric();
+}
+
+L3Address DYMO::getAddressForInterface(InterfaceEntry *ie){
+
+    EV_DETAIL << "Attempting to get address for " << endl;
+
+    cPatternMatcher interfaceMatcher(interfaces, false, true, false);
+
+    if (ie->isMulticast()
+        && interfaceMatcher.matches(ie->getName())
+        && ie->getState() == ie->State::UP)
+    {
+          std::string info = ie->detailedInfo();
+          std::string d1 = "inet addr:";
+          std::string d2 = "\tMask:";
+          std::string t1 = info.std::string::substr(info.std::string::find(d1) + 10);
+          std::string addrStr = t1.std::string::substr(0, t1.std::string::find(d2));
+
+          const char *addrC = addrStr.std::string::c_str();
+
+          IPv4Address addrIPv4 = IPv4Address(addrC);
+          L3Address addr = routingTable->getRouterIdAsGeneric();
+          addr.set(addrIPv4);
+          return addr;
+    }
+    else
+        return L3Address(IPv4Address::UNSPECIFIED_ADDRESS);
 }
 
 bool DYMO::isClientAddress(const L3Address& address)
@@ -1765,6 +1859,7 @@ bool DYMO::isClientAddress(const L3Address& address)
 //
 // added node
 //
+
 void DYMO::addSelfNode(RteMsg *rteMsg)
 {
     const L3Address& address = getSelfAddress();

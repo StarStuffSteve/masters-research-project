@@ -96,6 +96,9 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
     std::multimap<L3Address, INetworkDatagram *> targetAddressToDelayedPackets;
     std::vector<std::pair<L3Address, int> > clientAddressAndPrefixLengthPairs;    // 5.3.  Router Clients and Client Networks
 
+    // Added
+    bool isGroundMaster;
+
   public:
     DYMO();
     virtual ~DYMO();
@@ -201,6 +204,7 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
 
     // address
     L3Address getSelfAddress();
+    L3Address getAddressForInterface(InterfaceEntry *ie);
     bool isClientAddress(const L3Address& address);
 
     // added node
