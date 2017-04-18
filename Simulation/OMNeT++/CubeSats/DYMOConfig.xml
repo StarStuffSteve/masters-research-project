@@ -1,7 +1,7 @@
 <config>
   <interface hosts='nodeSlave*' address='10.0.x.x' netmask='255.255.0.0'/>
   <interface hosts='nodeMaster*' address='10.1.x.x' netmask='255.255.0.0'/>
-  <interface hosts='nodeGround[0]' address = '10.2.0.0' netmask='255.255.0.0'/>
+  <interface hosts='nodeGround[0]' address = '10.2.0.1' netmask='255.255.0.0'/>
   
   <multicast-group hosts='node*' interfaces='*' address='225.0.0.1'/>
 </config>

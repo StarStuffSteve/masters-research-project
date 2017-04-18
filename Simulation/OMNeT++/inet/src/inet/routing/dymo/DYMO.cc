@@ -144,10 +144,17 @@ void DYMO::initialize(int stage)
         // internal
         expungeTimer = new cMessage("ExpungeTimer");
 
-        // ADDED
+        // ground
+        EV_DETAIL << "Setting Ground address to: 10.2.0.1" << endl;
+        groundAddress = L3Address(IPv4Address("10.2.0.1"));
+
         isGroundMaster = par("isGroundMaster");
         WATCH(isGroundMaster);
+
         isGroundStation = par("isGroundStation");
+
+        if (isGroundMaster && isGroundStation)
+            throw cRuntimeError("A node cannot be both ground master and a ground station");
     }
 
     else if (stage == INITSTAGE_NETWORK_LAYER_3) {
@@ -155,8 +162,10 @@ void DYMO::initialize(int stage)
         // - Addresses of all clients
         // - Parsing client string parameter
         cStringTokenizer tokenizer(clientAddresses);
+        EV_DETAIL << "Client Addresses: " << clientAddresses << endl;
 
         // - Why handled here and not higher in stack?
+        // TODO: Make sure we're catching addresses for both interfaces
         while (tokenizer.hasMoreTokens()) {
             const char *clientAddress = tokenizer.nextToken();
             char *slash = const_cast<char *>(strchr(clientAddress, '/'));
@@ -166,7 +175,7 @@ void DYMO::initialize(int stage)
 
             // - *Client* address and prefix
             const L3Address address = addressResolver.resolve(clientAddress);
-            int prefixLength = address.getAddressType()->getMaxPrefixLength();
+            int prefixLength = address.getAddressType()->getMaxPrefixLength(); // Will be
 
             if (slash) {
                 int pLength = atoi(slash + 1);
@@ -187,12 +196,25 @@ void DYMO::initialize(int stage)
         // - NB: Only signal to which the protocol subscribes (same with AODV)
         host->subscribe(NF_LINK_BREAK, this);
 
-        addressType = getSelfAddress().getAddressType();
+        if (isGroundMaster && getWLAN0Address().getAddressType() != getWLAN1Address().getAddressType())
+            throw cRuntimeError("WLAN0 address type does not match WLAN1 address type");
+
+        addressType = getWLAN0Address().getAddressType();
+        //addressType = getSelfAddress().getAddressType();
+
         networkProtocol->registerHook(0, this);
 
         // - True if node doesn't have status (assumed always up)
         if (isNodeUp())
             configureInterfaces();
+
+        if (isGroundStation)
+            EV_DETAIL << "GroundStation: wlan0 IPv4 address: " << getWLAN0Address() << endl;
+        else if (isGroundMaster)
+            EV_DETAIL << "GroundMaster: wlan0 IPv4 address: " << getWLAN0Address()
+                      << "\nwlan1 IPv4 address: " << getWLAN1Address() << endl;
+        else
+            EV_DETAIL << "Non-GroundMaster/Station: wlan0 IPv4 address: " << getWLAN0Address() << endl;
     }
 }
 
@@ -203,29 +225,17 @@ void DYMO::handleMessage(cMessage *message)
 
     if (message->isSelfMessage())
         processSelfMessage(message);
-
     else
         processMessage(message);
 }
-
-//
-// handling messages
-//
 
 void DYMO::processSelfMessage(cMessage *message)
 {
     if (message == expungeTimer)
         processExpungeTimer();
 
-    // - Good exmaple of dynamic_case
     else if (dynamic_cast<RREQWaitRREPTimer *>(message))
         processRREQWaitRREPTimer((RREQWaitRREPTimer *)message);
-
-    /*
-     * "To reduce congestion in a network, repeated attempts at route
-     * discovery for a particular Target Node SHOULD utilize an binary
-     * exponential backoff"
-     */
 
     else if (dynamic_cast<RREQBackoffTimer *>(message))
         processRREQBackoffTimer((RREQBackoffTimer *)message);
@@ -237,12 +247,10 @@ void DYMO::processSelfMessage(cMessage *message)
         throw cRuntimeError("Unknown self message");
 }
 
-// - NB: How is DYMO cut out of the loop from normal UDPPackets?
 void DYMO::processMessage(cMessage *message)
 {
     if (dynamic_cast<UDPPacket *>(message))
         processUDPPacket((UDPPacket *)message);
-
     else
         throw cRuntimeError("Message not UDP");
 }
@@ -253,11 +261,18 @@ void DYMO::processMessage(cMessage *message)
 
 void DYMO::startRouteDiscovery(const L3Address& target)
 {
-    EV_INFO << "Starting route discovery: originator = " << getSelfAddress() << ", target = " << target << endl;
+    L3Address originator = L3Address(IPv4Address::UNSPECIFIED_ADDRESS);
+    if (target == groundAddress && isGroundMaster)
+        originator = getWLAN1Address();
+    else
+        originator = getWLAN0Address();
+
+    EV_INFO << "Starting route discovery: originator = " << originator << ", target = " << target << endl;
+//    EV_INFO << "Starting route discovery: originator = " << getSelfAddress() << ", target = " << target << endl;
 
     ASSERT(!hasOngoingRouteDiscovery(target));
 
-    sendRREQ(createRREQ(target, 0));
+    sendRREQ(createRREQ(target, 0)); // createRREQ() contains logic to pick correct originator address
 
     // - Second param is number of retries thus far
     scheduleRREQWaitRREPTimer(createRREQWaitRREPTimer(target, 0));
@@ -265,11 +280,18 @@ void DYMO::startRouteDiscovery(const L3Address& target)
 
 void DYMO::retryRouteDiscovery(const L3Address& target, int retryCount)
 {
-    EV_INFO << "Retrying route discovery: originator = " << getSelfAddress() << ", target = " << target << ", attempt number: " << retryCount << endl;
+    L3Address originator = L3Address(IPv4Address::UNSPECIFIED_ADDRESS);
+    if (target == groundAddress && isGroundMaster)
+        originator = getWLAN1Address();
+    else
+        originator = getWLAN0Address();
+
+    EV_INFO << "Retrying route discovery: originator = " << originator << ", target = " << target << endl;
+//    EV_INFO << "Retrying route discovery: originator = " << getSelfAddress() << ", target = " << target << ", attempt number: " << retryCount << endl;
 
     ASSERT(hasOngoingRouteDiscovery(target));
 
-    sendRREQ(createRREQ(target, retryCount));
+    sendRREQ(createRREQ(target, retryCount)); // createRREQ() contains logic to pick correct originator address
 
     // - Second param is number of retries thus far
     scheduleRREQWaitRREPTimer(createRREQWaitRREPTimer(target, retryCount));
@@ -277,17 +299,22 @@ void DYMO::retryRouteDiscovery(const L3Address& target, int retryCount)
 
 void DYMO::completeRouteDiscovery(const L3Address& target)
 {
-    EV_INFO << "Completing route discovery: originator = " << getSelfAddress() << ", target = " << target << endl;
+    L3Address originator = L3Address(IPv4Address::UNSPECIFIED_ADDRESS);
+    if (target == groundAddress && isGroundMaster)
+        originator = getWLAN1Address();
+    else
+        originator = getWLAN0Address();
+
+    EV_INFO << "Completing route discovery: originator = " << originator << ", target = " << target << endl;
+//    EV_INFO << "Completing route discovery: originator = " << getSelfAddress() << ", target = " << target << endl;
 
     ASSERT(hasOngoingRouteDiscovery(target));
 
-    // - ?
     // - targetAddressToDelayedPackets populated by 'delayDatagram()'
     // - std::multimap<L3Address, INetworkDatagram *> targetAddressToDelayedPackets;
     auto lt = targetAddressToDelayedPackets.lower_bound(target);
     auto ut = targetAddressToDelayedPackets.upper_bound(target);
 
-    // - Again why second?
     for (auto it = lt; it != ut; it++)
         reinjectDelayedDatagram(it->second);
 
@@ -297,15 +324,30 @@ void DYMO::completeRouteDiscovery(const L3Address& target)
 // - Identical logic to that of completeRouteDiscovery() above
 void DYMO::cancelRouteDiscovery(const L3Address& target)
 {
-    EV_INFO << "Canceling route discovery: originator = " << getSelfAddress() << ", target = " << target << endl;
+    L3Address originator = L3Address(IPv4Address::UNSPECIFIED_ADDRESS);
+    if (target == groundAddress && isGroundMaster)
+        originator = getWLAN1Address();
+    else
+        originator = getWLAN0Address();
+
+    EV_INFO << "Canceling route discovery: originator = " << originator << ", target = " << target << endl;
+//    EV_INFO << "Canceling route discovery: originator = " << getSelfAddress() << ", target = " << target << endl;
 
     ASSERT(hasOngoingRouteDiscovery(target));
 
     auto lt = targetAddressToDelayedPackets.lower_bound(target);
     auto ut = targetAddressToDelayedPackets.upper_bound(target);
 
-    for (auto it = lt; it != ut; it++)
+    // XXX: Will drop all delayed datagrams if we exhaust retries
+    // See: processRREQWaitRREPTimer
+    // Don't want to do this ...
+    int n = 0;
+    for (auto it = lt; it != ut; it++){
+//        reinjectDelayedDatagram(it->second); // - Alternative solution
         dropDelayedDatagram(it->second);
+        n ++;
+    }
+    EV_WARN << "Dropped " << n << " delayed datagrams for target: " << target << endl;
 
     eraseDelayedDatagrams(target);
 }
@@ -332,7 +374,6 @@ void DYMO::delayDatagram(INetworkDatagram *datagram)
 void DYMO::reinjectDelayedDatagram(INetworkDatagram *datagram)
 {
     EV_INFO << "Sending queued datagram: source = " << datagram->getSourceAddress() << ", destination = " << datagram->getDestinationAddress() << endl;
-
     // - INetfilter *networkProtocol; ?
     networkProtocol->reinjectQueuedDatagram(const_cast<const INetworkDatagram *>(datagram));
 }
@@ -340,14 +381,21 @@ void DYMO::reinjectDelayedDatagram(INetworkDatagram *datagram)
 void DYMO::dropDelayedDatagram(INetworkDatagram *datagram)
 {
     EV_WARN << "Dropping queued datagram: source = " << datagram->getSourceAddress() << ", destination = " << datagram->getDestinationAddress() << endl;
-
     // - INetfilter *networkProtocol; ?
     networkProtocol->dropQueuedDatagram(const_cast<const INetworkDatagram *>(datagram));
 }
 
+// - Remove from local dictionary
 void DYMO::eraseDelayedDatagrams(const L3Address& target)
 {
-    EV_DEBUG << "Erasing the list of delayed datagrams: originator = " << getSelfAddress() << ", destination = " << target << endl;
+    L3Address originator = L3Address(IPv4Address::UNSPECIFIED_ADDRESS);
+    if (target == groundAddress && isGroundMaster)
+        originator = getWLAN1Address();
+    else
+        originator = getWLAN0Address();
+
+    EV_INFO << "Removing dictionary entries for delayed datagrams: originator = " << originator << ", target = " << target << endl;
+//    EV_INFO << "Erasing the list of delayed datagrams: originator = " << getSelfAddress() << ", destination = " << target << endl;
 
     auto lt = targetAddressToDelayedPackets.lower_bound(target);
     auto ut = targetAddressToDelayedPackets.upper_bound(target);
@@ -377,6 +425,7 @@ void DYMO::deleteRREQTimer(const L3Address& target)
     delete tt->second;
 }
 
+// - Remove from local dictionary
 void DYMO::eraseRREQTimer(const L3Address& target)
 {
     auto tt = targetAddressToRREQTimer.find(target);
@@ -398,7 +447,6 @@ RREQWaitRREPTimer *DYMO::createRREQWaitRREPTimer(const L3Address& target, int re
 void DYMO::scheduleRREQWaitRREPTimer(RREQWaitRREPTimer *message)
 {
     EV_DETAIL << "Scheduling RREQ wait RREP timer" << endl;
-    // - How does this map handle failure in this case?
     targetAddressToRREQTimer[message->getTarget()] = message;
     scheduleAt(simTime() + routeRREQWaitTime, message);
 }
@@ -408,13 +456,14 @@ void DYMO::processRREQWaitRREPTimer(RREQWaitRREPTimer *message)
     EV_DETAIL << "Processing RREQ wait RREP timer" << endl;
     const L3Address& target = message->getTarget();
     if (message->getRetryCount() == discoveryAttemptsMax - 1) {
-        cancelRouteDiscovery(target);
+        cancelRouteDiscovery(target); // - Should this drop or reinject?
         cancelRREQTimer(target);
         eraseRREQTimer(target);
         scheduleRREQHolddownTimer(createRREQHolddownTimer(target));
     }
-    else
+    else // - Backoff before next retry
         scheduleRREQBackoffTimer(createRREQBackoffTimer(target, message->getRetryCount()));
+
     delete message;
 }
 
@@ -446,9 +495,9 @@ void DYMO::processRREQBackoffTimer(RREQBackoffTimer *message)
     delete message;
 }
 
+// - Increases by factor of routeRREQWaitTime each retry
 simtime_t DYMO::computeRREQBackoffTime(int retryCount)
 {
-    // - Binary exponential
     return pow(routeRREQWaitTime, retryCount);
 }
 
@@ -471,8 +520,7 @@ void DYMO::scheduleRREQHolddownTimer(RREQHolddownTimer *message)
     scheduleAt(simTime() + rreqHolddownTime, message);
 }
 
-// - If we still have have DG's to send then start new round of RD
-// - Will only go into hold down after a complete failure of RD
+// - Holddown has finish we can start route discovery again if needed
 void DYMO::processRREQHolddownTimer(RREQHolddownTimer *message)
 {
     EV_DETAIL << "Processing RREQ holddown timer" << endl;
@@ -491,7 +539,6 @@ void DYMO::sendUDPPacket(UDPPacket *packet, double delay)
 {
     if (delay == 0)
         send(packet, "ipOut");
-    // - Internally
     // - delay = 0 or delay = uniform(0, maxJitter).dbl()
     else
         sendDelayed(packet, delay, "ipOut");
@@ -515,7 +562,8 @@ void DYMO::processUDPPacket(UDPPacket *packet)
 // handling DYMO packets
 //
 
-void DYMO::sendDYMOPacket(DYMOPacket *packet, const InterfaceEntry *interfaceEntry, const L3Address& nextHop, double delay)
+void DYMO::sendDYMOPacket(DYMOPacket *packet, InterfaceEntry *interfaceEntry, const L3Address& nextHop, double delay)
+//void DYMO::sendDYMOPacket(DYMOPacket *packet, const InterfaceEntry *interfaceEntry, const L3Address& nextHop, double delay)
 {
     INetworkProtocolControlInfo *networkProtocolControlInfo = addressType->createNetworkProtocolControlInfo();
 
@@ -523,14 +571,17 @@ void DYMO::sendDYMOPacket(DYMOPacket *packet, const InterfaceEntry *interfaceEnt
     // In addition, IP Protocol Number 138 has been reserved for MANET protocols [RFC5498].
     networkProtocolControlInfo->setTransportProtocol(IP_PROT_MANET);
 
-    // The IPv4 TTL (IPv6 Hop Limit) field for all packets containing AODVv2 messages is set to 255.
-    networkProtocolControlInfo->setHopLimit(255);
-    networkProtocolControlInfo->setDestinationAddress(nextHop);
-    networkProtocolControlInfo->setSourceAddress(getSelfAddress());
-
     // - IE chosen by caller
     if (interfaceEntry)
         networkProtocolControlInfo->setInterfaceId(interfaceEntry->getInterfaceId());
+    else
+        throw cRuntimeError("Attempting to sendDYMOPacket without specifying interface");
+
+    // The IPv4 TTL (IPv6 Hop Limit) field for all packets containing AODVv2 messages is set to 255.
+    networkProtocolControlInfo->setHopLimit(255);
+    networkProtocolControlInfo->setDestinationAddress(nextHop);
+    networkProtocolControlInfo->setSourceAddress(getAddressForInterface(interfaceEntry));
+//    networkProtocolControlInfo->setSourceAddress(getSelfAddress());
 
     UDPPacket *udpPacket = new UDPPacket(packet->getName());
     // - Encaps DYMO packet within UDPPacket
@@ -634,8 +685,8 @@ bool DYMO::permissibleRteMsg(RteMsg *rteMsg)
 void DYMO::processRteMsg(RteMsg *rteMsg)
 {
     INetworkProtocolControlInfo *networkProtocolControlInfo = check_and_cast<INetworkProtocolControlInfo *>(rteMsg->getControlInfo());
-    InterfaceEntry *IE = interfaceTable->getInterfaceById(networkProtocolControlInfo->getInterfaceId());
-    if (!IE)
+    InterfaceEntry *ie = interfaceTable->getInterfaceById(networkProtocolControlInfo->getInterfaceId());
+    if (!ie)
         throw cRuntimeError("Received rteMsg but was unable to determine arrival interface");
 
     // 7.5. Handling a Received RteMsg
@@ -645,7 +696,7 @@ void DYMO::processRteMsg(RteMsg *rteMsg)
         // ADDED
         AddressBlock& originator = rteMsg->getOriginatorNode();
         double oldMetric = originator.getMetric();
-        originator.setMetric(oldMetric + getLinkCost(IE, HOP_COUNT));
+        originator.setMetric(oldMetric + getLinkCost(ie, HOP_COUNT));
 
         updateRoutes(rteMsg, originator);
     }
@@ -654,7 +705,7 @@ void DYMO::processRteMsg(RteMsg *rteMsg)
         // ADDED
         AddressBlock& target = rteMsg->getTargetNode();
         double oldMetric = target.getMetric();
-        target.setMetric(oldMetric + getLinkCost(IE, HOP_COUNT));
+        target.setMetric(oldMetric + getLinkCost(ie, HOP_COUNT));
 
         updateRoutes(rteMsg, target);
     }
@@ -664,10 +715,9 @@ void DYMO::processRteMsg(RteMsg *rteMsg)
     // TODO: Make sure we are properly handling routes to intermediate nodes
     int count = rteMsg->getAddedNodeArraySize();
     for (int i = 0; i < count; i++) {
-        // ADDED
         AddressBlock& added = rteMsg->getAddedNode(i);
         double oldMetric = added.getMetric();
-        added.setMetric(oldMetric + getLinkCost(IE, HOP_COUNT));
+        added.setMetric(oldMetric + getLinkCost(ie, HOP_COUNT));
 
         updateRoutes(rteMsg, added);
     }
@@ -798,7 +848,8 @@ RREQ *DYMO::createRREQ(const L3Address& target, int retryCount)
     //       incur additional enlargement.
     // 5. RREQ_Gen adds the TargNode.Addr to the RREQ.
     targetNode.setAddress(target);
-    targetNode.setPrefixLength(addressType->getMaxPrefixLength());
+//    targetNode.setPrefixLength(16);
+    targetNode.setPrefixLength(addressType->getMaxPrefixLength()); // 32
 
     // 6. If a previous value of the TargNode's SeqNum is known RREQ_Gen SHOULD
     //    include TargNode.SeqNum in all but the last RREQ attempt.
@@ -811,9 +862,16 @@ RREQ *DYMO::createRREQ(const L3Address& target, int retryCount)
         targetNode.setHasSequenceNumber(false);
 
     // 7. RREQ_Gen adds OrigNode.Addr, its prefix, and the RREQ_Gen.SeqNum (OwnSeqNum) to the RREQ.
-    const L3Address& originator = getSelfAddress();
+    L3Address originator = L3Address(IPv4Address::UNSPECIFIED_ADDRESS);
+    if (target == groundAddress && isGroundMaster)
+        originator = getWLAN1Address();
+    else
+        originator = getWLAN0Address();
+//    L3Address originator = getSelfAddress();
+
     originatorNode.setAddress(originator);
-    originatorNode.setPrefixLength(addressType->getMaxPrefixLength());
+//    originatorNode.setPrefixLength(16);
+    originatorNode.setPrefixLength(addressType->getMaxPrefixLength()); // 32
     originatorNode.setHasSequenceNumber(true);
     originatorNode.setSequenceNumber(sequenceNumber);
 
@@ -842,40 +900,47 @@ void DYMO::sendRREQ(RREQ *rreq)
     int bl = computeRREQBitLength(rreq);
     rreq->setBitLength(bl);
 
-    EV_DETAIL << "Sending RREQ (" << bl << "b): originator = " << originator << ", target = " << target << endl;
-    sendDYMOPacket(rreq, nullptr, addressType->getLinkLocalManetRoutersMulticastAddress(), uniform(0, maxJitter).dbl());
+    InterfaceEntry *ie = nullptr; // - Will get runtime error if this remains at nullptr
+    if (target == groundAddress && isGroundMaster) // - If the target of the RREQ was Ground
+        ie = interfaceTable->getInterfaceByName("wlan1"); // - Allows RREQs to reach Ground
+    else
+        ie = interfaceTable->getInterfaceByName("wlan0"); // - RREQ getting sent on to/between orbiting nodes
 
-//    // NOT WORKING
-//    for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
-//        InterfaceEntry *IE = interfaceTable->getInterface(i);
-//
-//        if (!IE->isLoopback()) {
-//            EV_DETAIL << "Sending RREQ (" << bl << "b) on interface: " << IE->getName()
-//                      << " originator = " << originator << ", target = " << target << endl;
-//
-//            sendDYMOPacket(rreq->dup(), IE, addressType->getLinkLocalManetRoutersMulticastAddress(), uniform(0, maxJitter).dbl());
-//        }
-//    }
-//
-//    delete rreq;
+    EV_DETAIL << "Sending RREQ (" << bl << "b): originator = " << originator << ", target = " << target
+            << " On interface " << ie->getName() << endl;
+    sendDYMOPacket(rreq, ie, addressType->getLinkLocalManetRoutersMulticastAddress(), uniform(0, maxJitter).dbl());
+//    sendDYMOPacket(rreq, nullptr, addressType->getLinkLocalManetRoutersMulticastAddress(), uniform(0, maxJitter).dbl());
+
 }
 
 void DYMO::processRREQ(RREQ *rreqIncoming)
 {
     const L3Address& target = rreqIncoming->getTargetNode().getAddress();
     const L3Address& originator = rreqIncoming->getOriginatorNode().getAddress();
-    const L3Address my_address = getSelfAddress();
-    EV_DETAIL << my_address << " - Processing RREQ: originator = " << originator << ", target = " << target << endl;
+
+    EV_DETAIL << "Processing RREQ: originator = " << originator << ", target = " << target << endl;
 
 //    if (permissibleRteMsg(rreqIncoming)) {
-    // ADDED
     if (permissibleRteMsg(rreqIncoming)) {
 
-        if (originator != my_address) {
+        // - Only GroundMaster will originate RREQs on WLAN1, everyone else uses WLAN) only
+        if (    (isGroundMaster
+                && originator != getWLAN0Address()
+                && originator != getWLAN1Address())
+                || (!isGroundMaster
+                   && originator != getWLAN0Address()))
+        {
+//        if (originator != getSelfAddress())
             // - Contains the logic for calling updateRoute
             processRteMsg(rreqIncoming);
 
-            if (!isAddedNodeRREQ(rreqIncoming, getSelfAddress())) {
+            if (    (isGroundMaster
+                    && !isAddedNodeRREQ(rreqIncoming, getWLAN0Address())
+                    && !isAddedNodeRREQ(rreqIncoming, getWLAN1Address()))
+                    || (!isGroundMaster
+                    && !isAddedNodeRREQ(rreqIncoming, getWLAN0Address())))
+            {
+//            if (!isAddedNodeRREQ(rreqIncoming, getSelfAddress()))
 
                 // 7.5.1. Additional Handling for Outgoing RREQ
                 // o If the upstream router is in the Blacklist, and Current_Time <
@@ -900,7 +965,6 @@ void DYMO::processRREQ(RREQ *rreqIncoming)
                     if (useMulticastRREP)
                         sendRREP(createRREP(rreqIncoming));
                     else {
-                        // - TODO: Investigate findBestMatchingRoute()
                         IRoute *route = routingTable->findBestMatchingRoute(originator);
                         RREP *rrep = createRREP(rreqIncoming, route);
                         sendRREP(rrep, route);
@@ -918,9 +982,12 @@ void DYMO::processRREQ(RREQ *rreqIncoming)
                     IRoute *t_route = routingTable->findBestMatchingRoute(target);
                     IRoute *o_route = routingTable->findBestMatchingRoute(originator);
 
-                    if (sendIntermediateRREP && t_route != nullptr && o_route != nullptr
+                    if (sendIntermediateRREP
+                            && t_route != nullptr
+                            && o_route != nullptr
                             && !t_route->getNextHopAsGeneric().isUnspecified()
-                            && !o_route->getNextHopAsGeneric().isUnspecified() ){
+                            && !o_route->getNextHopAsGeneric().isUnspecified() )
+                    {
                         EV_DETAIL << "Attempting intermediate RREQ: originator = " << originator << ", target = " << target << endl;
                         EV_DETAIL << "Target route: " << t_route << " Originator route: " << o_route << endl;
 
@@ -929,8 +996,8 @@ void DYMO::processRREQ(RREQ *rreqIncoming)
                     }
                     // TODO: Should only forward when we don't have an ongoing RREQ for the target
                     //  IF we have an ongoing RREQ for target
-                    //  EITHER drop incomingRREQ
-                    //  OR cache incomingRREQ and on processing a RREP from the target generate new RREP
+                    //  EITHER drop incomingRREQ (and hope a retry from the originator will handle things)
+                    //  OR cache incomingRREQ and on processing a RREP from the target generate new seperate intermediate RREP
                     else {
                         EV_DETAIL << "Forwarding RREQ: originator = " << originator << ", target = " << target << endl;
 
@@ -966,7 +1033,7 @@ int DYMO::computeRREQBitLength(RREQ *rreq)
 
 RREP *DYMO::createRREP(RteMsg *rteMsg)
 {
-    return createRREP(rteMsg, nullptr); // - Why?
+    return createRREP(rteMsg, nullptr);
 }
 
 RREP *DYMO::createRREP(RteMsg *rteMsg, IRoute *route)
@@ -984,6 +1051,7 @@ RREP *DYMO::createRREP(RteMsg *rteMsg, IRoute *route)
     //    the rules specified in Section 5.5.
     incrementSequenceNumber();
 
+    // - NB: Getting target and originator RREQ. This could screw things up.
     // 3. RREP.AddrBlk[OrigNode] := RREQ.AddrBlk[OrigNode]
     originatorNode = AddressBlock(rteMsg->getOriginatorNode());
 
@@ -1031,26 +1099,25 @@ void DYMO::sendRREP(RREP *rrep)
     int bl = computeRREPBitLength(rrep);
     rrep->setBitLength(bl);
 
-    EV_DETAIL << "Sending *multicast* RREP (" << bl << "b): originator = " << originator << ", target = " << target << endl;
-    sendDYMOPacket(rrep, nullptr, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
+    InterfaceEntry *ie = nullptr; // - Will get runtime error if this remains at nullptr
+    if (originator == groundAddress && isGroundMaster) // - If the originator of the RREQ was Ground
+        ie = interfaceTable->getInterfaceByName("wlan1"); // - Allows RREPs to reach ground
+    else
+        ie = interfaceTable->getInterfaceByName("wlan0"); // - RREP getting sent on to orbiting nodes
 
-//    // NOT WORKING
-//    for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
-//        InterfaceEntry *IE = interfaceTable->getInterface(i);
-//
-//        if (!IE->isLoopback()) {
-//            EV_DETAIL << "Sending RREP (" << bl << "b) on interface: " << IE->getName()
-//                      << " originator = " << originator << ", target = " << target << endl;
-//
-//            sendDYMOPacket(rrep->dup(), IE, addressType->getLinkLocalManetRoutersMulticastAddress(), uniform(0, maxJitter).dbl());
-//        }
-//    }
-//
-//    delete rrep;
+    // TODO: Make sure to check the originator here has not been altered by GroundMaster
+    EV_DETAIL << "Sending *multicast* RREP (" << bl << "b): originator = " << originator << ", target = " << target
+            << " On interface " << ie->getName() << endl;
+
+    sendDYMOPacket(rrep, ie, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
+//    sendDYMOPacket(rrep, nullptr, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
 }
 
 void DYMO::sendRREP(RREP *rrep, IRoute *route)
 {
+    if (route == nullptr)
+        throw cRuntimeError("sendRREP unicast received a nullptr instead of a valid route");
+
     const L3Address& target = rrep->getTargetNode().getAddress();
     const L3Address& originator = rrep->getOriginatorNode().getAddress();
 
@@ -1058,7 +1125,17 @@ void DYMO::sendRREP(RREP *rrep, IRoute *route)
 
     int bl = computeRREPBitLength(rrep);
     rrep->setBitLength(bl);
-    EV_DETAIL << "Sending *unicast* RREP (" << bl << "b): originator = " << originator << ", target = " << target << ", nextHop = " << nextHop << endl;
+
+    InterfaceEntry *ie = route->getInterface(); // TODO: Pray the route is being configured with the right interface
+
+//    if (originator == groundAddress && isGroundMaster) // - If the originator of the RREQ was Ground
+//        ie = interfaceTable->getInterfaceByName("wlan1"); // - Allows RREPs to reach Ground
+//    else
+//        ie = interfaceTable->getInterfaceByName("wlan0"); // - RREP getting sent on to orbiting nodes
+
+    EV_DETAIL << "Sending *unicast* RREP (" << bl << "b): originator = " << originator << ", target = " << target
+            << ", nextHop = " << nextHop
+            << " On interface " << ie->getName() << endl;
 
     sendDYMOPacket(rrep, route->getInterface(), nextHop, 0);
 }
@@ -1068,18 +1145,28 @@ void DYMO::processRREP(RREP *rrepIncoming)
 {
     const L3Address& target = rrepIncoming->getTargetNode().getAddress();
     const L3Address& originator = rrepIncoming->getOriginatorNode().getAddress();
-    const L3Address my_address = getSelfAddress();
-    EV_DETAIL << my_address << " - Processing RREP: originator = " << originator << ", target = " << target << endl;
+    EV_DETAIL << "Processing RREP: originator = " << originator << ", target = " << target << endl;
 
     //    if (permissibleRteMsg(rrepIncoming)) {
-    // ADDED
     if (permissibleRteMsg(rrepIncoming)) {
 
-        if (target != my_address) {
+        if (    (isGroundMaster
+                && target != getWLAN0Address()
+                && target != getWLAN1Address())
+                || (!isGroundMaster
+                   && target != getWLAN0Address()))
+        {
+//        if (target != getSelfAddress()) {
             // - Contains the logic for calling updateRoute
             processRteMsg(rrepIncoming);
 
-            if (!isAddedNodeRREP(rrepIncoming, getSelfAddress())) {
+            if (    (isGroundMaster
+                    && !isAddedNodeRREP(rrepIncoming, getWLAN0Address())
+                    && !isAddedNodeRREP(rrepIncoming, getWLAN1Address()))
+                    || (!isGroundMaster
+                    && !isAddedNodeRREP(rrepIncoming, getWLAN0Address())))
+            {
+//            if (!isAddedNodeRREP(rrepIncoming, getSelfAddress())) {
                 // 7.5.2. Additional Handling for Outgoing RREP
                 if (isClientAddress(originator)) {
                     EV_DETAIL << "Received RREP for client: originator = " << originator << ", target = " << target << endl;
@@ -1092,7 +1179,7 @@ void DYMO::processRREP(RREP *rrepIncoming)
                         eraseRREQTimer(target); // - Erase?
                     }
                     else
-                        EV_DETAIL << "Received RREP but don't  hasOngoingRouteDiscovery(target)" << endl;
+                        EV_DETAIL << "Received RREP but don't hasOngoingRouteDiscovery(target)" << endl;
                 }
                 // - RREP not for us
                 else {
@@ -1113,12 +1200,10 @@ void DYMO::processRREP(RREP *rrepIncoming)
                         sendRREP(rrepOutgoing);
 
                     else {
-                        // - NB: How could we have a route back to the originator if this is the first time hearing from them?
                         IRoute *route = routingTable->findBestMatchingRoute(originator);
                         if (route)
                             sendRREP(rrepOutgoing, route);
-                        // - TODO: Should be sending RRERs here? -> sendRERRForUndeliverablePacket(...)
-                        else
+                        else // - TODO: Should be sending RRERs here? -> sendRERRForUndeliverablePacket(...)
                             EV_WARN << "No route found toward originator, dropping RREP: originator = " << originator << ", target = " << target << endl;
                     }
                 }
@@ -1152,6 +1237,7 @@ RERR *DYMO::createRERR(std::vector<L3Address>& unreachableAddresses)
 
         AddressBlock *addressBlock = new AddressBlock();
         addressBlock->setAddress(unreachableAddress);
+//        addressBlock->setPrefixLength(16);
         addressBlock->setPrefixLength(addressType->getMaxPrefixLength());
         addressBlock->setHasValidityTime(false);
         addressBlock->setHasMetric(false);
@@ -1175,26 +1261,18 @@ RERR *DYMO::createRERR(std::vector<L3Address>& unreachableAddresses)
     return rerr;
 }
 
+// - Sending RERRs to ground but no point when dealing only with data collection
 void DYMO::sendRERR(RERR *rerr)
 {
     rerr->setBitLength(computeRERRBitLength(rerr));
 
     EV_DETAIL << "Sending RERR unreachableNodeCount = " << rerr->getUnreachableNodeArraySize() << endl;
-    sendDYMOPacket(rerr, nullptr, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
 
-//    // NOT WORKING
-//    for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
-//        InterfaceEntry *IE = interfaceTable->getInterface(i);
-//
-//        if (!IE->isLoopback()) {
-//            EV_DETAIL << "Sending RERR on interface: " << IE->getName()
-//                      << " unreachableNodeCount = " << rerr->getUnreachableNodeArraySize() << endl;
-//
-//            sendDYMOPacket(rerr->dup(), IE, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
-//        }
-//    }
-//
-//    delete rerr;
+    if (isGroundMaster)
+        sendDYMOPacket(rerr->dup(), interfaceTable->getInterfaceByName("wlan1"), addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
+
+    sendDYMOPacket(rerr, interfaceTable->getInterfaceByName("wlan0"), addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
+//    sendDYMOPacket(rerr, nullptr, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
 }
 
 // - *Never used*
@@ -1440,7 +1518,12 @@ void DYMO::updateRoutes(RteMsg *rteMsg, AddressBlock& addressBlock)
     const L3Address& address = addressBlock.getAddress();
 
     // we don't need to manage routes for our own address
-    if (address == getSelfAddress())
+    if (    (isGroundMaster &&
+            (address == getWLAN0Address() ||
+             address == getWLAN1Address()))
+            || (!isGroundMaster
+               && address == getWLAN0Address()))
+//    if (address == getSelfAddress())
         return;
 
     // - Check for an existing route to update
@@ -1759,7 +1842,7 @@ void DYMO::configureInterfaces()
             // multicast address LL-MANET-Routers [RFC5498] unless otherwise specified. Therefore,
             // all AODVv2 routers MUST subscribe to LL-MANET-Routers [RFC5498] to receiving AODVv2 messages.
 
-            interfaceEntry->joinMulticastGroup(getSelfAddress().getAddressType()->getLinkLocalManetRoutersMulticastAddress());
+            interfaceEntry->joinMulticastGroup(addressType->getLinkLocalManetRoutersMulticastAddress());
         }
     }
 }
@@ -1768,7 +1851,6 @@ void DYMO::configureInterfaces()
 // address
 //
 
-// Error: member access into incomplete type 'inet::GenericNetworkProtocolInterfaceData'
 L3Address DYMO::getSelfAddress()
 {
     // void GenericRoutingTable::configureRouterId()
@@ -1795,7 +1877,7 @@ L3Address DYMO::getWLAN1Address(){
 
 L3Address DYMO::getAddressByInterfaceName(const char *n){
     std::string name = n;
-    EV_DETAIL << "Attempting to locate interface by the name " << name << endl;
+//    EV_DETAIL << "Attempting to locate interface by the name " << name << endl;
 
     for (int i = 0; i < interfaceTable->getNumInterfaces(); i++) {
         InterfaceEntry *ie = interfaceTable->getInterface(i);
@@ -1810,11 +1892,12 @@ L3Address DYMO::getAddressByInterfaceName(const char *n){
     throw cRuntimeError("Unable to identify interface for the given name");
 }
 
+// Error: member access into incomplete type 'inet::GenericNetworkProtocolInterfaceData'
 L3Address DYMO::getAddressForInterface(InterfaceEntry *ie){
     L3Address addr = L3Address(IPv4Address::UNSPECIFIED_ADDRESS);
 
     const char *ieName = ie->getName();
-    EV_DETAIL << "Attempting to get address for " << ieName << endl;
+//    EV_DETAIL << "Attempting to get address for " << ieName << endl;
 
     cPatternMatcher interfaceMatcher(interfaces, false, true, false);
 
@@ -1823,24 +1906,35 @@ L3Address DYMO::getAddressForInterface(InterfaceEntry *ie){
         && ie->getState() == ie->State::UP)
     {
           std::string info = ie->detailedInfo();
+//          EV_DETAIL << info << endl;
           std::string d1 = "inet addr:";
           std::string d2 = "\tMask:";
           std::string t1 = info.std::string::substr(info.std::string::find(d1) + 10);
+//          EV_DETAIL << t1 << endl;
           std::string addrStr = t1.std::string::substr(0, t1.std::string::find(d2));
+//          EV_DETAIL << "Address String: " << addrStr << endl;
 
           const char *addrC = addrStr.std::string::c_str();
+//          EV_DETAIL << "Address CString: " << addrC << endl;
 
+          // - There doesn't seem to be any reasonable way of attaching a prefix
           IPv4Address addrIPv4 = IPv4Address(addrC);
-          L3Address addr = routingTable->getRouterIdAsGeneric();
+          addr = routingTable->getRouterIdAsGeneric(); // TODO: Experiment with removing this line
           addr.set(addrIPv4);
     }
 
-    return addr;
+    if (addr.toIPv4().isUnspecified())
+        throw cRuntimeError("Address for interface is unspecified");
+    else
+        return addr;
 }
 
 bool DYMO::isClientAddress(const L3Address& address)
 {
-    if (routingTable->isLocalAddress(address))
+    if (routingTable->isLocalAddress(address)
+            || address == getWLAN0Address()
+            || (isGroundMaster
+                && address == getWLAN1Address())) // Just in case
         return true;
     else {
         // - Check all stored client addresses
@@ -1859,15 +1953,13 @@ bool DYMO::isClientAddress(const L3Address& address)
 
 void DYMO::addSelfNode(RteMsg *rteMsg)
 {
-    const L3Address& address = getSelfAddress();
+    const L3Address& address = getWLAN0Address();
     AddressBlock addressBlock;
     addressBlock.setAddress(address);
-    addressBlock.setPrefixLength(addressType->getMaxPrefixLength());
+//    addressBlock.setPrefixLength(16);
+    addressBlock.setPrefixLength(addressType->getMaxPrefixLength()); // 32
     addressBlock.setHasValidityTime(false);
-
-    // Default is 0
     addressBlock.setValidityTime(0);
-
     addressBlock.setHasMetric(true);
     addressBlock.setMetric(0);
     addressBlock.setHasMetricType(true);
@@ -1875,6 +1967,24 @@ void DYMO::addSelfNode(RteMsg *rteMsg)
     addressBlock.setHasSequenceNumber(true);
     addressBlock.setSequenceNumber(sequenceNumber);
     addNode(rteMsg, addressBlock);
+
+    // Add a second block
+    if (isGroundMaster) {
+        const L3Address& address = getWLAN1Address();
+        AddressBlock addressBlock;
+        addressBlock.setAddress(address);
+        addressBlock.setPrefixLength(16);
+        addressBlock.setPrefixLength(addressType->getMaxPrefixLength()); // 32
+        addressBlock.setHasValidityTime(false);
+        addressBlock.setValidityTime(0);
+        addressBlock.setHasMetric(true);
+        addressBlock.setMetric(0);
+        addressBlock.setHasMetricType(true);
+        addressBlock.setMetricType(HOP_COUNT);
+        addressBlock.setHasSequenceNumber(true);
+        addressBlock.setSequenceNumber(sequenceNumber);
+        addNode(rteMsg, addressBlock);
+    }
 }
 
 void DYMO::addNode(RteMsg *rteMsg, AddressBlock& addressBlock)
@@ -1883,8 +1993,6 @@ void DYMO::addNode(RteMsg *rteMsg, AddressBlock& addressBlock)
     rteMsg->setAddedNodeArraySize(size + 1);
     rteMsg->setAddedNode(size, addressBlock);
 }
-
-// ADDED
 
 bool DYMO::isAddedNodeRREQ(RREQ *rreq, L3Address addr){
     EV_DETAIL << "isAddedNodeRREQ: My address: " << addr << endl;
@@ -1966,9 +2074,16 @@ INetfilter::IHook::Result DYMO::ensureRouteForDatagram(INetworkDatagram *datagra
 
             if (!hasOngoingRouteDiscovery(destination))
                 startRouteDiscovery(destination);
-            else
-                EV_INFO << "Route discovery is in progress: originator = " << getSelfAddress() << ", target = " << destination << endl;
+            else {
+                L3Address originator = L3Address(IPv4Address::UNSPECIFIED_ADDRESS);
+                if (destination == groundAddress && isGroundMaster)
+                    originator = getWLAN1Address();
+                else
+                    originator = getWLAN0Address();
 
+                EV_INFO << "Route discovery is in progress: originator = " << originator << ", target = " << destination << endl;
+//                EV_INFO << "Route discovery is in progress: originator = " << getSelfAddress() << ", target = " << destination << endl;
+            }
             return QUEUE;
         }
         else

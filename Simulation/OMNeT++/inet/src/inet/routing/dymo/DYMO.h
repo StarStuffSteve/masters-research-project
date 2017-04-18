@@ -97,6 +97,7 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
     std::vector<std::pair<L3Address, int> > clientAddressAndPrefixLengthPairs;    // 5.3.  Router Clients and Client Networks
 
     // Added
+    L3Address groundAddress;
     bool isGroundMaster;
     bool isGroundStation;
 
@@ -155,7 +156,8 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
     void processUDPPacket(UDPPacket *packet);
 
     // handling DYMO packets
-    void sendDYMOPacket(DYMOPacket *packet, const InterfaceEntry *interfaceEntry, const L3Address& nextHop, double delay);
+    void sendDYMOPacket(DYMOPacket *packet, InterfaceEntry *interfaceEntry, const L3Address& nextHop, double delay);
+//    void sendDYMOPacket(DYMOPacket *packet, const InterfaceEntry *interfaceEntry, const L3Address& nextHop, double delay);
     void processDYMOPacket(DYMOPacket *packet);
 
     // handling RteMsg packets
