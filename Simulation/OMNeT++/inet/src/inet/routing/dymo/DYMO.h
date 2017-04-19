@@ -106,6 +106,9 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
   public:
     DYMO();
     virtual ~DYMO();
+    void setGroundMaster();
+    void unsetGroundMaster();
+    bool getIsGroundMaster();
 
   protected:
     // module interface

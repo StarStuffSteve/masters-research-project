@@ -354,6 +354,7 @@ void DYMO::cancelRouteDiscovery(const L3Address& target)
     EV_INFO << "Reinjecting " << n << " delayed datagrams for target: " << target << endl;
 //    EV_WARN << "Dropping " << n << " delayed datagrams for target: " << target << endl;
 
+    // - This should be ok
     eraseDelayedDatagrams(target);
 }
 
@@ -1953,6 +1954,56 @@ bool DYMO::isClientAddress(const L3Address& address)
 }
 
 //
+// GroundMaster Methods
+//
+void DYMO::setGroundMaster(){
+    EV_DETAIL << "Setting interface wlan1 to state 'UP'" << endl;
+    InterfaceEntry *wlan1 = interfaceTable->getInterfaceByName("wlan1");
+    wlan1->setState(wlan1->State::UP);
+
+    if (wlan1->getState() != wlan1->State::UP)
+        throw cRuntimeError("Unable to set wlan1 to state 'UP'");
+
+    // TODO: Probably need some way of bringing a new GroundMaster out of a holddown state
+    // OR handling holddown timers during an unexpected route discovery session
+//    if ()
+
+    IRoute *route = routingTable->findBestMatchingRoute(groundAddress);
+    if (!route && !hasOngoingRouteDiscovery(groundAddress)) {
+        startRouteDiscovery(groundAddress);
+    }
+
+    isGroundMaster = true;
+}
+
+void DYMO::unsetGroundMaster(){
+    EV_DETAIL << "Setting interface wlan1 to state 'DOWN'" << endl;
+    InterfaceEntry *wlan1 = interfaceTable->getInterfaceByName("wlan1");
+    wlan1->setState(wlan1->State::DOWN);
+
+    if (wlan1->getState() != wlan1->State::DOWN)
+        throw cRuntimeError("Unable to set wlan1 to state 'DOWN'");
+
+    if (hasOngoingRouteDiscovery(groundAddress)){
+        cancelRREQTimer(groundAddress);
+        deleteRREQTimer(groundAddress);
+        eraseRREQTimer(groundAddress);
+        cancelRouteDiscovery(groundAddress); // Handles delayed datagrams
+    }
+
+    IRoute *route = routingTable->findBestMatchingRoute(groundAddress);
+    if (route) { // - If we have a route to ground
+        routingTable->deleteRoute(route);
+        InterfaceEntry *wlan0 = interfaceTable->getInterfaceByName("wlan0");
+        sendRERRForBrokenLink(wlan0, addressType->getLinkLocalManetRoutersMulticastAddress());
+    }
+
+    isGroundMaster = false;
+}
+
+bool DYMO::getIsGroundMaster(){ return isGroundMaster; }
+
+//
 // added node
 //
 
@@ -2108,6 +2159,7 @@ bool DYMO::handleOperationStage(LifecycleOperation *operation, int stage, IDoneC
         if ((NodeStartOperation::Stage)stage == NodeStartOperation::STAGE_APPLICATION_LAYER)
             configureInterfaces();
     }
+    // - This doesn't do nearly enough
     else if (dynamic_cast<NodeShutdownOperation *>(operation)) {
         if ((NodeShutdownOperation::Stage)stage == NodeShutdownOperation::STAGE_APPLICATION_LAYER)
             // TO/DO: send a RERR to notify peers about broken routes
@@ -2130,11 +2182,12 @@ bool DYMO::handleOperationStage(LifecycleOperation *operation, int stage, IDoneC
 // notification
 //
 
-// - Poorly implemented and unlikely to work
+// - Poorly implemented ...
 void DYMO::receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj DETAILS_ARG)
 {
     // TODO: Add NF_LINK_BREAK to CubeMac (Routes should also timeout?)
     Enter_Method("receiveChangeNotification");
+
     if (signalID == NF_LINK_BREAK) {
         EV_WARN << "Received link break" << endl;
         cPacket *frame = check_and_cast<cPacket *>(obj);
@@ -2148,7 +2201,6 @@ void DYMO::receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj 
             || dynamic_cast<IdealMacFrame *>(frame)
 #endif // ifdef WITH_IDEALWIRELESS
 
-// ADDED
 #ifdef WITH_CUBEMAC
             || dynamic_cast<CubeMacFrame *>(frame)
 #endif // ifdef WITH_CUBEMAC
@@ -2162,8 +2214,12 @@ void DYMO::receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj 
                 if (destination.getAddressType() == addressType) {
                     IRoute *route = routingTable->findBestMatchingRoute(destination);
                     if (route) {
-                        const L3Address& nextHop = route->getNextHopAsGeneric();
-                        sendRERRForBrokenLink(route->getInterface(), nextHop);
+//                        const L3Address& nextHop = route->getNextHopAsGeneric();
+//                        InterfaceEntry *ie = route->getInterface();
+
+                        routingTable->deleteRoute(route);
+                        sendRERRForBrokenLink(interfaceTable->getInterfaceByName("wlan0"), addressType->getLinkLocalManetRoutersMulticastAddress());
+//                        sendRERRForBrokenLink(route->getInterface(), nextHop);
                     }
                 }
             }
