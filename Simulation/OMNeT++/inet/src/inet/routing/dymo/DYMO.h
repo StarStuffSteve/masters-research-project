@@ -101,6 +101,8 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
     bool isGroundMaster;
     bool isGroundStation;
 
+    int cancelledRouteDiscoveries;
+
   public:
     DYMO();
     virtual ~DYMO();

@@ -143,6 +143,8 @@ void DYMO::initialize(int stage)
 
         // internal
         expungeTimer = new cMessage("ExpungeTimer");
+        cancelledRouteDiscoveries = 0;
+        WATCH(cancelledRouteDiscoveries);
 
         // ground
         EV_DETAIL << "Setting Ground address to: 10.2.0.1" << endl;
@@ -324,13 +326,16 @@ void DYMO::completeRouteDiscovery(const L3Address& target)
 // - Identical logic to that of completeRouteDiscovery() above
 void DYMO::cancelRouteDiscovery(const L3Address& target)
 {
+    cancelledRouteDiscoveries += 1;
+
     L3Address originator = L3Address(IPv4Address::UNSPECIFIED_ADDRESS);
     if (target == groundAddress && isGroundMaster)
         originator = getWLAN1Address();
     else
         originator = getWLAN0Address();
 
-    EV_INFO << "Canceling route discovery: originator = " << originator << ", target = " << target << endl;
+    EV_INFO << "Canceling route discovery: originator = " << originator << ", target = " << target
+            << "\nNumber of cancellations thus far: " << (cancelledRouteDiscoveries - 1) << endl;
 //    EV_INFO << "Canceling route discovery: originator = " << getSelfAddress() << ", target = " << target << endl;
 
     ASSERT(hasOngoingRouteDiscovery(target));
@@ -338,16 +343,16 @@ void DYMO::cancelRouteDiscovery(const L3Address& target)
     auto lt = targetAddressToDelayedPackets.lower_bound(target);
     auto ut = targetAddressToDelayedPackets.upper_bound(target);
 
-    // XXX: Will drop all delayed datagrams if we exhaust retries
+    // Default: Will drop all delayed datagrams if we exhaust retries
     // See: processRREQWaitRREPTimer
-    // Don't want to do this ...
     int n = 0;
     for (auto it = lt; it != ut; it++){
-//        reinjectDelayedDatagram(it->second); // - Alternative solution
-        dropDelayedDatagram(it->second);
+        reinjectDelayedDatagram(it->second); // - Want to hold onto packets indefinitely
+//        dropDelayedDatagram(it->second);
         n ++;
     }
-    EV_WARN << "Dropped " << n << " delayed datagrams for target: " << target << endl;
+    EV_INFO << "Reinjecting " << n << " delayed datagrams for target: " << target << endl;
+//    EV_WARN << "Dropping " << n << " delayed datagrams for target: " << target << endl;
 
     eraseDelayedDatagrams(target);
 }
