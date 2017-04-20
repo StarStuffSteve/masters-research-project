@@ -5,12 +5,13 @@ import inet.environment.common.PhysicalEnvironment;
 import inet.physicallayer.contract.packetlevel.IRadioMedium;
 import inet.networklayer.configurator.ipv4.IPv4NetworkConfigurator;
 
-import inet.linklayer.cubemac.CubeMacLayer;
-
 import inet.node.inet.INetworkNode;
-
 import inet.node.aodv.AODVRouter;
 import inet.node.inet.WirelessHost;
+
+import inet.linklayer.cubemac.CubeMacLayer;
+
+import inet.oracle.common.RoleOracle;
 
 network Base
 {
@@ -33,6 +34,10 @@ network Base
         @statistic[rcvdPk](source=dest_rcvdPk; record=figure(count); targetFigure=rcvdPkText);
 
     submodules:
+        roleOracle: RoleOracle {
+            @display("p=100,850");
+        }
+        
         visualizer: IntegratedCanvasVisualizer {
             @display("p=100,950");
         }
@@ -62,15 +67,6 @@ network Base
             parameters:
                 @display("is=s;r=,,#606060");
         }
-//        nodeMaster[numMasters]: AODVRouter {
-//            parameters:
-//                @display("is=s;r=,,#7F7F7F");
-//        }
-//        // Slaves
-//        nodeSlave[numSlaves]: AODVRouter {
-//            parameters:
-//                @display("is=s;r=,,#606060");
-//        }   
 }
 
 network GroundStation extends Base

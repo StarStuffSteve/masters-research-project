@@ -242,6 +242,9 @@
 <includePath path="D:\Amazon Drive\Sync\Home\TCD\MAI\Project\GitHub\Simulation\OMNeT++\inet\src\inet\applications\contract"/>
 <includePath path="D:\Amazon Drive\Sync\Home\TCD\MAI\Project\GitHub\Simulation\OMNeT++\inet\src\inet\applications\base"/>
 <includePath path="D:\Amazon Drive\Sync\Home\TCD\MAI\Project\GitHub\Simulation\OMNeT++\inet\src\inet\linklayer\cubemac"/>
+<includePath path="D:\Amazon Drive\Sync\Home\TCD\MAI\Project\GitHub\Simulation\OMNeT++\inet\src\inet\oracle"/>
+<includePath path="D:\Amazon Drive\Sync\Home\TCD\MAI\Project\GitHub\Simulation\OMNeT++\inet\src\inet\oracle\contract"/>
+<includePath path="D:\Amazon Drive\Sync\Home\TCD\MAI\Project\GitHub\Simulation\OMNeT++\inet\src\inet\oracle\common"/>
 <definedSymbol symbol="__STDC__=1"/>
 <definedSymbol symbol="__cplusplus=199711L"/>
 <definedSymbol symbol="__STDC_HOSTED__=1"/>
