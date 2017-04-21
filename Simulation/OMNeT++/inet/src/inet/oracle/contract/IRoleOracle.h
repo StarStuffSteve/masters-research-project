@@ -11,7 +11,7 @@ namespace roleoracle {
 class INET_API IRoleOracle
 {
   public:
-    virtual int getUpdateFrequency() const = 0;
+    virtual simtime_t getUpdateFrequency() const = 0;
 };
 
 } // namespace roleoracle

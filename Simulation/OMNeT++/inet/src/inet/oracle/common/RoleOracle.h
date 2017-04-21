@@ -9,16 +9,25 @@ namespace inet {
 
 namespace roleoracle {
 
-class INET_API RoleOracle : public cModule, public IRoleOracle
+class INET_API RoleOracle : public cSimpleModule, public IRoleOracle
 {
   protected:
-    int updateFrequency;
     virtual void initialize(int stage) override;
+
+    simtime_t updateFrequency;
+
+    cMessage *updateTimer;
+
+    enum TYPES {
+        ORACLE_UPDATE_TIMER = 303
+    };
 
   public:
     RoleOracle();
     virtual ~RoleOracle();
-    virtual int getUpdateFrequency() const override { return updateFrequency; }
+    virtual simtime_t getUpdateFrequency() const override { return updateFrequency; };
+
+    virtual void handleMessage(cMessage *msg) override;
 
 };
 

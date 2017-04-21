@@ -5,7 +5,7 @@ import inet.oracle.contract.IRoleOracle;
 module RoleOracle like IRoleOracle
 {
     parameters:
-        int updateFrequency = default(1); // module path of the geographic coordinate system module
+        double updateFrequency @unit(s) = default(1s);
         @display("i=misc/town_s");
         @class(RoleOracle);
 }
