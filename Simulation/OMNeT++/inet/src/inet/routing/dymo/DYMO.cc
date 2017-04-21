@@ -1957,6 +1957,8 @@ bool DYMO::isClientAddress(const L3Address& address)
 // GroundMaster Methods
 //
 void DYMO::setGroundMaster(){
+    Enter_Method_Silent();
+
     EV_DETAIL << "Setting interface wlan1 to state 'UP'" << endl;
     InterfaceEntry *wlan1 = interfaceTable->getInterfaceByName("wlan1");
     wlan1->setState(wlan1->State::UP);
@@ -1977,6 +1979,8 @@ void DYMO::setGroundMaster(){
 }
 
 void DYMO::unsetGroundMaster(){
+    Enter_Method_Silent();
+
     EV_DETAIL << "Setting interface wlan1 to state 'DOWN'" << endl;
     InterfaceEntry *wlan1 = interfaceTable->getInterfaceByName("wlan1");
     wlan1->setState(wlan1->State::DOWN);
@@ -2001,7 +2005,11 @@ void DYMO::unsetGroundMaster(){
     isGroundMaster = false;
 }
 
-bool DYMO::getIsGroundMaster(){ return isGroundMaster; }
+bool DYMO::getIsGroundMaster(){
+    Enter_Method_Silent();
+
+    return isGroundMaster;
+}
 
 //
 // added node

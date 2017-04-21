@@ -22,6 +22,8 @@ class INET_API RoleOracle : public cSimpleModule, public IRoleOracle
         ORACLE_UPDATE_TIMER = 303
     };
 
+    void updateRoles();
+
   public:
     RoleOracle();
     virtual ~RoleOracle();

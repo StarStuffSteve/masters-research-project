@@ -7,6 +7,7 @@ import inet.networklayer.configurator.ipv4.IPv4NetworkConfigurator;
 
 import inet.node.inet.INetworkNode;
 import inet.node.aodv.AODVRouter;
+import inet.node.dymo.DYMORouter;
 import inet.node.inet.WirelessHost;
 
 import inet.linklayer.cubemac.CubeMacLayer;

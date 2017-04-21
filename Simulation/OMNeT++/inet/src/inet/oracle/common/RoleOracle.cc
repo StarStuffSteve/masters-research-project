@@ -2,6 +2,8 @@
 
 #include "inet/oracle/common/RoleOracle.h"
 
+#include "inet/routing/dymo/DYMO.h"
+
 namespace inet {
 
 namespace roleoracle {
@@ -35,18 +37,43 @@ void RoleOracle::initialize(int stage)
 void RoleOracle::handleMessage(cMessage *msg){
     if (msg->isSelfMessage()){
         if (msg->getKind() == ORACLE_UPDATE_TIMER){
-            EV_DETAIL << "Update Timer" << endl;
+            EV_DETAIL << "Handling update timer" << endl;
+
+            updateRoles();
         }
         else
-            throw cRuntimeError("0");
+            throw cRuntimeError("Unknown self-message");
     }
     else
-        throw cRuntimeError("1");
+        throw cRuntimeError("Unknown message not from self");
 
     if (updateTimer->isScheduled())
         cancelEvent(updateTimer);
 
     scheduleAt(simTime() + updateFrequency, updateTimer);
+}
+
+void RoleOracle::updateRoles(){
+    const cModule *sim = getParentModule();
+
+    cModuleType *moduleType = cModuleType::get("inet.node.dymo.DYMORouter");
+    EV_DETAIL << "DYMORouter type info: " << moduleType->info() << endl;
+
+
+    for (SubmoduleIterator i = SubmoduleIterator(sim); !i.end(); i++){
+        cModule *m = i.operator *();
+
+        if (m->isName("nodeMaster")){
+            inet::dymo::DYMO *d = check_and_cast<inet::dymo::DYMO*>(m->getSubmodule("dymo"));
+
+            if (d != nullptr) {
+                EV_DETAIL << "Module: " << m->getFullName() << endl;
+                EV_DETAIL << "\tisGroundMaster: " << d->getIsGroundMaster() << endl;
+            }
+            else
+                throw cRuntimeError("Unable to cast dymo sudmodule");
+        }
+    }
 }
 
 } // namespace roleoracle
