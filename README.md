@@ -5,9 +5,7 @@ Project being completed as part of a taught masters in computer engineering at t
 __Supervisor__: [Dr. Johnathan Dukes](https://www.scss.tcd.ie/Jonathan.Dukes/)
 
 ### Overview:
-The project seeks to create an emulation of a low earth orbit (LEO) CubeSat network and assess the potential efficacy of a number of distributed applications thereon.
-
-The proposal and planning directories contain a number of potentially helpful overview documents. The current reading list file will also give a good indication of the state of the art being considered. 
+The project seeks investigate potential approaches to balancing power consumption with data throughput within CubeSat networks. The end goal of the world is shed light on methods which may be employed in future missions to maximize science data collection and mission duration. To this end a number of simulations of customized protocols are carried out with OMNeT++.
 
 ---
 
