@@ -1,8 +1,6 @@
 #ifndef __INET_ROLEORACLE_H
 #define __INET_ROLEORACLE_H
 
-#include "inet/common/geometry/common/CoordinateSystem.h"
-
 #include "inet/oracle/contract/IRoleOracle.h"
 
 namespace inet {
@@ -23,6 +21,7 @@ class INET_API RoleOracle : public cSimpleModule, public IRoleOracle
     };
 
     void updateRoles();
+    void deleteGroundRoutes();
 
   public:
     RoleOracle();

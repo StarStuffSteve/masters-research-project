@@ -96,11 +96,7 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
     std::multimap<L3Address, INetworkDatagram *> targetAddressToDelayedPackets;
     std::vector<std::pair<L3Address, int> > clientAddressAndPrefixLengthPairs;    // 5.3.  Router Clients and Client Networks
 
-    // Added
-    L3Address groundAddress;
-    bool isGroundMaster;
-    bool isGroundStation;
-
+    // ADDED
     int cancelledRouteDiscoveries;
 
   public:
@@ -109,12 +105,18 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
     void setGroundMaster();
     void unsetGroundMaster();
     bool getIsGroundMaster();
+    void deleteGroundRoute();
 
   protected:
     // module interface
     virtual int numInitStages() const override { return NUM_INIT_STAGES; }
     void initialize(int stage) override;
     void handleMessage(cMessage *message) override;
+
+    // ADDED
+    L3Address groundAddress;
+    bool isGroundStation;
+    bool isGroundMaster;
 
   private:
     // handling messages

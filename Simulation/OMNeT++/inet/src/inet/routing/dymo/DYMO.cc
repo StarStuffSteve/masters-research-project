@@ -1134,16 +1134,17 @@ void DYMO::sendRREP(RREP *rrep, IRoute *route)
 
     InterfaceEntry *ie = route->getInterface(); // TODO: Pray the route is being configured with the right interface
 
-//    if (originator == groundAddress && isGroundMaster) // - If the originator of the RREQ was Ground
-//        ie = interfaceTable->getInterfaceByName("wlan1"); // - Allows RREPs to reach Ground
-//    else
-//        ie = interfaceTable->getInterfaceByName("wlan0"); // - RREP getting sent on to orbiting nodes
+    if (originator == groundAddress && isGroundMaster) // - If the originator of the RREQ was Ground
+        ie = interfaceTable->getInterfaceByName("wlan1"); // - Allows RREPs to reach Ground
+    else
+        ie = interfaceTable->getInterfaceByName("wlan0"); // - RREP getting sent on to orbiting nodes
 
     EV_DETAIL << "Sending *unicast* RREP (" << bl << "b): originator = " << originator << ", target = " << target
             << ", nextHop = " << nextHop
             << " On interface " << ie->getName() << endl;
 
-    sendDYMOPacket(rrep, route->getInterface(), nextHop, 0);
+    sendDYMOPacket(rrep, ie, nextHop, 0);
+//    sendDYMOPacket(rrep, route->getInterface(), nextHop, 0);
 }
 
 // - Need to check for broadcast loops?
@@ -1835,20 +1836,21 @@ void DYMO::configureInterfaces()
 //            interfaceEntry->joinMulticastGroup(addressType->getLinkLocalManetRoutersMulticastAddress());
 //        }
 
-        // Won't affect ground as it only has wlan0
-        if (!isGroundMaster && interfaceName.std::string::find("wlan1") != std::string::npos) {
-            EV_DETAIL << "Setting interface " << interfaceName << " to state 'DOWN'" << endl;
-            interfaceEntry->setState(interfaceEntry->State::DOWN);
-
-            if (interfaceEntry->getState() != interfaceEntry->State::DOWN)
-                throw cRuntimeError("Unable to set interface to state 'DOWN'");
-        }
-        else if (interfaceEntry->isMulticast() && interfaceMatcher.matches(interfaceEntry->getName())) {
+        if (interfaceEntry->isMulticast() && interfaceMatcher.matches(interfaceEntry->getName())) {
             // Most AODVv2 messages are sent with the IP destination address set to the link-local
             // multicast address LL-MANET-Routers [RFC5498] unless otherwise specified. Therefore,
             // all AODVv2 routers MUST subscribe to LL-MANET-Routers [RFC5498] to receiving AODVv2 messages.
 
             interfaceEntry->joinMulticastGroup(addressType->getLinkLocalManetRoutersMulticastAddress());
+        }
+
+        // Won't affect ground as it only has wlan0
+        if (!isGroundMaster && interfaceName == "wlan1") {
+            EV_DETAIL << "Setting interface " << interfaceName << " to state 'DOWN'" << endl;
+            interfaceEntry->setState(interfaceEntry->State::DOWN);
+
+            if (interfaceEntry->getState() != interfaceEntry->State::DOWN)
+                throw cRuntimeError("Unable to set interface to state 'DOWN'");
         }
     }
 }
@@ -1959,7 +1961,9 @@ bool DYMO::isClientAddress(const L3Address& address)
 void DYMO::setGroundMaster(){
     Enter_Method_Silent();
 
-    EV_DETAIL << "Setting interface wlan1 to state 'UP'" << endl;
+    EV_DETAIL << "Assuming ground master role" << endl;
+
+//    EV_DETAIL << "Setting interface wlan1 to state 'UP'" << endl;
     InterfaceEntry *wlan1 = interfaceTable->getInterfaceByName("wlan1");
     wlan1->setState(wlan1->State::UP);
 
@@ -1970,45 +1974,59 @@ void DYMO::setGroundMaster(){
     // OR handling holddown timers during an unexpected route discovery session
 //    if ()
 
-    IRoute *route = routingTable->findBestMatchingRoute(groundAddress);
-    if (!route && !hasOngoingRouteDiscovery(groundAddress)) {
-        startRouteDiscovery(groundAddress);
-    }
+//    IRoute *route = routingTable->findBestMatchingRoute(groundAddress);
+//    if (route) {
+//        EV_DETAIL << "Deleting existing route to ground" << endl;
+//        routingTable->deleteRoute(route);
+//    }
 
     isGroundMaster = true;
+    ASSERT(isGroundMaster);
 }
 
 void DYMO::unsetGroundMaster(){
     Enter_Method_Silent();
 
-    EV_DETAIL << "Setting interface wlan1 to state 'DOWN'" << endl;
+    EV_DETAIL << "Relinquishing ground master role" << endl;
+
+    if (hasOngoingRouteDiscovery(groundAddress)){
+        cancelRouteDiscovery(groundAddress); // Handles delayed datagrams
+
+        cancelRREQTimer(groundAddress);
+        deleteRREQTimer(groundAddress);
+        eraseRREQTimer(groundAddress);
+    }
+
+    IRoute *route = routingTable->findBestMatchingRoute(groundAddress);
+    // Not performing as hoped ...
+    if (route) // - If we have a route to ground
+        sendRERRForBrokenLink(interfaceTable->getInterfaceByName("wlan0"), addressType->getLinkLocalManetRoutersMulticastAddress());
+
+//    EV_DETAIL << "Setting interface wlan1 to state 'DOWN'" << endl;
     InterfaceEntry *wlan1 = interfaceTable->getInterfaceByName("wlan1");
     wlan1->setState(wlan1->State::DOWN);
 
     if (wlan1->getState() != wlan1->State::DOWN)
         throw cRuntimeError("Unable to set wlan1 to state 'DOWN'");
 
-    if (hasOngoingRouteDiscovery(groundAddress)){
-        cancelRREQTimer(groundAddress);
-        deleteRREQTimer(groundAddress);
-        eraseRREQTimer(groundAddress);
-        cancelRouteDiscovery(groundAddress); // Handles delayed datagrams
-    }
-
-    IRoute *route = routingTable->findBestMatchingRoute(groundAddress);
-    if (route) { // - If we have a route to ground
-        routingTable->deleteRoute(route);
-        InterfaceEntry *wlan0 = interfaceTable->getInterfaceByName("wlan0");
-        sendRERRForBrokenLink(wlan0, addressType->getLinkLocalManetRoutersMulticastAddress());
-    }
-
     isGroundMaster = false;
+    ASSERT(!isGroundMaster);
 }
 
 bool DYMO::getIsGroundMaster(){
     Enter_Method_Silent();
 
     return isGroundMaster;
+}
+
+void DYMO::deleteGroundRoute(){
+    Enter_Method_Silent();
+
+    IRoute *route = routingTable->findBestMatchingRoute(groundAddress);
+    if (route) {
+        EV_DETAIL << "Deleting existing route to ground" << endl;
+        routingTable->deleteRoute(route);
+    }
 }
 
 //
