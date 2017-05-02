@@ -30,10 +30,17 @@
 #include "inet/linklayer/ieee80211/mac/Ieee80211Frame_m.h"
 #endif // ifdef WITH_IEEE80211
 
-// ADDED
 #ifdef WITH_CUBEMAC
 #include "inet/linklayer/cubemac/CubeMacFrame_m.h"
 #endif // ifdef WITH_CUBEMAC
+
+#ifdef WITH_CSMACA
+#include "inet/linklayer/csmaca/CsmaCaMacFrame_m.h"
+#endif // ifdef WITH_CSMACA
+
+#ifdef WITH_CSMA
+#include "inet/linklayer/csma/CSMAFrame_m.h"
+#endif // ifdef WITH_CSMACA
 
 #include "inet/networklayer/common/L3AddressResolver.h"
 #include "inet/networklayer/contract/INetworkProtocolControlInfo.h"
@@ -2230,6 +2237,14 @@ void DYMO::receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj 
 #ifdef WITH_CUBEMAC
             || dynamic_cast<CubeMacFrame *>(frame)
 #endif // ifdef WITH_CUBEMAC
+
+#ifdef WITH_CSMA
+            || dynamic_cast<CSMAFrame *>(frame)
+#endif // ifdef WITH_CSMA
+
+#ifdef WITH_CSMACA
+            || dynamic_cast<CsmaCaMacFrame *>(frame)
+#endif // ifdef WITH_CSMACA
             )
         {
             INetworkDatagram *datagram = dynamic_cast<INetworkDatagram *>(frame->getEncapsulatedPacket());
