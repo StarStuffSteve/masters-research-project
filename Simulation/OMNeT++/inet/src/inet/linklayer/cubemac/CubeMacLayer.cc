@@ -45,6 +45,8 @@ void CubeMacLayer::initialize(int stage)
 
         canSendNextPacket = false;
 
+        pureTDMA = par("pureTDMA");
+
         // --- Results =, Stats etc.
         packetsOnQueue = 0;
 
@@ -61,7 +63,12 @@ void CubeMacLayer::initialize(int stage)
 
         numSlots = par("numSlots");
 
-        uplinkSlot = (numSlots - 1);
+        if (pureTDMA){
+            numSlots -= 1;
+            uplinkSlot = -1;
+        }
+        else
+            uplinkSlot = (numSlots - 1);
 
         EV_DETAIL << "My Mac address is" << myAddress
                   << " my cluster ID is " << myClusterId << endl;
@@ -83,6 +90,8 @@ void CubeMacLayer::initialize(int stage)
 
         accessDelayMAC.setName("MAC Access Delay");
 
+        WATCH(numSlots);
+        WATCH(uplinkSlot);
         WATCH(packetsOnQueue);
         WATCH(macState);
     }
@@ -174,6 +183,9 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
 {
     if (isSlave)
     {
+        if (pureTDMA)
+            throw cRuntimeError("All nodes must be assigned the master role in pure TDMA mode");
+
         switch (macState) {
             case INIT:
                 if (msg->getKind() == CUBEMAC_START_CUBEMAC) {

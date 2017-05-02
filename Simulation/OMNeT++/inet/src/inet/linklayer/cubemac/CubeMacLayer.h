@@ -56,6 +56,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         , slotPadding(0.01)
         // --- Results =, Stats etc.
         , packetsOnQueue(0)
+        , pureTDMA(false)
         // --- Added --- //
         , macState()
         , slotDuration(0)
@@ -159,6 +160,8 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
     cOutVector accessDelayMAC;
 
     // ---
+
+    bool pureTDMA;
 
     static const MACAddress CUBEMAC_BROADCAST;
 

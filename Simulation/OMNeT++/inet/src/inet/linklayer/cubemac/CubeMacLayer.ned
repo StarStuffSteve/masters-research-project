@@ -58,6 +58,9 @@ simple CubeMacLayer extends MACProtocolBase like IMACProtocol
         
         // The path to the Radio module
         string radioModule = default("^.radio");     //FIXME remove default value
+        
+        // Pure TDMA
+        bool pureTDMA = default(false);
 
         @class(CubeMacLayer);
 }
