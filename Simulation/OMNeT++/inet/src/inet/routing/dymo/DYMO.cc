@@ -47,7 +47,10 @@
 #include "inet/transportlayer/contract/udp/UDPControlInfo.h"
 #include "inet/common/lifecycle/NodeOperations.h"
 #include "inet/networklayer/contract/IInterfaceTable.h"
+
 #include "inet/common/ModuleAccess.h"
+#include "inet/power/storage/IdealEnergyStorage.h"
+#include "inet/common/Units.h"
 
 namespace inet {
 
@@ -1673,10 +1676,25 @@ void DYMO::updateRoute(RteMsg *rteMsg, AddressBlock& addressBlock, IRoute *route
 // TODO: use
 double DYMO::getLinkCost(const InterfaceEntry *IE, DYMOMetricType metricType)
 {
+    const cModule *m = getParentModule();
+    power::IdealEnergyStorage *mes = check_and_cast<power::IdealEnergyStorage*>(m->getSubmodule("energyStorage"));
+
+    double pcd = -1.0;
+
+    if (mes != nullptr) {
+        units::value<double, units::units::J> pc = mes->getEnergyBalance();
+        pcd = std::abs(pc.get());
+    }
+    else
+        throw cRuntimeError("Unable to cast energy storage submodule");
+
+    if (pcd <= 0)
+        throw cRuntimeError("Node power consumption reported as == 0");
+
     switch (metricType) {
         case HOP_COUNT:
-            EV_DETAIL << "getLinkCost: " << (11000000/IE->getDatarate()) << " Interface: " << IE->getName() << endl;
-            return (1000000/IE->getDatarate()); // ADDED: Higher data rate implies lower cost
+            EV_DETAIL << "Link cost: " << pcd << endl;
+            return (pcd);
 
         default:
             throw cRuntimeError("Unknown metric type");

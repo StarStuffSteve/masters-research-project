@@ -1,8 +1,13 @@
 #include <limits>
+#include <vector>
 
 #include "inet/common/ModuleAccess.h"
 #include "inet/common/geometry/common/coord.h"
+
 #include "inet/mobility/single/CircleMobility.h"
+
+#include "inet/power/storage/IdealEnergyStorage.h"
+#include "inet/common/Units.h"
 
 #include "inet/oracle/common/RoleOracle.h"
 
@@ -64,7 +69,7 @@ void RoleOracle::updateRoles(){
     Coord groundCoord = Coord(0,0,0);
 
     // Get position of ground
-    inet::CircleMobility *gcm = check_and_cast<inet::CircleMobility*>(sim->getModuleByPath("nodeGround[0].mobility"));
+    CircleMobility *gcm = check_and_cast<CircleMobility*>(sim->getModuleByPath("nodeGround[0].mobility"));
 
     if (gcm != nullptr)
         groundCoord = gcm->getCurrentPosition();
@@ -74,10 +79,12 @@ void RoleOracle::updateRoles(){
     if (groundCoord == Coord(0,0,0))
         throw cRuntimeError("Unable to get coordinates for ground station");
 
-    inet::dymo::DYMO *currentGroundMaster = nullptr;
-    inet::dymo::DYMO *closestMaster = nullptr;
+    dymo::DYMO *currentGroundMaster = nullptr;
+    dymo::DYMO *closestMaster = nullptr;
 
     double min_dist = std::numeric_limits<double>::max();
+
+    std::map<int, double> masterEnergies;
 
     for (SubmoduleIterator i = SubmoduleIterator(sim); !i.end(); i++){
         cModule *m = i.operator *();
@@ -85,12 +92,24 @@ void RoleOracle::updateRoles(){
         if (m->isName("nodeMaster")){
             EV_DETAIL << "Assessing the role of: " << m->getFullName() << endl;
 
-            inet::dymo::DYMO *d = check_and_cast<inet::dymo::DYMO*>(m->getSubmodule("dymo"));
+            int masterIndex = m->getIndex();
+
+            dymo::DYMO *d = check_and_cast<dymo::DYMO*>(m->getSubmodule("dymo"));
             if (d != nullptr) {
                 if (d->getIsGroundMaster())
                     currentGroundMaster = d;
 
-                inet::CircleMobility *mcm = check_and_cast<inet::CircleMobility*>(m->getSubmodule("mobility"));
+                power::IdealEnergyStorage *mes = check_and_cast<power::IdealEnergyStorage*>(m->getSubmodule("energyStorage"));
+
+                if (mes != nullptr) {
+                    units::value<double, units::units::J> pc = mes->getEnergyBalance();
+                    double pcd = pc.get();
+                    masterEnergies[masterIndex] = pcd;
+                }
+                else
+                    throw cRuntimeError("Unable to cast master energy storage submodule");
+
+                CircleMobility *mcm = check_and_cast<CircleMobility*>(m->getSubmodule("mobility"));
 
                 if (mcm != nullptr) {
                     Coord masterCoord = Coord(0,0,0);
@@ -113,6 +132,14 @@ void RoleOracle::updateRoles(){
             else
                 throw cRuntimeError("Unable to cast dymo submodule");
         }
+    }
+
+    // Iterate through all elements in std::map
+    std::map<int, double>::iterator it = masterEnergies.begin();
+    while(it != masterEnergies.end())
+    {
+        EV_DETAIL << "Master[" << it->first <<"] energy balance " << it->second << "J" << endl;
+        it++;
     }
 
     if (currentGroundMaster == nullptr)
@@ -144,7 +171,7 @@ void RoleOracle::deleteGroundRoutes(){
         if (m->isName("nodeMaster") || m->isName("nodeSlave")){
             EV_DETAIL << "Deleting ground routes for: " << m->getFullName() << endl;
 
-            inet::dymo::DYMO *d = check_and_cast<inet::dymo::DYMO*>(m->getSubmodule("dymo"));
+            dymo::DYMO *d = check_and_cast<dymo::DYMO*>(m->getSubmodule("dymo"));
             if (d != nullptr) {
                 d->deleteGroundRoute();
             }

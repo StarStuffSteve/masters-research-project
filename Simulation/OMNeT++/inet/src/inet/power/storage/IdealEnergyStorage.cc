@@ -17,6 +17,8 @@
 
 #include "inet/power/storage/IdealEnergyStorage.h"
 
+#include "inet/common/Units.h"
+
 namespace inet {
 
 namespace power {
@@ -51,6 +53,19 @@ void IdealEnergyStorage::updateResidualCapacity()
         lastResidualCapacityUpdate = now;
         emit(residualCapacityChangedSignal, energyBalance.get());
     }
+}
+
+J IdealEnergyStorage::getEnergyBalance()
+{
+    Enter_Method_Silent();
+    return energyBalance;
+}
+
+void IdealEnergyStorage::updateEnergyBalance(double du)
+{
+    Enter_Method_Silent();
+    J ju = J(du);
+    energyBalance += ju;
 }
 
 } // namespace power
