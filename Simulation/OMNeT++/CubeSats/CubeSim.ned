@@ -61,12 +61,12 @@ network Base
         // Masters
         nodeMaster[numMasters]: <hostType> like INetworkNode {
             parameters:
-                @display("is=s;r=,,#7F7F7F");
+                @display("i=device/satellite;r=,,#7F7F7F");
         }
         // Slaves
         nodeSlave[numSlaves]: <hostType> like INetworkNode {
             parameters:
-                @display("is=s;r=,,#606060");
+                @display("i=device/satellite;r=,,#606060");
         }
 }
 
@@ -85,6 +85,6 @@ network GroundStation extends Base
         // Ground Station
         nodeGround[numGround]: <hostType> like INetworkNode {
             parameters:
-                @display("is=s;r=,,#606060"); 
+                @display("i=device/antennatower;is=s;r=,,#606060"); 
         }    
 }

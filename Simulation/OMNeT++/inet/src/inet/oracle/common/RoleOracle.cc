@@ -4,7 +4,7 @@
 #include "inet/common/ModuleAccess.h"
 #include "inet/common/geometry/common/coord.h"
 
-#include "inet/mobility/single/CircleMobility.h"
+#include "inet/mobility/single/LinearMobility.h"
 
 #include "inet/power/storage/IdealEnergyStorage.h"
 #include "inet/common/Units.h"
@@ -21,7 +21,9 @@ Define_Module(RoleOracle);
 
 RoleOracle::RoleOracle() :
     updateFrequency(NaN),
-    updateTimer(nullptr)
+    updateTimer(nullptr),
+    overloadMaster(false),
+    targetMaster(1)
 {
 }
 
@@ -35,9 +37,11 @@ void RoleOracle::initialize(int stage)
     if (stage == INITSTAGE_LOCAL)
     {
         updateFrequency = par("updateFrequency").doubleValue();
-
         updateTimer = new cMessage("updateTimer");
         updateTimer->setKind(ORACLE_UPDATE_TIMER);
+
+        overloadMaster = par("overloadMaster");
+        targetMaster = par("targetMaster");
 
         scheduleAt(updateFrequency, updateTimer);
     }
@@ -69,12 +73,12 @@ void RoleOracle::updateRoles(){
     Coord groundCoord = Coord(0,0,0);
 
     // Get position of ground
-    CircleMobility *gcm = check_and_cast<CircleMobility*>(sim->getModuleByPath("nodeGround[0].mobility"));
+    LinearMobility *glm = check_and_cast<LinearMobility*>(sim->getModuleByPath("nodeGround[0].mobility"));
 
-    if (gcm != nullptr)
-        groundCoord = gcm->getCurrentPosition();
+    if (glm != nullptr)
+        groundCoord = glm->getCurrentPosition();
     else
-        throw cRuntimeError("Unable to cast ground station circle mobility submodule");
+        throw cRuntimeError("Unable to cast ground station linear mobility submodule");
 
     if (groundCoord == Coord(0,0,0))
         throw cRuntimeError("Unable to get coordinates for ground station");
@@ -99,21 +103,31 @@ void RoleOracle::updateRoles(){
                 if (d->getIsGroundMaster())
                     currentGroundMaster = d;
 
+                //
+                // ENERGY
+                //
                 power::IdealEnergyStorage *mes = check_and_cast<power::IdealEnergyStorage*>(m->getSubmodule("energyStorage"));
-
                 if (mes != nullptr) {
                     units::value<double, units::units::J> pc = mes->getEnergyBalance();
                     double pcd = pc.get();
                     masterEnergies[masterIndex] = pcd;
+
+                    // Should only performed once
+                    if (overloadMaster && masterIndex == targetMaster && simTime() < (2*updateFrequency)){
+                        EV_DETAIL << "Overloading master: " << targetMaster << endl;
+                        mes->updateEnergyBalance(10.0);
+                    }
                 }
                 else
                     throw cRuntimeError("Unable to cast master energy storage submodule");
 
-                CircleMobility *mcm = check_and_cast<CircleMobility*>(m->getSubmodule("mobility"));
-
-                if (mcm != nullptr) {
+                //
+                // DISTANCE TO GROUND
+                //
+                LinearMobility *mlm = check_and_cast<LinearMobility*>(m->getSubmodule("mobility"));
+                if (mlm != nullptr) {
                     Coord masterCoord = Coord(0,0,0);
-                    masterCoord = mcm->getCurrentPosition();
+                    masterCoord = mlm->getCurrentPosition();
 
                     if (masterCoord == Coord(0,0,0))
                         throw cRuntimeError("Unable to get coordinates for master");
@@ -126,7 +140,7 @@ void RoleOracle::updateRoles(){
                     }
                 }
                 else
-                    throw cRuntimeError("Unable to cast master circle mobility submodule");
+                    throw cRuntimeError("Unable to cast master linear mobility submodule");
 
             }
             else
@@ -134,7 +148,7 @@ void RoleOracle::updateRoles(){
         }
     }
 
-    // Iterate through all elements in std::map
+//    Iterate through all elements in std::map
     std::map<int, double>::iterator it = masterEnergies.begin();
     while(it != masterEnergies.end())
     {
@@ -142,6 +156,9 @@ void RoleOracle::updateRoles(){
         it++;
     }
 
+    //
+    // MASTER SELECTION
+    //
     if (currentGroundMaster == nullptr)
         throw cRuntimeError("Unable to establish current ground master");
 

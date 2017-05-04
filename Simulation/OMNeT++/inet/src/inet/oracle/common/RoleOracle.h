@@ -13,8 +13,10 @@ class INET_API RoleOracle : public cSimpleModule, public IRoleOracle
     virtual void initialize(int stage) override;
 
     simtime_t updateFrequency;
-
     cMessage *updateTimer;
+
+    bool overloadMaster;
+    int targetMaster;
 
     enum TYPES {
         ORACLE_UPDATE_TIMER = 303

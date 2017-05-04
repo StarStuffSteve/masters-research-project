@@ -263,8 +263,11 @@ void DYMO::processMessage(cMessage *message)
 {
     if (dynamic_cast<UDPPacket *>(message))
         processUDPPacket((UDPPacket *)message);
-    else
-        throw cRuntimeError("Message not UDP");
+    else {
+        delete message;
+        EV_DETAIL << "Deleting non-UDP message: " << message->detailedInfo() << endl;
+//        throw cRuntimeError("Message not UDP");
+    }
 }
 
 //

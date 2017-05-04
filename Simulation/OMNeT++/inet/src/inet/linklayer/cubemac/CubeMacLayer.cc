@@ -286,6 +286,11 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         EV_DETAIL << "Slave: Data packet from master is empty" << endl;
                         delete mac;
                     }
+                    else if (clusterId != myClusterId) {
+                        EV_DETAIL << "Slave: Data packet from master from different cluster" << endl;
+                        delete mac;
+                        break;
+                    }
                     else {
                         if (dest == myAddress || dest.isBroadcast() || dest.isMulticast() || dest == CUBEMAC_BROADCAST) {
                             EV_DETAIL << "Slave: Sending packet '" << mac << "' up\n";
