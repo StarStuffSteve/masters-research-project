@@ -18,6 +18,9 @@ class INET_API RoleOracle : public cSimpleModule, public IRoleOracle
     bool overloadMaster;
     int targetMaster;
 
+    bool useEnergies;
+    double energyRankWeight;
+
     enum TYPES {
         ORACLE_UPDATE_TIMER = 303
     };
