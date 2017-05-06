@@ -1679,20 +1679,24 @@ void DYMO::updateRoute(RteMsg *rteMsg, AddressBlock& addressBlock, IRoute *route
 // TODO: use
 double DYMO::getLinkCost(const InterfaceEntry *IE, DYMOMetricType metricType)
 {
-    const cModule *m = getParentModule();
-    power::IdealEnergyStorage *mes = check_and_cast<power::IdealEnergyStorage*>(m->getSubmodule("energyStorage"));
-
     double pcd = -1.0;
 
-    if (mes != nullptr) {
-        units::value<double, units::units::J> pc = mes->getEnergyBalance();
-        pcd = std::abs(pc.get());
+    if (!isGroundStation){
+        const cModule *m = getParentModule();
+        power::IdealEnergyStorage *mes = check_and_cast<power::IdealEnergyStorage*>(m->getSubmodule("energyStorage"));
+
+        if (mes != nullptr) {
+            units::value<double, units::units::J> pc = mes->getEnergyBalance();
+            pcd = std::abs(pc.get());
+        }
+        else
+            throw cRuntimeError("Unable to cast energy storage submodule");
+
+        if (pcd <= 0)
+            throw cRuntimeError("Node power consumption reported as == 0");
     }
     else
-        throw cRuntimeError("Unable to cast energy storage submodule");
-
-    if (pcd <= 0)
-        throw cRuntimeError("Node power consumption reported as == 0");
+        pcd = 1.0;
 
     switch (metricType) {
         case HOP_COUNT:

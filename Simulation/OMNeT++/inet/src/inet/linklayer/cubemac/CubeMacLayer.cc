@@ -47,6 +47,8 @@ void CubeMacLayer::initialize(int stage)
 
         pureTDMA = par("pureTDMA");
 
+        energySavingFeatures = par("energySavingFeatures");
+
         // --- Results =, Stats etc.
         packetsOnQueue = 0;
 
@@ -304,7 +306,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                     }
 
                     // Only sleep if the incoming message is marked as the last packet
-                    if (isLastPacket) {
+                    if (isLastPacket && energySavingFeatures) {
                         macState = SLEEP;
                         radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
 
@@ -569,7 +571,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                     }
 
                     // Only sleep if the incoming message is marked as the last packet
-                    if (isLastPacket) {
+                    if (isLastPacket && energySavingFeatures) {
                         macState = SLEEP;
                         radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
 
@@ -690,7 +692,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         // Stay in WAIT_SLAVE_DATA
                         break;
                     }
-                    else {
+                    else if (energySavingFeatures) {
                         EV_DETAIL << "Master: Expecting no further slave packets." << endl;
 
                         macState = SLEEP;
@@ -894,7 +896,6 @@ void CubeMacLayer::receiveSignal(cComponent *source, simsignal_t signalID, long 
             // Finished sending packet but have also calculated that there is enough time to send the next packet
             if (canSendNextPacket) {
                 macState = SEND_DATA;
-
                 radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
 
                 scheduleAt(simTime(), sendData);

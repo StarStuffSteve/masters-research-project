@@ -26,6 +26,7 @@ simple CubeMacLayer extends MACProtocolBase like IMACProtocol
         
         //  Results, Stats, etc.
         
+        bool energySavingFeatures = default(true);
         
         // ---
         

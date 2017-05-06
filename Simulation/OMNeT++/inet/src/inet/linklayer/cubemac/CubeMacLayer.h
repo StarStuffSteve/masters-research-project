@@ -11,29 +11,6 @@ namespace inet {
 
 using namespace physicallayer;
 
-/**
- * @brief LMAC Base
- *
- * During the first 5 full frames nodes will be waking up every controlDuration
- * to setup the network first by assigning a different timeslot to each node.
- * Normal packets will be queued, but will be send only after the setup phase.
- *
- * During its timeslot a node wakes up, checks the channel for a short random
- * period (CCA) to check for possible collision in the slot and, if the
- * channel is free, sends a control packet. If there is a collision it tries
- * to change its timeslot to an empty one. After the transmission of the control
- * packet it checks its packet queue and if its non-empty it sends a data
- * packet.
- *
- * During a foreign timeslot a node wakes up, checks the channel for
- * 2*controlDuration period for an incoming control packet and if there in
- * nothing it goes back to sleep and conserves energy for the rest of the
- * timeslot. If it receives a control packet addressed for itself it stays awake
- * for the rest of the timeslot to receive the incoming data packet.
- *
- * @ingroup macLayer
- **/
-
 class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
 {
   private:
@@ -54,6 +31,7 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
         , uplinkSlot(0)
         , timeoutDuration(0.01)
         , slotPadding(0.01)
+        , energySavingFeatures(true)
         // --- Results =, Stats etc.
         , packetsOnQueue(0)
         , pureTDMA(false)
@@ -106,18 +84,6 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
 
     typedef std::list<CubeMacFrame *> MacQueue;
 
-    /** @brief MAC states
-     *
-     *  The MAC states help to keep track what the MAC is actually
-     *  trying to do -- this is esp. useful when radio switching takes
-     *  some time.
-     *  SLEEP -- the node sleeps but accepts packets from the network layer
-     *  RX  -- MAC accepts packets from PHY layer
-     *  TX  -- MAC transmits a packet
-     *  CCA -- Clear Channel Assessment - MAC checks whether medium is busy
-     *
-     */
-
     enum States {
         INIT, SLEEP, SEND_DATA, WAIT_MASTER_DATA, WAIT_SLAVE_DATA
     };
@@ -154,6 +120,8 @@ class INET_API CubeMacLayer : public MACProtocolBase, public IMACProtocol
 
     simtime_t currentSlotEndTime;
     bool canSendNextPacket;
+
+    bool energySavingFeatures;
 
     // --- Results, Stats, Watched etc.
     int packetsOnQueue;

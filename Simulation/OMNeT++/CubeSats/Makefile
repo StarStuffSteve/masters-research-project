@@ -20,8 +20,16 @@ INCLUDE_PATH = \
     -Ianalysis \
     -Iresults \
     -Iresults/demo_data \
-    -Iresults/ground_testing \
-    -Iresults/multi_testing
+    -Iresults/S1 \
+    -Iresults/S1/no_energy_saving \
+    -Iresults/S2 \
+    -Iresults/S2/CSMA \
+    -Iresults/S2/TDMA \
+    -Iresults/S3 \
+    -Iresults/S3/elect_with_energy \
+    -Iresults/Testing \
+    -Iresults/Testing/ground_testing \
+    -Iresults/Testing/multi_testing
 
 # Additional object and library files to link with
 EXTRA_OBJS =
@@ -130,15 +138,23 @@ clean:
 	$(Q)-rm -f analysis/*_m.cc analysis/*_m.h analysis/*_sm.cc analysis/*_sm.h
 	$(Q)-rm -f results/*_m.cc results/*_m.h results/*_sm.cc results/*_sm.h
 	$(Q)-rm -f results/demo_data/*_m.cc results/demo_data/*_m.h results/demo_data/*_sm.cc results/demo_data/*_sm.h
-	$(Q)-rm -f results/ground_testing/*_m.cc results/ground_testing/*_m.h results/ground_testing/*_sm.cc results/ground_testing/*_sm.h
-	$(Q)-rm -f results/multi_testing/*_m.cc results/multi_testing/*_m.h results/multi_testing/*_sm.cc results/multi_testing/*_sm.h
+	$(Q)-rm -f results/S1/*_m.cc results/S1/*_m.h results/S1/*_sm.cc results/S1/*_sm.h
+	$(Q)-rm -f results/S1/no_energy_saving/*_m.cc results/S1/no_energy_saving/*_m.h results/S1/no_energy_saving/*_sm.cc results/S1/no_energy_saving/*_sm.h
+	$(Q)-rm -f results/S2/*_m.cc results/S2/*_m.h results/S2/*_sm.cc results/S2/*_sm.h
+	$(Q)-rm -f results/S2/CSMA/*_m.cc results/S2/CSMA/*_m.h results/S2/CSMA/*_sm.cc results/S2/CSMA/*_sm.h
+	$(Q)-rm -f results/S2/TDMA/*_m.cc results/S2/TDMA/*_m.h results/S2/TDMA/*_sm.cc results/S2/TDMA/*_sm.h
+	$(Q)-rm -f results/S3/*_m.cc results/S3/*_m.h results/S3/*_sm.cc results/S3/*_sm.h
+	$(Q)-rm -f results/S3/elect_with_energy/*_m.cc results/S3/elect_with_energy/*_m.h results/S3/elect_with_energy/*_sm.cc results/S3/elect_with_energy/*_sm.h
+	$(Q)-rm -f results/Testing/*_m.cc results/Testing/*_m.h results/Testing/*_sm.cc results/Testing/*_sm.h
+	$(Q)-rm -f results/Testing/ground_testing/*_m.cc results/Testing/ground_testing/*_m.h results/Testing/ground_testing/*_sm.cc results/Testing/ground_testing/*_sm.h
+	$(Q)-rm -f results/Testing/multi_testing/*_m.cc results/Testing/multi_testing/*_m.h results/Testing/multi_testing/*_sm.cc results/Testing/multi_testing/*_sm.h
 
 cleanall: clean
 	$(Q)-rm -rf $(PROJECT_OUTPUT_DIR)
 
 depend:
 	$(qecho) Creating dependencies...
-	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES) $(SM_CC_FILES)  ./*.cc analysis/*.cc results/*.cc results/demo_data/*.cc results/ground_testing/*.cc results/multi_testing/*.cc
+	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES) $(SM_CC_FILES)  ./*.cc analysis/*.cc results/*.cc results/demo_data/*.cc results/S1/*.cc results/S1/no_energy_saving/*.cc results/S2/*.cc results/S2/CSMA/*.cc results/S2/TDMA/*.cc results/S3/*.cc results/S3/elect_with_energy/*.cc results/Testing/*.cc results/Testing/ground_testing/*.cc results/Testing/multi_testing/*.cc
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 
