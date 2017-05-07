@@ -66,7 +66,6 @@ void CubeMacLayer::initialize(int stage)
         numSlots = par("numSlots");
 
         if (pureTDMA){
-            numSlots -= 1;
             uplinkSlot = -1;
         }
         else
