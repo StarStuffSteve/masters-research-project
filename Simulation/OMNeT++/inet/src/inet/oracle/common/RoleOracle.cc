@@ -123,23 +123,24 @@ void RoleOracle::updateRoles(){
                 //
                 // ENERGIES
                 //
+                if (useEnergies) {
+                    power::IdealEnergyStorage *mes = check_and_cast<power::IdealEnergyStorage*>(m->getSubmodule("energyStorage"));
 
-                power::IdealEnergyStorage *mes = check_and_cast<power::IdealEnergyStorage*>(m->getSubmodule("energyStorage"));
+                    if (mes != nullptr) {
+                        units::value<double, units::units::J> pc = mes->getEnergyBalance();
+                        double pcd = pc.get();
 
-                if (mes != nullptr) {
-                    units::value<double, units::units::J> pc = mes->getEnergyBalance();
-                    double pcd = pc.get();
+                        masterEnergies[masterIndex] = pcd;
 
-                    masterEnergies[masterIndex] = pcd;
-
-                    // Will only be performed on first update
-                    if (overloadMaster && masterIndex == targetMaster && simTime() < (2*updateFrequency)){
-                        EV_DETAIL << "Overloading master: " << targetMaster << endl;
-                        mes->updateEnergyBalance(10.0);
+                        // Will only be performed on first update
+                        if (overloadMaster && masterIndex == targetMaster && simTime() < (2*updateFrequency)){
+                            EV_DETAIL << "Overloading master: " << targetMaster << endl;
+                            mes->updateEnergyBalance(10.0);
+                        }
                     }
+                    else
+                        throw cRuntimeError("Unable to cast master energy storage submodule");
                 }
-                else
-                    throw cRuntimeError("Unable to cast master energy storage submodule");
 
                 //
                 // DISTANCES
@@ -156,12 +157,13 @@ void RoleOracle::updateRoles(){
                         throw cRuntimeError("Unable to get coordinates for master");
 
                     double distanceFromGround = masterCoord.distance(groundCoord);
-                    masterDistances[masterIndex] = distanceFromGround;
 
                     if (distanceFromGround < minDistance){
                         minDistance = distanceFromGround;
                         closestMaster = d;
                     }
+
+                    masterDistances[masterIndex] = distanceFromGround;
                 }
                 else
                     throw cRuntimeError("Unable to cast master linear mobility submodule");

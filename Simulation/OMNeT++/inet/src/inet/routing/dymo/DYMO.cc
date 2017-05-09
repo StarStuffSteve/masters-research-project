@@ -2029,10 +2029,10 @@ void DYMO::unsetGroundMaster(){
         eraseRREQTimer(groundAddress);
     }
 
-    IRoute *route = routingTable->findBestMatchingRoute(groundAddress);
-    // Not performing as hoped ...
-    if (route) // - If we have a route to ground
-        sendRERRForBrokenLink(interfaceTable->getInterfaceByName("wlan0"), addressType->getLinkLocalManetRoutersMulticastAddress());
+//    IRoute *route = routingTable->findBestMatchingRoute(groundAddress);
+//    // Not performing as hoped ...
+//    if (route) // - If we have a route to ground
+//        sendRERRForBrokenLink(interfaceTable->getInterfaceByName("wlan0"), addressType->getLinkLocalManetRoutersMulticastAddress());
 
 //    EV_DETAIL << "Setting interface wlan1 to state 'DOWN'" << endl;
     InterfaceEntry *wlan1 = interfaceTable->getInterfaceByName("wlan1");
@@ -2058,6 +2058,18 @@ void DYMO::deleteGroundRoute(){
     if (route) {
         EV_DETAIL << "Deleting existing route to ground" << endl;
         routingTable->deleteRoute(route);
+    }
+
+    route = routingTable->findBestMatchingRoute(groundAddress);
+    if (route != nullptr)
+        throw cRuntimeError("Node still has a valid route to ground");
+
+    if (hasOngoingRouteDiscovery(groundAddress)){
+        cancelRouteDiscovery(groundAddress); // Handles delayed datagrams
+
+        cancelRREQTimer(groundAddress);
+        deleteRREQTimer(groundAddress);
+        eraseRREQTimer(groundAddress);
     }
 }
 
