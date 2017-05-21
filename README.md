@@ -1,4 +1,4 @@
-# TCD MAI Computer Engineering: Research Project
+# CubeSat Networks: Balancing Power with Satellite-to-Ground Data Throughput
 
 Project completed as part of a taught masters in computer engineering at the [Trinity College Dublin](tcd.ie)
 
