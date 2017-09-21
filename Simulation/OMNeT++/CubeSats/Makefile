@@ -18,16 +18,22 @@ USERIF_LIBS = $(ALL_ENV_LIBS) # that is, $(TKENV_LIBS) $(QTENV_LIBS) $(CMDENV_LI
 INCLUDE_PATH = \
     -I. \
     -Ianalysis \
+    -Ianalysis/Dissertation \
+    -Ianalysis/IEEE \
     -Iresults \
-    -Iresults/demo_data \
-    -Iresults/S1 \
-    -Iresults/S1/baseline \
-    -Iresults/S1/no_energy_saving \
-    -Iresults/S2 \
-    -Iresults/S2/CSMA \
-    -Iresults/S2/TDMA \
-    -Iresults/S3 \
-    -Iresults/S3/elect_with_energy \
+    -Iresults/Dissertation \
+    -Iresults/Dissertation/S1 \
+    -Iresults/Dissertation/S1/baseline \
+    -Iresults/Dissertation/S1/no_energy_saving \
+    -Iresults/Dissertation/S2 \
+    -Iresults/Dissertation/S2/CSMA \
+    -Iresults/Dissertation/S2/TDMA \
+    -Iresults/Dissertation/S3 \
+    -Iresults/Dissertation/S3/elect_with_energy \
+    -Iresults/IEEE \
+    -Iresults/IEEE/Baseline \
+    -Iresults/IEEE/S1 \
+    -Iresults/IEEE/S2 \
     -Iresults/Testing \
     -Iresults/Testing/ground_testing \
     -Iresults/Testing/multi_testing
@@ -137,16 +143,22 @@ clean:
 	$(Q)-rm -f CubeSats CubeSats.exe libCubeSats.so libCubeSats.a libCubeSats.dll libCubeSats.dylib
 	$(Q)-rm -f ./*_m.cc ./*_m.h ./*_sm.cc ./*_sm.h
 	$(Q)-rm -f analysis/*_m.cc analysis/*_m.h analysis/*_sm.cc analysis/*_sm.h
+	$(Q)-rm -f analysis/Dissertation/*_m.cc analysis/Dissertation/*_m.h analysis/Dissertation/*_sm.cc analysis/Dissertation/*_sm.h
+	$(Q)-rm -f analysis/IEEE/*_m.cc analysis/IEEE/*_m.h analysis/IEEE/*_sm.cc analysis/IEEE/*_sm.h
 	$(Q)-rm -f results/*_m.cc results/*_m.h results/*_sm.cc results/*_sm.h
-	$(Q)-rm -f results/demo_data/*_m.cc results/demo_data/*_m.h results/demo_data/*_sm.cc results/demo_data/*_sm.h
-	$(Q)-rm -f results/S1/*_m.cc results/S1/*_m.h results/S1/*_sm.cc results/S1/*_sm.h
-	$(Q)-rm -f results/S1/baseline/*_m.cc results/S1/baseline/*_m.h results/S1/baseline/*_sm.cc results/S1/baseline/*_sm.h
-	$(Q)-rm -f results/S1/no_energy_saving/*_m.cc results/S1/no_energy_saving/*_m.h results/S1/no_energy_saving/*_sm.cc results/S1/no_energy_saving/*_sm.h
-	$(Q)-rm -f results/S2/*_m.cc results/S2/*_m.h results/S2/*_sm.cc results/S2/*_sm.h
-	$(Q)-rm -f results/S2/CSMA/*_m.cc results/S2/CSMA/*_m.h results/S2/CSMA/*_sm.cc results/S2/CSMA/*_sm.h
-	$(Q)-rm -f results/S2/TDMA/*_m.cc results/S2/TDMA/*_m.h results/S2/TDMA/*_sm.cc results/S2/TDMA/*_sm.h
-	$(Q)-rm -f results/S3/*_m.cc results/S3/*_m.h results/S3/*_sm.cc results/S3/*_sm.h
-	$(Q)-rm -f results/S3/elect_with_energy/*_m.cc results/S3/elect_with_energy/*_m.h results/S3/elect_with_energy/*_sm.cc results/S3/elect_with_energy/*_sm.h
+	$(Q)-rm -f results/Dissertation/*_m.cc results/Dissertation/*_m.h results/Dissertation/*_sm.cc results/Dissertation/*_sm.h
+	$(Q)-rm -f results/Dissertation/S1/*_m.cc results/Dissertation/S1/*_m.h results/Dissertation/S1/*_sm.cc results/Dissertation/S1/*_sm.h
+	$(Q)-rm -f results/Dissertation/S1/baseline/*_m.cc results/Dissertation/S1/baseline/*_m.h results/Dissertation/S1/baseline/*_sm.cc results/Dissertation/S1/baseline/*_sm.h
+	$(Q)-rm -f results/Dissertation/S1/no_energy_saving/*_m.cc results/Dissertation/S1/no_energy_saving/*_m.h results/Dissertation/S1/no_energy_saving/*_sm.cc results/Dissertation/S1/no_energy_saving/*_sm.h
+	$(Q)-rm -f results/Dissertation/S2/*_m.cc results/Dissertation/S2/*_m.h results/Dissertation/S2/*_sm.cc results/Dissertation/S2/*_sm.h
+	$(Q)-rm -f results/Dissertation/S2/CSMA/*_m.cc results/Dissertation/S2/CSMA/*_m.h results/Dissertation/S2/CSMA/*_sm.cc results/Dissertation/S2/CSMA/*_sm.h
+	$(Q)-rm -f results/Dissertation/S2/TDMA/*_m.cc results/Dissertation/S2/TDMA/*_m.h results/Dissertation/S2/TDMA/*_sm.cc results/Dissertation/S2/TDMA/*_sm.h
+	$(Q)-rm -f results/Dissertation/S3/*_m.cc results/Dissertation/S3/*_m.h results/Dissertation/S3/*_sm.cc results/Dissertation/S3/*_sm.h
+	$(Q)-rm -f results/Dissertation/S3/elect_with_energy/*_m.cc results/Dissertation/S3/elect_with_energy/*_m.h results/Dissertation/S3/elect_with_energy/*_sm.cc results/Dissertation/S3/elect_with_energy/*_sm.h
+	$(Q)-rm -f results/IEEE/*_m.cc results/IEEE/*_m.h results/IEEE/*_sm.cc results/IEEE/*_sm.h
+	$(Q)-rm -f results/IEEE/Baseline/*_m.cc results/IEEE/Baseline/*_m.h results/IEEE/Baseline/*_sm.cc results/IEEE/Baseline/*_sm.h
+	$(Q)-rm -f results/IEEE/S1/*_m.cc results/IEEE/S1/*_m.h results/IEEE/S1/*_sm.cc results/IEEE/S1/*_sm.h
+	$(Q)-rm -f results/IEEE/S2/*_m.cc results/IEEE/S2/*_m.h results/IEEE/S2/*_sm.cc results/IEEE/S2/*_sm.h
 	$(Q)-rm -f results/Testing/*_m.cc results/Testing/*_m.h results/Testing/*_sm.cc results/Testing/*_sm.h
 	$(Q)-rm -f results/Testing/ground_testing/*_m.cc results/Testing/ground_testing/*_m.h results/Testing/ground_testing/*_sm.cc results/Testing/ground_testing/*_sm.h
 	$(Q)-rm -f results/Testing/multi_testing/*_m.cc results/Testing/multi_testing/*_m.h results/Testing/multi_testing/*_sm.cc results/Testing/multi_testing/*_sm.h
@@ -156,7 +168,7 @@ cleanall: clean
 
 depend:
 	$(qecho) Creating dependencies...
-	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES) $(SM_CC_FILES)  ./*.cc analysis/*.cc results/*.cc results/demo_data/*.cc results/S1/*.cc results/S1/baseline/*.cc results/S1/no_energy_saving/*.cc results/S2/*.cc results/S2/CSMA/*.cc results/S2/TDMA/*.cc results/S3/*.cc results/S3/elect_with_energy/*.cc results/Testing/*.cc results/Testing/ground_testing/*.cc results/Testing/multi_testing/*.cc
+	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES) $(SM_CC_FILES)  ./*.cc analysis/*.cc analysis/Dissertation/*.cc analysis/IEEE/*.cc results/*.cc results/Dissertation/*.cc results/Dissertation/S1/*.cc results/Dissertation/S1/baseline/*.cc results/Dissertation/S1/no_energy_saving/*.cc results/Dissertation/S2/*.cc results/Dissertation/S2/CSMA/*.cc results/Dissertation/S2/TDMA/*.cc results/Dissertation/S3/*.cc results/Dissertation/S3/elect_with_energy/*.cc results/IEEE/*.cc results/IEEE/Baseline/*.cc results/IEEE/S1/*.cc results/IEEE/S2/*.cc results/Testing/*.cc results/Testing/ground_testing/*.cc results/Testing/multi_testing/*.cc
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 
