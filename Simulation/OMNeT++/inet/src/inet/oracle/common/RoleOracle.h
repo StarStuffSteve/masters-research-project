@@ -25,6 +25,8 @@ class INET_API RoleOracle : public cSimpleModule, public IRoleOracle
         ORACLE_UPDATE_TIMER = 303
     };
 
+    int currentGroundMasterID;
+
     void updateRoles();
     void deleteGroundRoutes();
 

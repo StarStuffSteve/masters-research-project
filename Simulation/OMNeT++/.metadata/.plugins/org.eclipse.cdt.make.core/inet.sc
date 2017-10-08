@@ -2,14 +2,21 @@
 <?scdStore version="2"?><scannerInfo id="org.eclipse.cdt.make.core.discoveredScannerInfo">
 <instance id="org.omnetpp.cdt.gnu.config.debug.229043752">
 <collector id="org.eclipse.cdt.make.core.PerProjectSICollector">
-<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/bin/../lib/gcc/i686-w64-mingw32/5.2.0/include"/>
-<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/bin/../lib/gcc/i686-w64-mingw32/5.2.0/../../../../include"/>
-<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/bin/../lib/gcc/i686-w64-mingw32/5.2.0/include-fixed"/>
-<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/bin/../lib/gcc/i686-w64-mingw32/5.2.0/../../../../i686-w64-mingw32/include"/>
-<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/lib/gcc/../../include/c++/5.2.0"/>
-<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/lib/gcc/../../include/c++/5.2.0/i686-w64-mingw32"/>
-<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/lib/gcc/../../include/c++/5.2.0/backward"/>
-<includePath path="D:\OMNeT\omnetpp-5.0\omnetpp-5.0\include"/>
+<includePath path="C:/OMNeT/omnetpp-5.0/tools/win32/mingw32/bin/../lib/gcc/i686-w64-mingw32/5.2.0/include"/>
+<includePath path="C:/OMNeT/omnetpp-5.0/tools/win32/mingw32/bin/../lib/gcc/i686-w64-mingw32/5.2.0/../../../../include"/>
+<includePath path="C:/OMNeT/omnetpp-5.0/tools/win32/mingw32/bin/../lib/gcc/i686-w64-mingw32/5.2.0/include-fixed"/>
+<includePath path="C:/OMNeT/omnetpp-5.0/tools/win32/mingw32/bin/../lib/gcc/i686-w64-mingw32/5.2.0/../../../../i686-w64-mingw32/include"/>
+<includePath path="C:/OMNeT/omnetpp-5.0/tools/win32/mingw32/lib/gcc/../../include/c++/5.2.0"/>
+<includePath path="C:/OMNeT/omnetpp-5.0/tools/win32/mingw32/lib/gcc/../../include/c++/5.2.0/i686-w64-mingw32"/>
+<includePath path="C:/OMNeT/omnetpp-5.0/tools/win32/mingw32/lib/gcc/../../include/c++/5.2.0/backward"/>
+<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/bin/../lib/gcc/i686-w64-mingw32/5.2.0/include" removed="true"/>
+<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/bin/../lib/gcc/i686-w64-mingw32/5.2.0/../../../../include" removed="true"/>
+<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/bin/../lib/gcc/i686-w64-mingw32/5.2.0/include-fixed" removed="true"/>
+<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/bin/../lib/gcc/i686-w64-mingw32/5.2.0/../../../../i686-w64-mingw32/include" removed="true"/>
+<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/lib/gcc/../../include/c++/5.2.0" removed="true"/>
+<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/lib/gcc/../../include/c++/5.2.0/i686-w64-mingw32" removed="true"/>
+<includePath path="D:/OMNeT/omnetpp-5.0/omnetpp-5.0/tools/win32/mingw32/lib/gcc/../../include/c++/5.2.0/backward" removed="true"/>
+<includePath path="D:\OMNeT\omnetpp-5.0\omnetpp-5.0\include" removed="true"/>
 <includePath path="D:\Amazon Drive\Sync\Home\TCD\MAI\Project\GitHub\Simulation\OMNeT++\inet\src"/>
 <includePath path="D:\Amazon Drive\Sync\Home\TCD\MAI\Project\GitHub\Simulation\OMNeT++\inet\src\inet"/>
 <includePath path="D:\Amazon Drive\Sync\Home\TCD\MAI\Project\GitHub\Simulation\OMNeT++\inet\src\inet\visualizer"/>
@@ -245,6 +252,7 @@
 <includePath path="D:\Amazon Drive\Sync\Home\TCD\MAI\Project\GitHub\Simulation\OMNeT++\inet\src\inet\oracle"/>
 <includePath path="D:\Amazon Drive\Sync\Home\TCD\MAI\Project\GitHub\Simulation\OMNeT++\inet\src\inet\oracle\contract"/>
 <includePath path="D:\Amazon Drive\Sync\Home\TCD\MAI\Project\GitHub\Simulation\OMNeT++\inet\src\inet\oracle\common"/>
+<includePath path="C:\OMNeT\omnetpp-5.0\include"/>
 <definedSymbol symbol="__STDC__=1"/>
 <definedSymbol symbol="__cplusplus=199711L"/>
 <definedSymbol symbol="__STDC_HOSTED__=1"/>

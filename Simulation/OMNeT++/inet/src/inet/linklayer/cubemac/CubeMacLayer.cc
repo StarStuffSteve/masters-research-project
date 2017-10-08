@@ -200,7 +200,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                     if (wakeUp->isScheduled())
                         cancelEvent(wakeUp);
                     scheduleAt(simTime() + slotDuration, wakeUp);
-                    currentSlotEndTime = simTime() + slotDuration;
+                    currentSlotEndTime = simTime() + slotDuration - slotPadding;
 
                     EV_DETAIL << "Slave: First wake up at: " << simTime() + slotDuration << endl;
                     EV_DETAIL << "Slave: Old: INIT, New: SLEEP" << endl;
@@ -242,7 +242,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                     }
 
                     scheduleAt(simTime() + slotDuration, wakeUp);
-                    currentSlotEndTime = simTime() + slotDuration;
+                    currentSlotEndTime = simTime() + slotDuration - slotPadding;
                 }
                 else {
                     EV << "Slave: Unknown packet " << msg->getKind() << " in state " << macState << endl;
@@ -363,10 +363,16 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                         canSendNextPacket = false; // There must be a next packet and enough time to send it for this to true
 
                         // Current packet
+                        // TODO: Check if the bitLength returned is correctly calculated
                         double bitLength = (double) data->getBitLength();
                         double estTimeToSend = bitLength/bitrate;
 
-                        if ((simTime() + estTimeToSend) >= (currentSlotEndTime + slotPadding)) {
+                        /*
+                        Assumes that canSendNextPacket was correctly calculated we should not be able to get here without
+                        another packet to send -unless- this is the first packet on our queue. In which case a runtime is
+                        probably appropriate because there is no time to send even a single packet
+                        */
+                        if ((simTime() + estTimeToSend) >= currentSlotEndTime) {
                             throw cRuntimeError("Master: ERROR: Cannot send current packet before end of slot");
                         }
 
@@ -379,7 +385,8 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                             simtime_t endNext = estTimeToSend + nextEstTimeToSend;
 
                             // If next
-                            if ((simTime() + endNext) < (currentSlotEndTime + slotPadding)) {
+                            // -only- place that canSendNextPacket will become true
+                            if ((simTime() + endNext) < currentSlotEndTime) {
                                 EV << "Slave: Have calculated that there is time to send next packet on queue " << endl;
 
                                 canSendNextPacket = true;
@@ -453,7 +460,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                     radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
 
                     scheduleAt(simTime() + slotDuration, wakeUp);
-                    currentSlotEndTime = simTime() + slotDuration;
+                    currentSlotEndTime = simTime() + slotDuration - slotPadding;
 
                     EV_DETAIL << "Master: First wake up at: " << simTime() + slotDuration << endl;
                     EV_DETAIL << "Master: Old: INIT, New: SLEEP" << endl;
@@ -510,7 +517,7 @@ void CubeMacLayer::handleSelfMessage(cMessage *msg)
                     }
 
                     scheduleAt(simTime() + slotDuration, wakeUp);
-                    currentSlotEndTime = simTime() + slotDuration;
+                    currentSlotEndTime = simTime() + slotDuration - slotPadding;
                 }
 
                 else {
@@ -892,6 +899,7 @@ void CubeMacLayer::receiveSignal(cComponent *source, simsignal_t signalID, long 
 
         if (transmissionState == IRadio::TRANSMISSION_STATE_TRANSMITTING && newRadioTransmissionState == IRadio::TRANSMISSION_STATE_IDLE) {
 
+            // NB: Immediatley kicks execution back to the logic for sending the next packet
             // Finished sending packet but have also calculated that there is enough time to send the next packet
             if (canSendNextPacket) {
                 macState = SEND_DATA;

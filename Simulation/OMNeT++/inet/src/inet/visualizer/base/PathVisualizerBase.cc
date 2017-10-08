@@ -87,11 +87,38 @@ void PathVisualizerBase::addPath(std::pair<int, int> sourceAndDestination, const
     updatePositions();
 }
 
+// Old
+//void PathVisualizerBase::removePath(std::pair<int, int> sourceAndDestination, const Path *path)
+//{
+//    paths.erase(paths.find(sourceAndDestination));
+//    updateOffsets();
+//    updatePositions();
+//}
+
+// Fix for removing paths given common identifiers
 void PathVisualizerBase::removePath(std::pair<int, int> sourceAndDestination, const Path *path)
+
 {
-    paths.erase(paths.find(sourceAndDestination));
+
+    auto range = paths.equal_range(sourceAndDestination);
+
+    for (auto it = range.first; it != range.second; it++) {
+
+        if (it->second == path) {
+
+            paths.erase(it);
+
+            break;
+
+        }
+
+    }
+
+
     updateOffsets();
+
     updatePositions();
+
 }
 
 const std::vector<int> *PathVisualizerBase::getIncompletePath(int treeId)

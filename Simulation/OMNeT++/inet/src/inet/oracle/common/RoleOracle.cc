@@ -48,6 +48,9 @@ void RoleOracle::initialize(int stage)
         useEnergies = par("useEnergies");
         energyRankWeight = par("energyRankWeight");
 
+        currentGroundMasterID = -1;
+        WATCH(currentGroundMasterID);
+
         scheduleAt(updateFrequency, updateTimer);
     }
 }
@@ -233,6 +236,7 @@ void RoleOracle::updateRoles(){
 
             currentGroundMaster->unsetGroundMaster();
             lowestScoreMaster->setGroundMaster();
+            currentGroundMasterID = lowestScoreMaster->getIndex();
 
             deleteGroundRoutes();
         }
@@ -251,6 +255,7 @@ void RoleOracle::updateRoles(){
 
             currentGroundMaster->unsetGroundMaster();
             closestMaster->setGroundMaster();
+            currentGroundMasterID = closestMaster->getIndex();
 
             deleteGroundRoutes();
         }

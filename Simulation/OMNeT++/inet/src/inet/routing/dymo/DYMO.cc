@@ -1216,15 +1216,30 @@ void DYMO::processRREP(RREP *rrepIncoming)
                     if (appendInformation)
                         addSelfNode(rrepOutgoing);
 
+                    // Pre-JD patches
+//                    if (useMulticastRREP)
+//                        sendRREP(rrepOutgoing);
+//
+//                    else {
+//                        IRoute *route = routingTable->findBestMatchingRoute(originator);
+//                        if (route)
+//                            sendRREP(rrepOutgoing, route);
+//                        else // - TODO: Should be sending RRERs here? -> sendRERRForUndeliverablePacket(...)
+//                            EV_WARN << "No route found toward originator, dropping RREP: originator = " << originator << ", target = " << target << endl;
+//                    }
+
                     if (useMulticastRREP)
-                        sendRREP(rrepOutgoing);
+                            sendRREP(rrepOutgoing);
 
                     else {
                         IRoute *route = routingTable->findBestMatchingRoute(originator);
-                        if (route)
+
+                        if (route && route->getSourceType() == IRoute::SourceType::DYMO)
                             sendRREP(rrepOutgoing, route);
+
                         else // - TODO: Should be sending RRERs here? -> sendRERRForUndeliverablePacket(...)
                             EV_WARN << "No route found toward originator, dropping RREP: originator = " << originator << ", target = " << target << endl;
+
                     }
                 }
             }
