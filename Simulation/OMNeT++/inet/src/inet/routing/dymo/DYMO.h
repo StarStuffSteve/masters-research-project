@@ -100,6 +100,13 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
     std::multimap<L3Address, INetworkDatagram *> targetAddressToDelayedPackets;
     std::vector<std::pair<L3Address, int> > clientAddressAndPrefixLengthPairs;    // 5.3.  Router Clients and Client Networks
 
+    // Stats
+    cOutVector VecRREQWaitRREP;
+    cOutVector VecRREQBackoff;
+    cOutVector VecRREQHolddown;
+    cOutVector VecCompleteRouteDiscovery;
+    cOutVector VecSendREPP;
+
     // ADDED
     int cancelledRouteDiscoveries;
 

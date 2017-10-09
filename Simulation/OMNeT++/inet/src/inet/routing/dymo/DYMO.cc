@@ -175,6 +175,13 @@ void DYMO::initialize(int stage)
 
         if (isGroundMaster && isGroundStation)
             throw cRuntimeError("A node cannot be both ground master and a ground station");
+
+        // stats
+        VecRREQWaitRREP.setName("VecRREQWaitRREP");
+        VecRREQBackoff.setName("VecRREQBackoff");
+        VecRREQHolddown.setName("VecRREQHolddown");
+        VecCompleteRouteDiscovery.setName("VecCompleteRouteDiscovery");
+        VecSendREPP.setName("VecSendREPP");
     }
 
     else if (stage == INITSTAGE_NETWORK_LAYER_3) {
@@ -487,9 +494,11 @@ void DYMO::processRREQWaitRREPTimer(RREQWaitRREPTimer *message)
         cancelRREQTimer(target);
         eraseRREQTimer(target);
         scheduleRREQHolddownTimer(createRREQHolddownTimer(target));
+        VecRREQHolddown.record(simTime());
     }
     else // - Backoff before next retry
         scheduleRREQBackoffTimer(createRREQBackoffTimer(target, message->getRetryCount()));
+        VecRREQBackoff.record(simTime());
 
     delete message;
 }
@@ -1137,6 +1146,7 @@ void DYMO::sendRREP(RREP *rrep)
     EV_DETAIL << "Sending *multicast* RREP (" << bl << "b): originator = " << originator << ", target = " << target
             << " On interface " << ie->getName() << endl;
 
+    VecSendREPP.record(simTime());
     sendDYMOPacket(rrep, ie, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
 //    sendDYMOPacket(rrep, nullptr, addressType->getLinkLocalManetRoutersMulticastAddress(), 0);
 }
@@ -1165,6 +1175,7 @@ void DYMO::sendRREP(RREP *rrep, IRoute *route)
             << ", nextHop = " << nextHop
             << " On interface " << ie->getName() << endl;
 
+    VecSendREPP.record(simTime());
     sendDYMOPacket(rrep, ie, nextHop, 0);
 //    sendDYMOPacket(rrep, route->getInterface(), nextHop, 0);
 }
@@ -1203,6 +1214,8 @@ void DYMO::processRREP(RREP *rrepIncoming)
                     // If this a RREQ we were expecting
                     if (hasOngoingRouteDiscovery(target)) {
                         completeRouteDiscovery(target);
+                        VecCompleteRouteDiscovery.record(simTime());
+
                         cancelRREQTimer(target);
                         deleteRREQTimer(target);
                         eraseRREQTimer(target); // - Erase?

@@ -88,7 +88,6 @@ void CubeMacLayer::initialize(int stage)
         radio = check_and_cast<IRadio *>(radioModule);
 
         // Results, Stats, Watches etc.
-
         accessDelayMAC.setName("MAC Access Delay");
 
         WATCH(numSlots);
