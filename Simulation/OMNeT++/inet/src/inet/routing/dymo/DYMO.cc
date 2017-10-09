@@ -75,7 +75,11 @@ DYMO::DYMO() :
     // - Handling failure/reboot
     maxSequenceNumberLifetime(NaN),
     // - How long to wait for RREQ response before giving up
-    routeRREQWaitTime(NaN),
+
+    RREQWaitRREPTime(NaN),
+    RREQBackoffTime(NaN),
+//    routeRREQWaitTime(NaN),
+
     // - Time waited after failed route discovery
     rreqHolddownTime(NaN),
     maxHopCount(-1),
@@ -130,7 +134,11 @@ void DYMO::initialize(int stage)
         activeInterval = par("activeInterval");
         maxIdleTime = par("maxIdleTime");
         maxSequenceNumberLifetime = par("maxSequenceNumberLifetime");
-        routeRREQWaitTime = par("routeRREQWaitTime");
+
+        RREQWaitRREPTime = par("RREQWaitRREPTime");
+        RREQBackoffTime = par("RREQBackoffTime");
+//        routeRREQWaitTime = par("routeRREQWaitTime");
+
         rreqHolddownTime = par("rreqHolddownTime");
         maxHopCount = par("maxHopCount");
         discoveryAttemptsMax = par("discoveryAttemptsMax");
@@ -467,7 +475,7 @@ void DYMO::scheduleRREQWaitRREPTimer(RREQWaitRREPTimer *message)
 {
     EV_DETAIL << "Scheduling RREQ wait RREP timer" << endl;
     targetAddressToRREQTimer[message->getTarget()] = message;
-    scheduleAt(simTime() + routeRREQWaitTime, message);
+    scheduleAt(simTime() + RREQWaitRREPTime, message);
 }
 
 void DYMO::processRREQWaitRREPTimer(RREQWaitRREPTimer *message)
@@ -514,10 +522,11 @@ void DYMO::processRREQBackoffTimer(RREQBackoffTimer *message)
     delete message;
 }
 
-// - Increases by factor of routeRREQWaitTime each retry
+// - FIXME: Issues ...
 simtime_t DYMO::computeRREQBackoffTime(int retryCount)
 {
-    return pow(routeRREQWaitTime, retryCount);
+    return(RREQBackoffTime * retryCount);
+//    return pow(routeRREQWaitTime, retryCount);
 }
 
 //

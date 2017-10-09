@@ -62,7 +62,10 @@ simple DYMO like IDYMO
         double activeInterval @unit("s") = default(5s); // ACTIVE_INTERVAL
         double maxIdleTime @unit("s") = default(200s); // MAX_IDLETIME
         double maxSequenceNumberLifetime @unit("s") = default(300s); // MAX_SEQNUM_LIFETIME
-        double routeRREQWaitTime @unit("s") = default(2s); // ROUTE_RREQ_WAIT_TIME
+        
+        double RREQWaitRREPTime @unit("s") = default(6s); // Time to wait for RREP response
+        double RREQBackoffTime @unit("s") = default(0.6s); // Backoff = BackoffTime ^ Retries
+//        double routeRREQWaitTime @unit("s") = default(2s); // ROUTE_RREQ_WAIT_TIME
         // double UNICAST_MESSAGE_SENT_TIMEOUT @unit("s") = default(1s);
         double rreqHolddownTime @unit("s") = default(10s); // RREQ_HOLDDOWN_TIME
 

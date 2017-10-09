@@ -63,7 +63,11 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
     double activeInterval;
     double maxIdleTime;
     double maxSequenceNumberLifetime;
-    double routeRREQWaitTime;
+
+    double RREQWaitRREPTime;
+    double RREQBackoffTime;
+//    double routeRREQWaitTime;
+
     double rreqHolddownTime;
     int maxHopCount;
     int discoveryAttemptsMax;

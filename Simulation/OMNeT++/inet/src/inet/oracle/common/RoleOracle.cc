@@ -236,7 +236,7 @@ void RoleOracle::updateRoles(){
 
             currentGroundMaster->unsetGroundMaster();
             lowestScoreMaster->setGroundMaster();
-            currentGroundMasterID = lowestScoreMaster->getIndex();
+            currentGroundMasterID = lowestScoreMaster->getId();
 
             deleteGroundRoutes();
         }
@@ -255,7 +255,7 @@ void RoleOracle::updateRoles(){
 
             currentGroundMaster->unsetGroundMaster();
             closestMaster->setGroundMaster();
-            currentGroundMasterID = closestMaster->getIndex();
+            currentGroundMasterID = closestMaster->getId();
 
             deleteGroundRoutes();
         }
