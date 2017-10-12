@@ -16,6 +16,10 @@ class INET_API RoleOracle : public cSimpleModule, public IRoleOracle
     cMessage *updateTimer;
 
     bool overloadMaster;
+
+    int hysteresis;
+    bool rolesChanged;
+
     int targetMaster;
 
     bool useEnergies;
@@ -25,7 +29,7 @@ class INET_API RoleOracle : public cSimpleModule, public IRoleOracle
         ORACLE_UPDATE_TIMER = 303
     };
 
-    int currentGroundMasterID;
+//    static simsignal_t groundMasterChangedSignal;
 
     void updateRoles();
     void deleteGroundRoutes();

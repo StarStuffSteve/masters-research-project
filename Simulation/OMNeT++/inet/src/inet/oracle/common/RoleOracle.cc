@@ -23,6 +23,8 @@ RoleOracle::RoleOracle() :
     updateFrequency(NaN),
     updateTimer(nullptr),
     overloadMaster(false),
+    hysteresis(10),
+    rolesChanged(true),
     targetMaster(1),
     useEnergies(false),
     energyRankWeight(1.0)
@@ -43,13 +45,13 @@ void RoleOracle::initialize(int stage)
         updateTimer->setKind(ORACLE_UPDATE_TIMER);
 
         overloadMaster = par("overloadMaster");
+        hysteresis = par("hysteresis");
         targetMaster = par("targetMaster");
 
         useEnergies = par("useEnergies");
         energyRankWeight = par("energyRankWeight");
 
-        currentGroundMasterID = -1;
-        WATCH(currentGroundMasterID);
+//        emit(groundMasterChangedSignal, 0);
 
         scheduleAt(updateFrequency, updateTimer);
     }
@@ -72,7 +74,12 @@ void RoleOracle::handleMessage(cMessage *msg){
     if (updateTimer->isScheduled())
         cancelEvent(updateTimer);
 
-    scheduleAt(simTime() + updateFrequency, updateTimer);
+    if(rolesChanged) {
+        rolesChanged = false;
+        scheduleAt(simTime() + updateFrequency*hysteresis, updateTimer);
+    }
+    else
+        scheduleAt(simTime() + updateFrequency, updateTimer);
 }
 
 void RoleOracle::updateRoles(){
@@ -236,7 +243,10 @@ void RoleOracle::updateRoles(){
 
             currentGroundMaster->unsetGroundMaster();
             lowestScoreMaster->setGroundMaster();
-            currentGroundMasterID = lowestScoreMaster->getId();
+
+            // ERROR: undefined reference to `inet::roleoracle::RoleOracle::groundMasterChangedSignal'
+//            emit(groundMasterChangedSignal, lowestScoreMaster->getId());
+            rolesChanged = true;
 
             deleteGroundRoutes();
         }
@@ -255,7 +265,9 @@ void RoleOracle::updateRoles(){
 
             currentGroundMaster->unsetGroundMaster();
             closestMaster->setGroundMaster();
-            currentGroundMasterID = closestMaster->getId();
+
+//            emit(groundMasterChangedSignal, closestMaster->getId());
+            rolesChanged = true;
 
             deleteGroundRoutes();
         }

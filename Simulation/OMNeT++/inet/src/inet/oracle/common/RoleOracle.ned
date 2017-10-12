@@ -8,6 +8,7 @@ module RoleOracle like IRoleOracle
         double updateFrequency @unit(s) = default(1s);
         
         bool overloadMaster = default(false);
+        int hysteresis = default(10);
         int targetMaster = default(1);
         
         bool useEnergies = default(false);
@@ -15,4 +16,7 @@ module RoleOracle like IRoleOracle
         
         @display("i=misc/town_s");
         @class(RoleOracle);
+        
+//        @signal[groundMasterChanged](type=long);
+//        @statistic[groundMaster](title="groundMaster"; source=groundMasterChanged; record=count,vector);
 }
