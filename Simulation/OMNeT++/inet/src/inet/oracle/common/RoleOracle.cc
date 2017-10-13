@@ -53,7 +53,8 @@ void RoleOracle::initialize(int stage)
 
 //        emit(groundMasterChangedSignal, 0);
 
-        scheduleAt(updateFrequency, updateTimer);
+//        scheduleAt(updateFrequency, updateTimer);
+        scheduleAt(0, updateTimer);
     }
 }
 
