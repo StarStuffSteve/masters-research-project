@@ -29,7 +29,7 @@ class INET_API RoleOracle : public cSimpleModule, public IRoleOracle
         ORACLE_UPDATE_TIMER = 303
     };
 
-//    static simsignal_t groundMasterChangedSignal;
+    static simsignal_t groundMasterChangedSignal;
 
     void updateRoles();
     void deleteGroundRoutes();

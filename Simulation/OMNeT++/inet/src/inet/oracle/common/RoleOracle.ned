@@ -17,6 +17,6 @@ module RoleOracle like IRoleOracle
         @display("i=misc/town_s");
         @class(RoleOracle);
         
-//        @signal[groundMasterChanged](type=long);
-//        @statistic[groundMaster](title="groundMaster"; source=groundMasterChanged; record=count,vector);
+        @signal[groundMasterChanged](type=long);
+        @statistic[groundMaster](title="groundMaster"; source=groundMasterChanged; record=count,vector);
 }

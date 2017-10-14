@@ -19,6 +19,8 @@ namespace roleoracle {
 
 Define_Module(RoleOracle);
 
+simsignal_t RoleOracle::groundMasterChangedSignal = registerSignal("groundMasterChanged");
+
 RoleOracle::RoleOracle() :
     updateFrequency(NaN),
     updateTimer(nullptr),
@@ -51,9 +53,10 @@ void RoleOracle::initialize(int stage)
         useEnergies = par("useEnergies");
         energyRankWeight = par("energyRankWeight");
 
-//        emit(groundMasterChangedSignal, 0);
+        emit(groundMasterChangedSignal, 0);
 
-        scheduleAt(updateFrequency, updateTimer);
+//        scheduleAt(updateFrequency, updateTimer);
+        scheduleAt(simTime(), updateTimer);
     }
 }
 
@@ -62,7 +65,6 @@ void RoleOracle::handleMessage(cMessage *msg){
         if (msg->getKind() == ORACLE_UPDATE_TIMER){
             EV_DETAIL << "Handling update timer" << endl;
 
-            // TODO: Differing metrics for election
             updateRoles();
         }
         else
@@ -76,6 +78,7 @@ void RoleOracle::handleMessage(cMessage *msg){
 
     if(rolesChanged) {
         rolesChanged = false;
+        // Note the hysteresis parameter being applied to the updateFrequeny
         scheduleAt(simTime() + updateFrequency*hysteresis, updateTimer);
     }
     else
@@ -155,7 +158,6 @@ void RoleOracle::updateRoles(){
                 //
                 // DISTANCES
                 //
-
                 LinearMobility *mlm = check_and_cast<LinearMobility*>(m->getSubmodule("mobility"));
 
                 if (mlm != nullptr)
@@ -244,10 +246,10 @@ void RoleOracle::updateRoles(){
             currentGroundMaster->unsetGroundMaster();
             lowestScoreMaster->setGroundMaster();
 
-            // ERROR: undefined reference to `inet::roleoracle::RoleOracle::groundMasterChangedSignal'
-//            emit(groundMasterChangedSignal, lowestScoreMaster->getId());
+            // Expected pattern 0, 3, 1, 4, 2 (perhaps)
+            // FIXME: getHostIndex not available, this is a crude hack
+            emit(groundMasterChangedSignal, (closestMaster->getId()));
             rolesChanged = true;
-
             deleteGroundRoutes();
         }
     }
@@ -255,7 +257,6 @@ void RoleOracle::updateRoles(){
     //
     // DISTANCE ONLY MASTER SELECTION
     //
-
     else {
         if (closestMaster == nullptr)
             throw cRuntimeError("Unable to establish which master is closest to ground");
@@ -266,9 +267,10 @@ void RoleOracle::updateRoles(){
             currentGroundMaster->unsetGroundMaster();
             closestMaster->setGroundMaster();
 
-//            emit(groundMasterChangedSignal, closestMaster->getId());
+            // Expected pattern 0, 3, 1, 4, 2
+            // FIXME: getHostIndex not available, this is a crude hack
+            emit(groundMasterChangedSignal, (closestMaster->getId()));
             rolesChanged = true;
-
             deleteGroundRoutes();
         }
 
@@ -276,10 +278,11 @@ void RoleOracle::updateRoles(){
             EV_DETAIL << "currentGroundMaster == closestMaster: Roles unchanged" << endl;
     }
 
-    //    cModuleType *moduleType = cModuleType::get("inet.node.dymo.DYMORouter");
-    //    EV_DETAIL << "DYMORouter type info: " << moduleType->info() << endl;
-}
+} // END: HandleUpdateRoles
 
+// !!!
+// This could be causing absolute mayhem
+// !!!
 void RoleOracle::deleteGroundRoutes(){
     const cModule *sim = getParentModule();
 
@@ -300,7 +303,7 @@ void RoleOracle::deleteGroundRoutes(){
 
 }
 
-} // namespace roleoracle
+} // END: namespace roleoracle
 
-} // namespace inet
+} // END: namespace inet
 
