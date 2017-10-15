@@ -12,6 +12,15 @@ module RoleOracle like IRoleOracle
         bool useEnergies = default(false);
         double energyRankWeight = default(1.0);
         
+        double groundMasterCooldown = default(200.0);
+        bool enforceSouthOfGround = default(false);
+        
+        bool useFixedTimes = default(false);
+        bool useEnergyBudgets = default(false);
+        
+        double maxGroundMasterDuration = default(54);
+        double energyBudget = default(-0.0001); // No idea what a good default is for this
+        
         @display("i=misc/town_s");
         @class(RoleOracle);
         

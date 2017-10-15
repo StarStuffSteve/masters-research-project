@@ -27,7 +27,13 @@ RoleOracle::RoleOracle() :
     hysteresis(10),
     rolesChanged(true),
     useEnergies(false),
-    energyRankWeight(1.0)
+    energyRankWeight(1.0),
+    groundMasterCooldown(200.0),
+    enforceSouthOfGround(false),
+    useFixedTimes(false),
+    useEnergyBudgets(false),
+    maxGroundMasterDuration(54.0),
+    energyBudget(-0.0001)
 {
 }
 
@@ -48,6 +54,21 @@ void RoleOracle::initialize(int stage)
 
         useEnergies = par("useEnergies");
         energyRankWeight = par("energyRankWeight");
+
+        groundMasterCooldown = par("groundMasterCooldown");
+        enforceSouthOfGround = par("enforceSouthOfGround");
+        useFixedTimes = par("useFixedTimes");
+        useEnergyBudgets = par("useEnergyBudgets");
+
+        maxGroundMasterDuration = par("maxGroundMasterDuration");
+        energyBudget = par("energyBudget");
+
+        // For fixed-times (crude 'get it working' hack)
+        nextGM[212] = 110;
+        nextGM[263] = 161;
+        nextGM[59] = 212;
+        nextGM[110] = 263;
+        nextGM[161] = 59;
 
         emit(groundMasterChangedSignal, 212);
 
@@ -179,6 +200,7 @@ void RoleOracle::updateRoles(){
     {
         double lowestScore = std::numeric_limits<double>::max();
         double lowestScoreMasterDistance = -1.0;
+        bool southOfGround = true; // only changes if enforceSouthOfGround == True
         dymo::DYMO *lowestScoreMaster = nullptr;
 
         std::map<int, double>::iterator it1 = masterEnergies.begin();
@@ -198,10 +220,23 @@ void RoleOracle::updateRoles(){
                 it2++;
             }
 
+            // Enforce south of ground
+            if (enforceSouthOfGround){
+                // Hope this works ...
+                LinearMobility *mlm = check_and_cast<LinearMobility*>(masterDymoPointers[it1->first]->getParentModule()->getSubmodule("mobility"));
+                Coord currCoord = mlm->getCurrentPosition();
+
+                // If currCoord is North of ground
+                if (currCoord.y <= groundCoord.y)
+                    southOfGround = false;
+                else
+                    southOfGround = true;
+            }
+
             // The effective distance of a master increase in relation to it's rank
             double score = masterDistances[it1->first] + (masterDistances[it1->first] * (energyRank * energyRankWeight));
 
-            if (score < lowestScore) {
+            if (score < lowestScore && southOfGround) {
                 lowestScore = score;
                 lowestScoreMaster = masterDymoPointers[it1->first];
                 lowestScoreMasterDistance = masterDistances[it1->first];
@@ -216,28 +251,55 @@ void RoleOracle::updateRoles(){
             it1++;
         } // END: while
 
-        EV_DETAIL << "Master with lowest score: " << lowestScoreMaster->getParentModule()->getFullName() << endl;
+        if (lowestScoreMaster != nullptr) {
+            EV_DETAIL << "Master with lowest score: " << lowestScoreMaster->getParentModule()->getFullName() << endl;
 
-        if (currentGroundMaster != lowestScoreMaster &&
-                lowestScoreMasterDistance < 125.0) {
-            EV_DETAIL << "currentGroundMaster != lowestScoreMaster: Executing role change" << endl;
+            // Will only change to a master which
+            double lastElected = lowestScoreMaster->getLastTimeElected(); // Recorded as GM *start* time
 
-            currentGroundMaster->unsetGroundMaster();
-            lowestScoreMaster->setGroundMaster();
+            double timeSinceElected = groundMasterCooldown; // Master is eligible if lastElected == -1
+            if (lastElected != -1.0){
+                timeSinceElected = (simTime().dbl()) - lastElected;
 
-            emit(groundMasterChangedSignal, (lowestScoreMaster->getId()));
-            rolesChanged = true;
-            deleteGroundRoutes();
+                if (timeSinceElected < 0)
+                    throw cRuntimeError("timeSinceElected is negative");
+
+                if (lastElected > simTime().dbl())
+                    throw cRuntimeError("lastElected > simTime()");
+            }
+
+            // Don't re-elect current GM
+            // Only elect masters which are within range of ground
+            // Only elect masters which have not had the GM role for at least groundMasterCooldown
+            // TODO: Should we elect 'next best' master if the 'best' is not suitable?
+            if (currentGroundMaster != lowestScoreMaster &&
+                    lowestScoreMasterDistance < 125.0 &&
+                    timeSinceElected >= groundMasterCooldown) {
+                EV_DETAIL << "currentGroundMaster != lowestScoreMaster: Executing role change" << endl;
+
+                currentGroundMaster->unsetGroundMaster();
+                lowestScoreMaster->setGroundMaster();
+
+                emit(groundMasterChangedSignal, (lowestScoreMaster->getId()));
+                rolesChanged = true;
+                deleteGroundRoutes();
+            }
+        }
+        else {
+            if (enforceSouthOfGround)
+                EV_DETAIL << "enforceSouthOfGround: No appropriate lowestScoreMaster available" << endl;
+            else
+                throw cRuntimeError("Failed to identify lowestScoreMaster");
         }
     }
 
-//    // ---
-//    // Fixed time per master
-//    // ---
-//    else if (useFixedTime) {
-//
-//    }
-//
+    // ---
+    // Fixed time per master
+    // ---
+    else if (useFixedTimes) {
+
+    }
+
 //    // ---
 //    // Energy budget
 //    // ---

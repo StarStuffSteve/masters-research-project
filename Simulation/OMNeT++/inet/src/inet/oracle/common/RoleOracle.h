@@ -21,6 +21,16 @@ class INET_API RoleOracle : public cSimpleModule, public IRoleOracle
     bool useEnergies;
     double energyRankWeight;
 
+    double groundMasterCooldown;
+    bool enforceSouthOfGround;
+    bool useFixedTimes;
+    bool useEnergyBudgets;
+    double maxGroundMasterDuration;
+    double energyBudget;
+
+    // For fixed-times
+    std::map<int, int> nextGM;
+
     enum TYPES {
         ORACLE_UPDATE_TIMER = 303
     };
