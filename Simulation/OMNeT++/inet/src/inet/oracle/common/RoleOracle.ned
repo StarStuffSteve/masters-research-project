@@ -7,9 +7,7 @@ module RoleOracle like IRoleOracle
     parameters:
         double updateFrequency @unit(s) = default(1s);
         
-        bool overloadMaster = default(false);
         int hysteresis = default(10);
-        int targetMaster = default(1);
         
         bool useEnergies = default(false);
         double energyRankWeight = default(1.0);

@@ -15,12 +15,8 @@ class INET_API RoleOracle : public cSimpleModule, public IRoleOracle
     simtime_t updateFrequency;
     cMessage *updateTimer;
 
-    bool overloadMaster;
-
     int hysteresis;
     bool rolesChanged;
-
-    int targetMaster;
 
     bool useEnergies;
     double energyRankWeight;

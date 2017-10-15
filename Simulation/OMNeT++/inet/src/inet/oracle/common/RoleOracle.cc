@@ -24,10 +24,8 @@ simsignal_t RoleOracle::groundMasterChangedSignal = registerSignal("groundMaster
 RoleOracle::RoleOracle() :
     updateFrequency(NaN),
     updateTimer(nullptr),
-    overloadMaster(false),
     hysteresis(10),
     rolesChanged(true),
-    targetMaster(1),
     useEnergies(false),
     energyRankWeight(1.0)
 {
@@ -46,16 +44,13 @@ void RoleOracle::initialize(int stage)
         updateTimer = new cMessage("updateTimer");
         updateTimer->setKind(ORACLE_UPDATE_TIMER);
 
-        overloadMaster = par("overloadMaster");
         hysteresis = par("hysteresis");
-        targetMaster = par("targetMaster");
 
         useEnergies = par("useEnergies");
         energyRankWeight = par("energyRankWeight");
 
-        emit(groundMasterChangedSignal, 0);
+        emit(groundMasterChangedSignal, 212);
 
-//        scheduleAt(updateFrequency, updateTimer);
         scheduleAt(simTime(), updateTimer);
     }
 }
@@ -88,9 +83,8 @@ void RoleOracle::handleMessage(cMessage *msg){
 void RoleOracle::updateRoles(){
     const cModule *sim = getParentModule();
 
-    Coord groundCoord = Coord(0,0,0);
-
     // Get position of ground
+    Coord groundCoord = Coord(0,0,0);
     LinearMobility *glm = check_and_cast<LinearMobility*>(sim->getModuleByPath("nodeGround[0].mobility"));
 
     if (glm != nullptr)
@@ -100,7 +94,6 @@ void RoleOracle::updateRoles(){
 
     if (groundCoord == Coord(0,0,0))
         throw cRuntimeError("Unable to get coordinates for ground station");
-
     // ---
 
     dymo::DYMO *currentGroundMaster = nullptr;
@@ -109,33 +102,30 @@ void RoleOracle::updateRoles(){
 
     std::map<int, double> masterDistances;
     std::map<int, double> masterEnergies;
-
     std::map<int, dymo::DYMO*> masterDymoPointers;
 
-    //
-    // COLLECTING INFO ON MASTERS
-    //
-
+    // ---
+    // Collect info on masters
+    // ---
     for (SubmoduleIterator i = SubmoduleIterator(sim); !i.end(); i++){
         cModule *m = i.operator *();
 
         if (m->isName("nodeMaster")){
-//            EV_DETAIL << "Assessing the role of: " << m->getFullName() << endl;
-
-            int masterIndex = m->getIndex();
-
+            // Get DYMO module for this master
             dymo::DYMO *d = check_and_cast<dymo::DYMO*>(m->getSubmodule("dymo"));
+            int masterId = d->getId();
+
             if (d != nullptr) {
-                masterDymoPointers[masterIndex] = d;
+                masterDymoPointers[masterId] = d;
 
                 if (d->getIsGroundMaster()){
                     EV_DETAIL << "Current ground master: " << d->getParentModule()->getFullName() << endl;
                     currentGroundMaster = d;
                 }
 
-                //
-                // ENERGIES
-                //
+                // ---
+                // Collect energies
+                // ---
                 if (useEnergies) {
                     power::IdealEnergyStorage *mes = check_and_cast<power::IdealEnergyStorage*>(m->getSubmodule("energyStorage"));
 
@@ -143,21 +133,15 @@ void RoleOracle::updateRoles(){
                         units::value<double, units::units::J> pc = mes->getEnergyBalance();
                         double pcd = pc.get();
 
-                        masterEnergies[masterIndex] = pcd;
-
-                        // Will only be performed on first update
-                        if (overloadMaster && masterIndex == targetMaster && simTime() < (2*updateFrequency)){
-                            EV_DETAIL << "Overloading master: " << targetMaster << endl;
-                            mes->updateEnergyBalance(10.0);
-                        }
+                        masterEnergies[masterId] = pcd;
                     }
                     else
                         throw cRuntimeError("Unable to cast master energy storage submodule");
                 }
 
-                //
-                // DISTANCES
-                //
+                // ---
+                // Collect distances
+                // ---
                 LinearMobility *mlm = check_and_cast<LinearMobility*>(m->getSubmodule("mobility"));
 
                 if (mlm != nullptr)
@@ -175,7 +159,7 @@ void RoleOracle::updateRoles(){
                         closestMaster = d;
                     }
 
-                    masterDistances[masterIndex] = distanceFromGround;
+                    masterDistances[masterId] = distanceFromGround;
                 }
                 else
                     throw cRuntimeError("Unable to cast master linear mobility submodule");
@@ -188,19 +172,17 @@ void RoleOracle::updateRoles(){
     if (currentGroundMaster == nullptr)
         throw cRuntimeError("Unable to establish current ground master");
 
-    //
-    // DISTANCE & ENERGY MASTER SELECTION
-    //
-
+    // ---
+    // Energy-distance
+    // ---
     if (useEnergies)
     {
-        EV_DETAIL << "Using energy rank weight: " << energyRankWeight << endl;
-
         double lowestScore = std::numeric_limits<double>::max();
         double lowestScoreMasterDistance = -1.0;
         dymo::DYMO *lowestScoreMaster = nullptr;
 
         std::map<int, double>::iterator it1 = masterEnergies.begin();
+        // NB: it1->first is the index of the current master of interest
         while(it1 != masterEnergies.end())
         {
             int energyRank = 1;// The lower the better
@@ -232,31 +214,39 @@ void RoleOracle::updateRoles(){
                       <<" Score: " << score << endl;
 
             it1++;
-        }
+        } // END: while
 
         EV_DETAIL << "Master with lowest score: " << lowestScoreMaster->getParentModule()->getFullName() << endl;
 
-        ASSERT(lowestScoreMasterDistance >= 1);
-        ASSERT(lowestScoreMaster != nullptr);
-
-        // What happens on wrap around?
-        if (currentGroundMaster != lowestScoreMaster && lowestScoreMasterDistance < 125.0) {
-            EV_DETAIL << "currentGroundMaster != lowestScoreMaster: Attempting role change" << endl;
+        if (currentGroundMaster != lowestScoreMaster &&
+                lowestScoreMasterDistance < 125.0) {
+            EV_DETAIL << "currentGroundMaster != lowestScoreMaster: Executing role change" << endl;
 
             currentGroundMaster->unsetGroundMaster();
             lowestScoreMaster->setGroundMaster();
 
-            // Expected pattern 0, 3, 1, 4, 2 (perhaps)
-            // FIXME: getHostIndex not available, this is a crude hack
-            emit(groundMasterChangedSignal, (closestMaster->getId()));
+            emit(groundMasterChangedSignal, (lowestScoreMaster->getId()));
             rolesChanged = true;
             deleteGroundRoutes();
         }
     }
 
-    //
-    // DISTANCE ONLY MASTER SELECTION
-    //
+//    // ---
+//    // Fixed time per master
+//    // ---
+//    else if (useFixedTime) {
+//
+//    }
+//
+//    // ---
+//    // Energy budget
+//    // ---
+//    else if (useEnergyBudget) {
+//
+//    }
+    // ---
+    // Closest-master
+    // ---
     else {
         if (closestMaster == nullptr)
             throw cRuntimeError("Unable to establish which master is closest to ground");
@@ -267,8 +257,6 @@ void RoleOracle::updateRoles(){
             currentGroundMaster->unsetGroundMaster();
             closestMaster->setGroundMaster();
 
-            // Expected pattern 0, 3, 1, 4, 2
-            // FIXME: getHostIndex not available, this is a crude hack
             emit(groundMasterChangedSignal, (closestMaster->getId()));
             rolesChanged = true;
             deleteGroundRoutes();
@@ -280,9 +268,6 @@ void RoleOracle::updateRoles(){
 
 } // END: HandleUpdateRoles
 
-// !!!
-// This could be causing absolute mayhem
-// !!!
 void RoleOracle::deleteGroundRoutes(){
     const cModule *sim = getParentModule();
 

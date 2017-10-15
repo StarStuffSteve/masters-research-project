@@ -91,6 +91,7 @@ simple DYMO like IDYMO
         // ADDED
         bool isGroundMaster = default(false);
         bool isGroundStation = default(false);
+        
 
     gates:
         input ipIn;

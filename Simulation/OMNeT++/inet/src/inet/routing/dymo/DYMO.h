@@ -117,6 +117,7 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
     void unsetGroundMaster();
     bool getIsGroundMaster();
     void deleteGroundRoute();
+    double getLastTimeElected();
 
   protected:
     // module interface
@@ -128,6 +129,7 @@ class INET_API DYMO : public cSimpleModule, public ILifecycle, public cListener,
     L3Address groundAddress;
     bool isGroundStation;
     bool isGroundMaster;
+    double lastTimeElected;
 
   private:
     // handling messages

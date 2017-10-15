@@ -176,6 +176,9 @@ void DYMO::initialize(int stage)
         if (isGroundMaster && isGroundStation)
             throw cRuntimeError("A node cannot be both ground master and a ground station");
 
+        // Special value
+        lastTimeElected = -1.0;
+
         // stats
         VecRREQWaitRREP.setName("VecRREQWaitRREP");
         VecRREQBackoff.setName("VecRREQBackoff");
@@ -2024,13 +2027,15 @@ bool DYMO::isClientAddress(const L3Address& address)
     }
 }
 
-//
+// ---
 // GroundMaster Methods
-//
+// ---
 void DYMO::setGroundMaster(){
     Enter_Method_Silent();
 
     EV_DETAIL << "Assuming ground master role" << endl;
+
+    lastTimeElected = simTime().dbl();
 
 //    EV_DETAIL << "Setting interface wlan1 to state 'UP'" << endl;
     InterfaceEntry *wlan1 = interfaceTable->getInterfaceByName("wlan1");
@@ -2086,6 +2091,12 @@ bool DYMO::getIsGroundMaster(){
     Enter_Method_Silent();
 
     return isGroundMaster;
+}
+
+double DYMO::getLastTimeElected(){
+    Enter_Method_Silent();
+
+    return lastTimeElected;
 }
 
 void DYMO::deleteGroundRoute(){
