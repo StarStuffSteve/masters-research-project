@@ -29,7 +29,9 @@ class INET_API RoleOracle : public cSimpleModule, public IRoleOracle
     double energyBudget;
 
     // For fixed-times
-    std::map<int, int> nextGM;
+    std::map<int, int> nextGMIdMap;
+    int prevGMId;
+    int currentGMId;
 
     enum TYPES {
         ORACLE_UPDATE_TIMER = 303

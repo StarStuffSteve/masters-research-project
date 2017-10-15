@@ -33,7 +33,9 @@ RoleOracle::RoleOracle() :
     useFixedTimes(false),
     useEnergyBudgets(false),
     maxGroundMasterDuration(54.0),
-    energyBudget(-0.0001)
+    energyBudget(-0.0001),
+    prevGMId(-1),
+    currentGMId(0)
 {
 }
 
@@ -64,11 +66,21 @@ void RoleOracle::initialize(int stage)
         energyBudget = par("energyBudget");
 
         // For fixed-times (crude 'get it working' hack)
-        nextGM[212] = 110;
-        nextGM[263] = 161;
-        nextGM[59] = 212;
-        nextGM[110] = 263;
-        nextGM[161] = 59;
+        /*
+         Currently known IDs for each 'real' master ID
+         59  2
+         110 3
+         161 4
+         212 0
+         263 1
+        */
+        nextGMIdMap[212] = 110; // nextGM[currentGMId] = nextGMId
+        nextGMIdMap[263] = 161;
+        nextGMIdMap[59] = 212;
+        nextGMIdMap[110] = 263;
+        nextGMIdMap[161] = 59;
+        prevGMId = -1; // Flag to tell that there was no previous GM
+        currentGMId = 212; // We always start with master 0
 
         emit(groundMasterChangedSignal, 212);
 
@@ -126,7 +138,7 @@ void RoleOracle::updateRoles(){
     std::map<int, dymo::DYMO*> masterDymoPointers;
 
     // ---
-    // Collect info on masters
+    // Collect info on all masters
     // ---
     for (SubmoduleIterator i = SubmoduleIterator(sim); !i.end(); i++){
         cModule *m = i.operator *();
@@ -142,6 +154,7 @@ void RoleOracle::updateRoles(){
                 if (d->getIsGroundMaster()){
                     EV_DETAIL << "Current ground master: " << d->getParentModule()->getFullName() << endl;
                     currentGroundMaster = d;
+                    currentGMId = masterId;
                 }
 
                 // ---
@@ -190,7 +203,7 @@ void RoleOracle::updateRoles(){
         }
     }
 
-    if (currentGroundMaster == nullptr)
+    if (!useFixedTimes && currentGroundMaster == nullptr)
         throw cRuntimeError("Unable to establish current ground master");
 
     // ---
@@ -254,7 +267,6 @@ void RoleOracle::updateRoles(){
         if (lowestScoreMaster != nullptr) {
             EV_DETAIL << "Master with lowest score: " << lowestScoreMaster->getParentModule()->getFullName() << endl;
 
-            // Will only change to a master which
             double lastElected = lowestScoreMaster->getLastTimeElected(); // Recorded as GM *start* time
 
             double timeSinceElected = groundMasterCooldown; // Master is eligible if lastElected == -1
@@ -295,9 +307,68 @@ void RoleOracle::updateRoles(){
 
     // ---
     // Fixed time per master
+    // TODO: Some metric which allows for gaps
     // ---
     else if (useFixedTimes) {
+        double timeLastElected;
+        double timeSinceElected = -1.0;
+        int nextGMId = -1;
+        dymo::DYMO *nextGM = nullptr;
 
+        // There is a currentGroundMaster
+        if (currentGroundMaster != nullptr) {
+            if (currentGMId != currentGroundMaster->getId())
+                throw cRuntimeError("currentGroundMaster ID mis-match");
+
+            //
+            // Determine how long current GM has been GM
+            //
+            timeLastElected = currentGroundMaster->getLastTimeElected(); // Recorded as GM *start* time
+            timeSinceElected = (simTime().dbl()) - timeLastElected;
+
+            //
+            // Perform the switch
+            //
+            if (timeSinceElected >= maxGroundMasterDuration){
+                // Get next GM
+                nextGMId = nextGMIdMap[currentGMId];
+                nextGM = masterDymoPointers[nextGMId];
+
+                currentGroundMaster->unsetGroundMaster();
+                prevGMId = currentGMId;
+
+                nextGM->setGroundMaster();
+                currentGMId = nextGMId;
+
+                emit(groundMasterChangedSignal, currentGMId);
+                rolesChanged = true;
+
+                deleteGroundRoutes();
+            }
+        }
+        // There is no currentGroundMaster
+        else {
+            if (currentGMId != -1)
+                throw cRuntimeError("No GM scenario not reflected by currGMId");
+
+            if (prevGMId != -1)
+                throw cRuntimeError("No GM scenario does not know ID of previous GM");
+
+                nextGMId = nextGMIdMap[prevGMId];
+                nextGM = masterDymoPointers[nextGMId];
+
+                nextGM->setGroundMaster();
+                currentGroundMaster = nextGM;
+                currentGMId = nextGMId;
+
+                emit(groundMasterChangedSignal, currentGMId);
+                rolesChanged = true;
+
+                deleteGroundRoutes();
+
+                if (currentGMId != currentGroundMaster->getId())
+                    throw cRuntimeError("currentGroundMaster ID mis-match in no GM scenario");
+            }
     }
 
 //    // ---

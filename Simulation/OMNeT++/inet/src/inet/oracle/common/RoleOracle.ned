@@ -18,7 +18,7 @@ module RoleOracle like IRoleOracle
         bool useFixedTimes = default(false);
         bool useEnergyBudgets = default(false);
         
-        double maxGroundMasterDuration = default(54);
+        double maxGroundMasterDuration = default(54.0);
         double energyBudget = default(-0.0001); // No idea what a good default is for this
         
         @display("i=misc/town_s");
