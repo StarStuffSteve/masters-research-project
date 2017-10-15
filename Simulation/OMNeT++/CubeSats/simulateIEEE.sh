@@ -1,3 +1,4 @@
 ./simulateCMD.sh NoEnergySaving;
 ./simulateCMD.sh EnergyModelling;
-./simulateCMD.sh ElectWithEnergy;
+./simulateCMD.sh NoMotion;
+# ./simulateCMD.sh ElectWithEnergy;
