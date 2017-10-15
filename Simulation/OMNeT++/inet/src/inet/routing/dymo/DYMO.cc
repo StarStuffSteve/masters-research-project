@@ -168,8 +168,21 @@ void DYMO::initialize(int stage)
         EV_DETAIL << "Setting Ground address to: 10.2.0.1" << endl;
         groundAddress = L3Address(IPv4Address("10.2.0.1"));
 
-        isGroundMaster = par("isGroundMaster");
+//        isGroundMaster = par("isGroundMaster");
+        isGroundMaster = false;
         WATCH(isGroundMaster);
+
+//        if (isGroundMaster) {
+//            gmSeq = 0;
+//        } else {
+//            gmSeq = -1;
+//        }
+
+        gmSeq = -1;
+        lastGmTime = SimTime(-99999, SIMTIME_S);
+
+        lastGmStartEnergy = 0.0;
+        lastGmEnergyCost = 0.0;
 
         isGroundStation = par("isGroundStation");
 
@@ -2030,6 +2043,8 @@ bool DYMO::isClientAddress(const L3Address& address)
 void DYMO::setGroundMaster(){
     Enter_Method_Silent();
 
+    static int nextGmSeq = 0;
+
     EV_DETAIL << "Assuming ground master role" << endl;
 
 //    EV_DETAIL << "Setting interface wlan1 to state 'UP'" << endl;
@@ -2048,6 +2063,9 @@ void DYMO::setGroundMaster(){
 //        EV_DETAIL << "Deleting existing route to ground" << endl;
 //        routingTable->deleteRoute(route);
 //    }
+
+    gmSeq = nextGmSeq++;
+    lastGmTime = simTime();
 
     isGroundMaster = true;
     ASSERT(isGroundMaster);
@@ -2087,6 +2105,42 @@ bool DYMO::getIsGroundMaster(){
 
     return isGroundMaster;
 }
+
+
+int DYMO::getLastGmSeq() {
+    Enter_Method_Silent();
+
+    return gmSeq;
+}
+
+void DYMO::recordGmStartEnergy(double currentEnergy)
+{
+    lastGmStartEnergy = currentEnergy;
+}
+
+
+void DYMO::recordGmEndEnergy(double currentEnergy)
+{
+    lastGmEnergyCost = lastGmStartEnergy - currentEnergy;
+}
+
+
+double DYMO::getLastGmEnergyCost()
+{
+    return lastGmEnergyCost;
+}
+
+
+double DYMO::getLastGmStartEnergy()
+{
+    return DYMO::lastGmStartEnergy;
+}
+
+simtime_t DYMO::getLastGmTime()
+{
+    return lastGmTime;
+}
+
 
 void DYMO::deleteGroundRoute(){
     Enter_Method_Silent();

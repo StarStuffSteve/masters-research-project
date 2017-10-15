@@ -51,10 +51,7 @@ void RoleOracle::initialize(int stage)
         useEnergies = par("useEnergies");
         energyRankWeight = par("energyRankWeight");
 
-//        emit(groundMasterChangedSignal, 0);
-
-//        scheduleAt(updateFrequency, updateTimer);
-        scheduleAt(0, updateTimer);
+        scheduleAt(simTime(), updateTimer);
     }
 }
 
@@ -77,7 +74,8 @@ void RoleOracle::handleMessage(cMessage *msg){
 
     if(rolesChanged) {
         rolesChanged = false;
-        scheduleAt(simTime() + updateFrequency*hysteresis, updateTimer);
+//        scheduleAt(simTime() + updateFrequency*hysteresis, updateTimer);
+        scheduleAt(simTime() + 30.0, updateTimer);
     }
     else
         scheduleAt(simTime() + updateFrequency, updateTimer);
@@ -103,10 +101,24 @@ void RoleOracle::updateRoles(){
 
     dymo::DYMO *currentGroundMaster = nullptr;
     dymo::DYMO *closestMaster = nullptr;
+    dymo::DYMO *nextMaster = nullptr;
     double minDistance = std::numeric_limits<double>::max();
+    double nextMinDistance = std::numeric_limits<double>::max();
 
     std::map<int, double> masterDistances;
     std::map<int, double> masterEnergies;
+
+    double currentGroundMasterEnergy = std::numeric_limits<int>::min();
+    double closestMasterEnergy = std::numeric_limits<int>::min();
+    double nextMasterEnergy = std::numeric_limits<int>::min();
+
+    double currentGroundMasterDistance = std::numeric_limits<double>::max();;
+
+    double totalLastPassEnergy = 0.0;
+    int lastPassCount = 0;
+
+    double totalEnergy = 0.0;
+    int energyCount = 0;
 
     std::map<int, dymo::DYMO*> masterDymoPointers;
 
@@ -148,6 +160,23 @@ void RoleOracle::updateRoles(){
                             EV_DETAIL << "Overloading master: " << targetMaster << endl;
                             mes->updateEnergyBalance(10.0);
                         }
+
+                        if (d->getIsGroundMaster()){
+                            currentGroundMasterEnergy = pcd;
+                            totalEnergy += d->getLastGmStartEnergy();
+                        }
+                        else {
+                            totalEnergy += pcd;
+                        }
+
+                        energyCount++;
+
+                        double energy;
+
+                        if ((energy = d->getLastGmEnergyCost()) != 0) {
+                            totalLastPassEnergy += energy;
+                            lastPassCount++;
+                        }
                     }
                     else
                         throw cRuntimeError("Unable to cast master energy storage submodule");
@@ -169,9 +198,20 @@ void RoleOracle::updateRoles(){
 
                     double distanceFromGround = masterCoord.distance(groundCoord);
 
+                    if (d->getIsGroundMaster()){
+                        currentGroundMasterDistance = distanceFromGround;
+                    }
+
                     if (distanceFromGround < minDistance){
                         minDistance = distanceFromGround;
                         closestMaster = d;
+                        closestMasterEnergy = masterEnergies[masterIndex];
+                    }
+
+                    if (distanceFromGround < nextMinDistance && simTime() - d->getLastGmTime() > SimTime(200, SIMTIME_S)) {
+                        nextMinDistance = distanceFromGround;
+                        nextMaster = d;
+                        nextMasterEnergy = masterEnergies[masterIndex];;
                     }
 
                     masterDistances[masterIndex] = distanceFromGround;
@@ -184,8 +224,10 @@ void RoleOracle::updateRoles(){
         }
     }
 
-    if (currentGroundMaster == nullptr)
-        throw cRuntimeError("Unable to establish current ground master");
+//    if (currentGroundMaster == nullptr)
+//        throw cRuntimeError("Unable to establish current ground master");
+
+
 
     //
     // DISTANCE & ENERGY MASTER SELECTION
@@ -193,64 +235,75 @@ void RoleOracle::updateRoles(){
 
     if (useEnergies)
     {
-        EV_DETAIL << "Using energy rank weight: " << energyRankWeight << endl;
-
-        double lowestScore = std::numeric_limits<double>::max();
-        double lowestScoreMasterDistance = -1.0;
-        dymo::DYMO *lowestScoreMaster = nullptr;
-
-        std::map<int, double>::iterator it1 = masterEnergies.begin();
-        while(it1 != masterEnergies.end())
-        {
-            int energyRank = 1;// The lower the better
-
-            // Get a rank for master[it->first]
-            std::map<int, double>::iterator it2 = masterEnergies.begin();
-            while(it2 != masterEnergies.end())
-            {
-                // If master[it1->first] has consumed more energy than master[it2->first]
-                if(it1 != it2 && it1->second < it2->second)
-                    energyRank++;
-
-                it2++;
-            }
-
-            // The effective distance of a master increase in relation to it's rank
-            double score = masterDistances[it1->first] + (masterDistances[it1->first] * (energyRank * energyRankWeight));
-
-            if (score < lowestScore) {
-                lowestScore = score;
-                lowestScoreMaster = masterDymoPointers[it1->first];
-                lowestScoreMasterDistance = masterDistances[it1->first];
-            }
-
-            EV_DETAIL << masterDymoPointers[it1->first]->getParentModule()->getFullName()
-                      <<" Energy balance " << it1->second << "J"
-                      <<" Energy rank: " << energyRank
-                      <<" Distance from ground: " << masterDistances[it1->first]
-                      <<" Score: " << score << endl;
-
-            it1++;
+        double avgGroundMasterCost = 0.0;
+        double avgMasterEnergy = 0.0;
+        
+        if (lastPassCount > 3) {
+            avgGroundMasterCost = totalLastPassEnergy / lastPassCount;
+        }
+        
+        if (energyCount > 3) {
+            avgMasterEnergy = totalEnergy / energyCount;
         }
 
-        EV_DETAIL << "Master with lowest score: " << lowestScoreMaster->getParentModule()->getFullName() << endl;
+        if (closestMaster == nullptr)
+            throw cRuntimeError("Unable to establish which master is closest to ground");
 
-        ASSERT(lowestScoreMasterDistance >= 1);
-        ASSERT(lowestScoreMaster != nullptr);
-
-        // What happens on wrap around?
-        if (currentGroundMaster != lowestScoreMaster && lowestScoreMasterDistance < 125.0) {
-            EV_DETAIL << "currentGroundMaster != lowestScoreMaster: Attempting role change" << endl;
-
-            currentGroundMaster->unsetGroundMaster();
-            lowestScoreMaster->setGroundMaster();
-
-            // ERROR: undefined reference to `inet::roleoracle::RoleOracle::groundMasterChangedSignal'
-//            emit(groundMasterChangedSignal, lowestScoreMaster->getId());
+        else if (currentGroundMaster == nullptr) {
+            closestMaster->setGroundMaster();
+            closestMaster->recordGmStartEnergy(closestMasterEnergy);
             rolesChanged = true;
-
             deleteGroundRoutes();
         }
+
+        else if (currentGroundMaster != nextMaster) {
+
+            if (avgGroundMasterCost != 0.0
+                    && currentGroundMasterEnergy > avgMasterEnergy - avgGroundMasterCost
+                    && currentGroundMasterDistance < 125) {
+
+                EV_DETAIL << "currentGroundMaster != nextMaster BUT currentGroundMaster has not depleted its energy budget and still in range - roles unchanged" << endl;
+
+            }
+            else {
+                EV_DETAIL << "currentGroundMaster != nextMaster AND currentGroundMaster has depleted its energy budget OR falling back to closest master - attempting role change" << endl;
+
+                currentGroundMaster->unsetGroundMaster();
+                currentGroundMaster->recordGmEndEnergy(currentGroundMasterEnergy);
+                nextMaster->setGroundMaster();
+                nextMaster->recordGmStartEnergy(nextMasterEnergy);
+
+                rolesChanged = true;
+                deleteGroundRoutes();
+            }
+        }
+
+        else {
+
+            // currentGroundMaster == closestMaster
+
+
+            if (avgGroundMasterCost != 0.0
+                    && currentGroundMasterEnergy < avgMasterEnergy - avgGroundMasterCost) {
+
+                EV_DETAIL << "currentGroundMaster == closestMaster but energy this pass depleted - attempting role change" << endl;
+
+                currentGroundMaster->unsetGroundMaster();
+                currentGroundMaster->recordGmEndEnergy(currentGroundMasterEnergy);
+                nextMaster->setGroundMaster();
+                nextMaster->recordGmStartEnergy(nextMasterEnergy);
+
+                rolesChanged = true;
+                deleteGroundRoutes();
+
+            } else {
+
+                EV_DETAIL << "currentGroundMaster == closestMaster: Falling back to closest master - roles unchanged" << endl;
+
+            }
+
+        }
+
     }
 
     //
@@ -261,15 +314,19 @@ void RoleOracle::updateRoles(){
         if (closestMaster == nullptr)
             throw cRuntimeError("Unable to establish which master is closest to ground");
 
+        else if (currentGroundMaster == nullptr) {
+            closestMaster->setGroundMaster();
+            rolesChanged = true;
+            deleteGroundRoutes();
+        }
+
         else if (currentGroundMaster != closestMaster){
             EV_DETAIL << "currentGroundMaster != closestMaster: Attempting role changes" << endl;
 
             currentGroundMaster->unsetGroundMaster();
             closestMaster->setGroundMaster();
 
-//            emit(groundMasterChangedSignal, closestMaster->getId());
             rolesChanged = true;
-
             deleteGroundRoutes();
         }
 

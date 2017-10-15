@@ -25,6 +25,8 @@ class INET_API RoleOracle : public cSimpleModule, public IRoleOracle
     bool useEnergies;
     double energyRankWeight;
 
+    int currentGmSeq = 0;
+
     enum TYPES {
         ORACLE_UPDATE_TIMER = 303
     };
